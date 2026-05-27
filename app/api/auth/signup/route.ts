@@ -5,7 +5,6 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { buildUserCreateCompatData, getUserSelectCompat, withCompatibleUserFields } from "@/lib/user-compat";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
-import { provisionSignupBillstackAccount } from "@/lib/billstack-account";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -58,22 +57,7 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    let fundingAccountProvisioned = false;
-    try {
-      const provisioning = await provisionSignupBillstackAccount({
-        userId: user.id,
-        fullName: user.fullName,
-        phone: user.phone,
-        email: user.email,
-      });
-      fundingAccountProvisioned = provisioning.success;
-    } catch (billstackError: unknown) {
-      const message = billstackError instanceof Error ? billstackError.message : "provision_failed";
-      console.error("[BILLSTACK SIGNUP PROVISION WARNING]", {
-        userId: user.id,
-        message,
-      });
-    }
+    const fundingAccountProvisioned = false;
 
     const token = await signToken({
       userId: user.id,
