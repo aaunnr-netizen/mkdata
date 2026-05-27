@@ -7,7 +7,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
-const publicDir = path.join(__dirname, '../public');
+const publicDir = path.join(process.cwd(), 'public');
 const logoPath = path.join(publicDir, 'logo.jpeg');
 
 // Ensure public directory exists
