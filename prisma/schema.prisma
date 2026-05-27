@@ -1,0 +1,263 @@
+// Prisma schema for MK DATA - Nigerian Fintech Data Platform
+// Generated: April 2026
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum UserRole {
+  USER
+  AGENT
+  ADMIN
+}
+
+enum NetworkType {
+  MTN
+  GLO
+  AIRTEL
+  NINEMOBILE
+}
+
+enum TransactionType {
+  DATA_PURCHASE
+  AIRTIME_PURCHASE
+  WALLET_FUNDING
+  REWARD_CREDIT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum ApiSource {
+  API_A
+  API_B
+}
+
+enum RewardType {
+  SIGNUP_BONUS
+  FIRST_DEPOSIT_2K
+  DEPOSIT_10K_UPGRADE
+  SALES_50GB_WEEKLY
+  SALES_100GB_WEEKLY
+}
+
+enum RewardStatus {
+  IN_PROGRESS
+  EARNED
+  CLAIMED
+}
+
+enum AgentRequestStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NoticeSeverity {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+  PROMO
+}
+
+// ============================================================================
+// MODELS
+// ============================================================================
+
+model User {
+  id                 String             @id @default(cuid())
+  fullName           String
+  phone              String             @unique
+  pinHash            String?
+  email              String?
+  role               UserRole           @default(USER)
+  tier               String             @default("user") // "user" or "agent"
+  balance            Int                @default(0) // in KOBO
+  rewardBalance      Int                @default(0) // in KOBO, only spendable on data
+  agentRequestStatus AgentRequestStatus @default(NONE)
+  isBanned           Boolean            @default(false)
+  isActive           Boolean            @default(true)
+  joinedAt           DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  virtualAccount VirtualAccount?
+  bankAccounts   UserBankAccount[]
+  transactions   Transaction[]
+  userRewards    UserReward[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([tier])
+  @@map("users")
+}
+
+model VirtualAccount {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNumber String
+  bankName      String
+  flwRef        String
+  orderRef      String   @unique
+  createdAt     DateTime @default(now())
+
+  @@map("virtual_accounts")
+}
+
+model UserBankAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankCode          String
+  accountNumber     String   @unique
+  accountName       String?
+  bankName          String
+  merchantReference String   @unique
+  providerReference String?
+  isPrimary         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, bankCode])
+  @@index([userId, isPrimary])
+  @@index([merchantReference])
+  @@map("user_bank_accounts")
+}
+
+model PaymentWebhookEvent {
+  id                   String   @id @default(cuid())
+  provider             String
+  eventType            String
+  transactionReference String?
+  interbankReference   String?
+  merchantReference    String?
+  amount               Int?
+  payload              Json?
+  status               String   @default("RECEIVED")
+  transactionId        String?
+  createdAt            DateTime @default(now())
+  processedAt          DateTime?
+
+  @@unique([provider, transactionReference])
+  @@unique([provider, interbankReference])
+  @@index([merchantReference])
+  @@index([status])
+  @@map("payment_webhook_events")
+}
+
+model Plan {
+  id                  String     @id @default(cuid())
+  name                String
+  network             NetworkType
+  sizeLabel           String     // e.g. "1GB", "5GB"
+  validity            String     // e.g. "Monthly", "Weekly"
+  price               Int        // in NAIRA (deprecated - use user_price)
+  user_price          Int        @default(0) // Standard customer price in NAIRA
+  agent_price         Int        @default(0) // Reseller/bulk price in NAIRA
+  apiSource           ApiSource
+  externalPlanId      Int
+  externalNetworkId   Int
+  isActive            Boolean    @default(true)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  transactions Transaction[]
+
+  @@unique([apiSource, externalPlanId, externalNetworkId])
+  @@index([network])
+  @@index([isActive])
+  @@map("plans")
+}
+
+model Transaction {
+  id                 String             @id @default(cuid())
+  userId             String?
+  user               User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestPhone         String?
+  type               TransactionType
+  status             TransactionStatus  @default(PENDING)
+  amount             Int                // in NAIRA
+  balanceBefore      Int?               // in KOBO
+  balanceAfter       Int?               // in KOBO
+  phone              String
+  planId             String?
+  plan               Plan?              @relation(fields: [planId], references: [id])
+  description        String?
+  reference          String             @unique
+  externalReference  String?
+  flwRef             String?
+  tempAccountNumber  String?
+  tempBankName       String?
+  tempTxRef          String?
+  apiUsed            ApiSource?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([phone])
+  @@index([reference])
+  @@index([externalReference])
+  @@map("transactions")
+}
+
+model Reward {
+  id          String      @id @default(cuid())
+  type        RewardType  @unique
+  title       String
+  description String
+  amount      Int         // in NAIRA
+  isActive    Boolean     @default(true)
+  userRewards UserReward[]
+
+  @@map("rewards")
+}
+
+model UserReward {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rewardId  String
+  reward    Reward        @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  status    RewardStatus  @default(IN_PROGRESS)
+  claimedAt DateTime?
+  createdAt DateTime      @default(now())
+
+  @@unique([userId, rewardId])
+  @@index([userId])
+  @@index([status])
+  @@map("user_rewards")
+}
+
+model ServiceNotice {
+  id        String         @id @default(cuid())
+  title     String
+  message   String
+  severity  NoticeSeverity @default(INFO)
+  audience  String         @default("all")
+  network   NetworkType?
+  isActive  Boolean        @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([isActive, startsAt, endsAt])
+  @@index([audience])
+  @@map("service_notices")
+}
