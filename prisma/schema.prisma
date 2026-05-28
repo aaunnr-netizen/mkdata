@@ -99,11 +99,30 @@ model User {
   bankAccounts   UserBankAccount[]
   transactions   Transaction[]
   userRewards    UserReward[]
+  biometricCredentials BiometricCredential[]
 
   @@index([phone])
   @@index([email])
   @@index([tier])
   @@map("users")
+}
+
+model BiometricCredential {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone      String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId])
+  @@index([phone])
+  @@index([expiresAt])
+  @@index([revokedAt])
+  @@map("biometric_credentials")
 }
 
 model VirtualAccount {

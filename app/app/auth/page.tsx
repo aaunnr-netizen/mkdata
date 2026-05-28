@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
   Eye,
   EyeOff,
+  Fingerprint,
   Loader2,
   LockKeyhole,
   Mail,
@@ -18,8 +19,46 @@ import { getFriendlyMessage } from "@/lib/user-feedback";
 
 type AuthMode = "login" | "signup";
 
+type BridgeValue<T> = T | Promise<T>;
+
+type MKBiometricBridge = {
+  isAvailable?: () => BridgeValue<boolean>;
+  hasCredential?: (phone: string) => BridgeValue<boolean>;
+  authenticate?: (phone: string) => BridgeValue<void>;
+  saveCredential?: (phone: string, token: string) => BridgeValue<void>;
+  clearCredential?: (phone: string) => BridgeValue<void>;
+};
+
+type BiometricResultDetail = {
+  success?: boolean;
+  phone?: string;
+  token?: string;
+  error?: string;
+};
+
+declare global {
+  interface Window {
+    MKBiometricBridge?: MKBiometricBridge;
+  }
+}
+
 const inputBase =
   "h-12 w-full rounded-lg border border-[#cfe2fb] bg-white px-4 text-[15px] text-[#06133a] shadow-sm outline-none transition focus:border-[#008fef] focus:ring-4 focus:ring-[#008fef]/12";
+
+const getBiometricBridge = () =>
+  typeof window !== "undefined" ? window.MKBiometricBridge : undefined;
+
+async function bridgeIsAvailable() {
+  const bridge = getBiometricBridge();
+  if (typeof bridge?.isAvailable !== "function") return false;
+  return Boolean(await Promise.resolve(bridge.isAvailable()));
+}
+
+async function bridgeHasCredential(phone: string) {
+  const bridge = getBiometricBridge();
+  if (typeof bridge?.hasCredential !== "function") return false;
+  return Boolean(await Promise.resolve(bridge.hasCredential(phone)));
+}
 
 export default function AuthPage() {
   const router = useRouter();
@@ -35,6 +74,12 @@ export default function AuthPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [savedPhone, setSavedPhone] = useState("");
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricCredentialAvailable, setBiometricCredentialAvailable] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+  const [biometricPrompted, setBiometricPrompted] = useState(false);
+  const [biometricError, setBiometricError] = useState("");
+  const [usePinFallback, setUsePinFallback] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -76,7 +121,103 @@ export default function AuthPage() {
     setPin("");
     setConfirmPin("");
     setAcceptTerms(false);
+    setBiometricError("");
+    setBiometricPrompted(false);
+    setUsePinFallback(false);
   };
+
+  const enrollBiometricCredential = useCallback(async (loginPhone: string) => {
+    const bridge = getBiometricBridge();
+    if (typeof bridge?.saveCredential !== "function") return;
+
+    try {
+      const available = await bridgeIsAvailable();
+      if (!available) return;
+
+      const res = await fetch("/api/auth/biometric/enroll", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) return;
+
+      const payload = await res.json();
+      if (payload?.success && payload?.phone === loginPhone && payload?.token) {
+        await Promise.resolve(bridge.saveCredential(loginPhone, payload.token));
+      }
+    } catch {
+      // Biometric enrollment is optional; PIN login must still complete.
+    }
+  }, []);
+
+  const handleBiometricResult = useCallback(
+    async (detail: BiometricResultDetail) => {
+      if (!detail?.success) {
+        setBiometricLoading(false);
+        setUsePinFallback(true);
+        setBiometricError("Fingerprint was cancelled. You can sign in with your PIN.");
+        return;
+      }
+
+      if (!detail.phone || detail.phone !== savedPhone || !detail.token) {
+        setBiometricLoading(false);
+        setUsePinFallback(true);
+        setBiometricError("Fingerprint login could not be verified. Use your PIN instead.");
+        return;
+      }
+
+      setBiometricLoading(true);
+      setBiometricError("");
+
+      try {
+        const res = await fetch("/api/auth/biometric/login", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: detail.phone, token: detail.token }),
+        });
+
+        if (res.ok) {
+          localStorage.setItem("saved_phone", detail.phone);
+          toast.success("Fingerprint unlocked your account.");
+          router.push("/app");
+          return;
+        }
+
+        const data = await res.json();
+        setUsePinFallback(true);
+        setBiometricError("Fingerprint login expired. Use your PIN to sign in again.");
+        toast.error(getFriendlyMessage(data.error, "Fingerprint login could not continue."));
+      } catch {
+        setUsePinFallback(true);
+        setBiometricError("Connection is unstable right now. Use your PIN instead.");
+        toast.error("Connection is unstable right now. Please try again shortly.");
+      } finally {
+        setBiometricLoading(false);
+      }
+    },
+    [router, savedPhone]
+  );
+
+  const startBiometricAuth = useCallback(async () => {
+    const bridge = getBiometricBridge();
+    if (!savedPhone || typeof bridge?.authenticate !== "function") {
+      setUsePinFallback(true);
+      return;
+    }
+
+    setBiometricLoading(true);
+    setBiometricError("");
+
+    try {
+      await Promise.resolve(bridge.authenticate(savedPhone));
+    } catch {
+      setBiometricLoading(false);
+      setUsePinFallback(true);
+      setBiometricError("Fingerprint could not start. Use your PIN instead.");
+    }
+  }, [savedPhone]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -102,6 +243,7 @@ export default function AuthPage() {
         if (typeof window !== "undefined") {
           localStorage.setItem("saved_phone", phone);
         }
+        await enrollBiometricCredential(phone);
         toast.success("You are signed in.");
         router.push("/app");
       } else {
@@ -162,6 +304,10 @@ export default function AuthPage() {
       }
 
       if (res.ok) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("saved_phone", phone);
+        }
+        await enrollBiometricCredential(phone);
         toast.success("Your account is ready.");
         router.push("/app");
       } else {
@@ -174,6 +320,62 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!hasCheckedAuth || mode !== "login" || !savedPhone || usePinFallback) {
+      setBiometricAvailable(false);
+      setBiometricCredentialAvailable(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const checkBiometric = async () => {
+      try {
+        const available = await bridgeIsAvailable();
+        const hasCredential = available ? await bridgeHasCredential(savedPhone) : false;
+        if (!cancelled) {
+          setBiometricAvailable(available);
+          setBiometricCredentialAvailable(hasCredential);
+          setBiometricError("");
+        }
+      } catch {
+        if (!cancelled) {
+          setBiometricAvailable(false);
+          setBiometricCredentialAvailable(false);
+        }
+      }
+    };
+
+    void checkBiometric();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCheckedAuth, mode, savedPhone, usePinFallback]);
+
+  useEffect(() => {
+    const onBiometricResult = (event: Event) => {
+      const customEvent = event as CustomEvent<BiometricResultDetail>;
+      void handleBiometricResult(customEvent.detail || {});
+    };
+
+    window.addEventListener("mk-biometric-result", onBiometricResult);
+    return () => window.removeEventListener("mk-biometric-result", onBiometricResult);
+  }, [handleBiometricResult]);
+
+  const showBiometricLogin =
+    mode === "login" &&
+    Boolean(savedPhone) &&
+    biometricAvailable &&
+    biometricCredentialAvailable &&
+    !usePinFallback;
+
+  useEffect(() => {
+    if (!showBiometricLogin || biometricPrompted) return;
+    setBiometricPrompted(true);
+    void startBiometricAuth();
+  }, [biometricPrompted, showBiometricLogin, startBiometricAuth]);
 
   if (!hasCheckedAuth) {
     return <div className="min-h-screen bg-[#f5faff]" />;
@@ -259,46 +461,85 @@ export default function AuthPage() {
                         maxLength={11}
                         placeholder="08012345678"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                        className={`${inputBase} pl-11 font-mono`}
+                        readOnly={showBiometricLogin}
+                        onChange={(e) => {
+                          setPhone(e.target.value.replace(/\D/g, ""));
+                          setUsePinFallback(true);
+                        }}
+                        className={`${inputBase} pl-11 font-mono ${showBiometricLogin ? "bg-[#f8fcff]" : ""}`}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-xs font-black uppercase text-[#526079]">PIN</label>
-                    <div className="relative">
-                      <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
-                      <input
-                        type={showPin ? "text" : "password"}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        autoComplete="current-password"
-                        maxLength={6}
-                        value={pin}
-                        onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className={`${inputBase} px-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
-                      />
+                  {showBiometricLogin ? (
+                    <div className="rounded-lg border border-[#d7e8ff] bg-[#f8fcff] p-4 text-center">
                       <button
                         type="button"
-                        onClick={() => setShowPin((value) => !value)}
-                        className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
-                        aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                        onClick={startBiometricAuth}
+                        disabled={biometricLoading}
+                        className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#008fef] text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition hover:bg-[#0060d0] disabled:opacity-70"
+                        aria-label="Unlock with fingerprint"
                       >
-                        {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {biometricLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : <Fingerprint className="h-9 w-9" />}
+                      </button>
+                      <p className="mt-3 text-sm font-black text-[#06133a]">
+                        {biometricLoading ? "Waiting for fingerprint..." : "Unlock with fingerprint"}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#526079]">
+                        Use the fingerprint or device credential already set on this phone.
+                      </p>
+                      {biometricError ? (
+                        <p className="mt-3 text-xs font-bold text-[#b42318]">{biometricError}</p>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUsePinFallback(true);
+                          setBiometricLoading(false);
+                        }}
+                        className="mt-4 text-sm font-black text-[#008fef] hover:text-[#0060d0]"
+                      >
+                        Use PIN instead
                       </button>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-xs font-black uppercase text-[#526079]">PIN</label>
+                        <div className="relative">
+                          <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                          <input
+                            type={showPin ? "text" : "password"}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            autoComplete="current-password"
+                            maxLength={6}
+                            value={pin}
+                            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            className={`${inputBase} px-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPin((value) => !value)}
+                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
+                            aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                          >
+                            {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#008fef] text-sm font-black text-white shadow-[0_14px_30px_rgba(0,143,239,0.24)] transition hover:bg-[#0060d0] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {loading ? "Signing in..." : "Sign in"}
-                    {!loading ? <ArrowRight className="h-4 w-4" /> : null}
-                  </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#008fef] text-sm font-black text-white shadow-[0_14px_30px_rgba(0,143,239,0.24)] transition hover:bg-[#0060d0] disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        {loading ? "Signing in..." : "Sign in"}
+                        {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+                      </button>
+                    </>
+                  )}
                 </motion.form>
               ) : (
                 <motion.form
