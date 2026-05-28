@@ -2296,7 +2296,6 @@ function AgentTab() {
 
 function PurchaseScreen({
   mode,
-  onModeChange,
   user,
   selectedNetwork,
   dataPlans,
@@ -2323,7 +2322,6 @@ function PurchaseScreen({
   onBack,
 }: {
   mode: PurchaseMode;
-  onModeChange: (mode: PurchaseMode) => void;
   user: UserData;
   selectedNetwork: string;
   dataPlans: DataPlan[];
@@ -2350,6 +2348,7 @@ function PurchaseScreen({
   onBack: () => void;
 }) {
   const selectedAirtimeNetwork = NETWORKS.find((network) => network.id === airtimeNetwork) || NETWORKS[0];
+  const purchaseTitle = mode === "data" ? "Buy Data" : "Buy Airtime";
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -2366,33 +2365,8 @@ function PurchaseScreen({
           Buy
         </p>
         <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>
-          Data & Airtime
+          {purchaseTitle}
         </h2>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, background: T.surface, border: `1px solid ${T.borderStrong}`, borderRadius: 18, padding: 6, marginBottom: 16 }}>
-        {[
-          ["data", "Data"],
-          ["airtime", "Airtime"],
-        ].map(([value, label]) => (
-          <button
-            key={value}
-            onClick={() => onModeChange(value as PurchaseMode)}
-            style={{
-              border: "none",
-              borderRadius: 13,
-              padding: "11px 12px",
-              background: mode === value ? T.card : "transparent",
-              color: mode === value ? T.blue : T.textMid,
-              fontFamily: T.font,
-              fontWeight: 900,
-              cursor: "pointer",
-              boxShadow: mode === value ? "0 8px 18px rgba(0,143,239,0.12)" : "none",
-            }}
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
       {mode === "data" ? (
@@ -3209,10 +3183,6 @@ export default function DashboardPage() {
           ) : activeTab === "buy" ? (
             <PurchaseScreen
               mode={purchaseMode}
-              onModeChange={(nextMode) => {
-                setPurchaseMode(nextMode);
-                if (nextMode === "data" && dataPlans.length === 0) void handleNetworkSelect(selectedNetwork || "mtn");
-              }}
               user={user}
               selectedNetwork={selectedNetwork || "mtn"}
               dataPlans={dataPlans}
