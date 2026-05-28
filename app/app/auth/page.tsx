@@ -322,7 +322,7 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    if (!hasCheckedAuth || mode !== "login" || !savedPhone || usePinFallback) {
+    if (!hasCheckedAuth || mode !== "login" || !savedPhone) {
       setBiometricAvailable(false);
       setBiometricCredentialAvailable(false);
       return;
@@ -352,7 +352,7 @@ export default function AuthPage() {
     return () => {
       cancelled = true;
     };
-  }, [hasCheckedAuth, mode, savedPhone, usePinFallback]);
+  }, [hasCheckedAuth, mode, savedPhone]);
 
   useEffect(() => {
     const onBiometricResult = (event: Event) => {
@@ -370,6 +370,12 @@ export default function AuthPage() {
     biometricAvailable &&
     biometricCredentialAvailable &&
     !usePinFallback;
+  const showInlineBiometricButton =
+    mode === "login" &&
+    Boolean(savedPhone) &&
+    phone === savedPhone &&
+    biometricAvailable &&
+    biometricCredentialAvailable;
 
   useEffect(() => {
     if (!showBiometricLogin || biometricPrompted) return;
@@ -506,27 +512,44 @@ export default function AuthPage() {
                     <>
                       <div>
                         <label className="mb-2 block text-xs font-black uppercase text-[#526079]">PIN</label>
-                        <div className="relative">
-                          <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
-                          <input
-                            type={showPin ? "text" : "password"}
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            autoComplete="current-password"
-                            maxLength={6}
-                            value={pin}
-                            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                            className={`${inputBase} px-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPin((value) => !value)}
-                            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
-                            aria-label={showPin ? "Hide PIN" : "Show PIN"}
-                          >
-                            {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
+                        <div className="flex items-center gap-2">
+                          <div className="relative min-w-0 flex-1">
+                            <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                            <input
+                              type={showPin ? "text" : "password"}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              autoComplete="current-password"
+                              maxLength={6}
+                              value={pin}
+                              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                              className={`${inputBase} px-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPin((value) => !value)}
+                              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
+                              aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                            >
+                              {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                          {showInlineBiometricButton ? (
+                            <button
+                              type="button"
+                              onClick={startBiometricAuth}
+                              disabled={biometricLoading}
+                              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#cfe2fb] bg-[#eef7ff] text-[#008fef] shadow-sm transition hover:border-[#008fef] hover:bg-white disabled:cursor-wait disabled:opacity-70"
+                              aria-label="Unlock with fingerprint"
+                              title="Unlock with fingerprint"
+                            >
+                              {biometricLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Fingerprint className="h-5 w-5" />}
+                            </button>
+                          ) : null}
                         </div>
+                        {showInlineBiometricButton && biometricError ? (
+                          <p className="mt-2 text-xs font-bold text-[#b42318]">{biometricError}</p>
+                        ) : null}
                       </div>
 
                       <button
