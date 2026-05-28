@@ -13,6 +13,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  Fingerprint,
   Home,
   Loader2,
   LogOut,
@@ -56,6 +57,25 @@ const T = {
 
 type AppTab = "home" | "transactions" | "accounts" | "agent" | "profile" | "airtime-cash" | "buy";
 type PurchaseMode = "data" | "airtime";
+type BridgeValue<T> = T | Promise<T>;
+type MKBiometricBridge = {
+  isAvailable?: () => BridgeValue<boolean>;
+  hasCredential?: (phone: string) => BridgeValue<boolean>;
+  authenticate?: (phone: string) => BridgeValue<void>;
+  saveCredential?: (phone: string, token: string) => BridgeValue<void>;
+  clearCredential?: (phone: string) => BridgeValue<void>;
+};
+
+const getBiometricBridge = () => {
+  if (typeof window === "undefined") return undefined;
+  return (window as Window & { MKBiometricBridge?: MKBiometricBridge }).MKBiometricBridge;
+};
+
+async function bridgeIsAvailable() {
+  const bridge = getBiometricBridge();
+  if (typeof bridge?.isAvailable !== "function") return false;
+  return Boolean(await Promise.resolve(bridge.isAvailable()));
+}
 
 interface UserData {
   id: string;
@@ -1949,6 +1969,7 @@ function ModernProfileTab({
   const [securityOpen, setSecurityOpen] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
   const [darkThemeEnabled, setDarkThemeEnabled] = useState(false);
+  const [enrollingBiometric, setEnrollingBiometric] = useState(false);
   const [metrics, setMetrics] = useState({ volume: 0, count: 0 });
 
   useEffect(() => {
@@ -1971,7 +1992,53 @@ function ModernProfileTab({
     .slice(0, 2)
     .toUpperCase();
 
-  const settingRows = [
+  const handleEnrollFingerprint = async () => {
+    const bridge = getBiometricBridge();
+
+    if (typeof bridge?.saveCredential !== "function") {
+      toast.error("Fingerprint setup is only available inside the Android app.");
+      return;
+    }
+
+    setEnrollingBiometric(true);
+    try {
+      const available = await bridgeIsAvailable();
+      if (!available) {
+        toast.error("Fingerprint is not available or enrolled on this phone.");
+        return;
+      }
+
+      const response = await fetch("/api/auth/biometric/enroll", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.success || payload.phone !== user.phone || !payload.token) {
+        toast.error(getFriendlyMessage(payload?.error, "Fingerprint enrollment could not be completed."));
+        return;
+      }
+
+      await Promise.resolve(bridge.saveCredential(user.phone, payload.token));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("saved_phone", user.phone);
+      }
+      toast.success("Fingerprint login is now enabled on this phone.");
+    } catch {
+      toast.error("Fingerprint enrollment could not be completed right now.");
+    } finally {
+      setEnrollingBiometric(false);
+    }
+  };
+
+  const settingRows: Array<{
+    label: string;
+    sub: string;
+    action: () => void | Promise<void>;
+    icon: React.ReactNode;
+    disabled?: boolean;
+  }> = [
     {
       label: "Haptics",
       sub: hapticsEnabled ? "Enabled" : "Disabled",
@@ -1989,6 +2056,13 @@ function ModernProfileTab({
         toast.info("Theme preference saved on this device.");
       },
       icon: <Moon size={17} color={T.blue} />,
+    },
+    {
+      label: "Enroll fingerprint",
+      sub: "Enable thumbprint login on this phone",
+      action: handleEnrollFingerprint,
+      icon: enrollingBiometric ? <Loader2 size={17} color={T.blue} /> : <Fingerprint size={17} color={T.blue} />,
+      disabled: enrollingBiometric,
     },
     {
       label: "Change PIN",
@@ -2091,7 +2165,10 @@ function ModernProfileTab({
           {settingRows.map((item) => (
             <button
               key={item.label}
-              onClick={item.action}
+              onClick={() => {
+                if (!item.disabled) void item.action();
+              }}
+              disabled={item.disabled}
               style={{
                 width: "100%",
                 border: `1px solid ${T.border}`,
@@ -2102,7 +2179,8 @@ function ModernProfileTab({
                 alignItems: "center",
                 justifyContent: "space-between",
                 marginBottom: 10,
-                cursor: "pointer",
+                cursor: item.disabled ? "wait" : "pointer",
+                opacity: item.disabled ? 0.72 : 1,
                 textAlign: "left",
               }}
             >
