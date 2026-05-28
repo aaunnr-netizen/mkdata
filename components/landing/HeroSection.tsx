@@ -1,69 +1,85 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, ShieldCheck, Zap } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative bg-white pt-20 pb-16 sm:pt-28 sm:pb-20 overflow-hidden">
-      {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-        {/* Main headline */}
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-black leading-tight mb-8">
+    <section className="relative overflow-hidden bg-[linear-gradient(135deg,#e7f5ff_0%,#ffffff_42%,#eafaf2_100%)] pt-24 pb-16 sm:pt-32 sm:pb-20">
+      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#008fef,#00a040,#0060d0)]" />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 text-center sm:px-8 lg:px-12">
+        <div className="mx-auto mb-8 flex w-fit items-center gap-3 rounded-full border border-white bg-white/80 px-4 py-2 shadow-sm">
+          <img src="/logo.jpeg" alt="MK DATA" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="text-xs font-black uppercase text-[#008fef]">Fast data for every network</span>
+        </div>
+
+        <h1 className="mx-auto mb-7 max-w-5xl text-5xl font-black leading-tight text-[#06133a] sm:text-6xl lg:text-7xl">
           Get data instantly.
           <br />
-          <span className="text-gray-600">No waiting. No delays.</span>
+          <span className="text-[#008fef]">No waiting. No delays.</span>
         </h1>
 
-        {/* Subheadline */}
-        <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-          Buy mobile data for MTN, Glo, Airtel & 9Mobile at the best prices. 
+        <p className="mx-auto mb-10 max-w-3xl text-base leading-relaxed text-[#526079] sm:text-lg">
+          Buy mobile data for MTN, Glo, Airtel & 9Mobile at the best prices.
           Delivered in seconds with zero hassle.
         </p>
 
-        {/* Trust indicators - stats row */}
-        <div className="flex flex-col sm:flex-row justify-center gap-8 mb-12 py-8 border-y border-gray-200/50">
+        <div className="mx-auto mb-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            ["/mtn.jpg", "MTN"],
+            ["/glo.jpg", "Glo"],
+            ["/airtel.jpg", "Airtel"],
+            ["/9mobile.jpg", "9Mobile"],
+          ].map(([src, name]) => (
+            <div key={name} className="flex items-center justify-center rounded-lg border border-[#d7e8ff] bg-white/85 px-4 py-3 shadow-sm">
+              <img src={src} alt={name} className="h-8 max-w-20 object-contain" />
+            </div>
+          ))}
+        </div>
+
+        <div className="mb-12 grid gap-4 border-y border-[#d7e8ff] py-8 sm:grid-cols-3">
           <div className="flex flex-col items-center">
-            <div className="text-2xl sm:text-3xl font-bold text-black">50K+</div>
-            <div className="text-sm text-gray-600">Happy Customers</div>
+            <div className="text-2xl font-black text-[#06133a] sm:text-3xl">50K+</div>
+            <div className="text-sm font-semibold text-[#526079]">Happy Customers</div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-2xl sm:text-3xl font-bold text-black">1M+</div>
-            <div className="text-sm text-gray-600">Transactions</div>
+            <div className="text-2xl font-black text-[#06133a] sm:text-3xl">1M+</div>
+            <div className="text-sm font-semibold text-[#526079]">Transactions</div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-2xl sm:text-3xl font-bold text-black">4.9★</div>
-            <div className="text-sm text-gray-600">Rated on Stores</div>
+            <div className="text-2xl font-black text-[#06133a] sm:text-3xl">4.9 star</div>
+            <div className="text-sm font-semibold text-[#526079]">Rated on Stores</div>
           </div>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+        <div className="mb-8 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
             href="/app"
-            className="px-8 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors duration-200 text-center"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#008fef] px-8 py-3 font-black text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition-colors duration-200 hover:bg-[#0060d0]"
           >
+            <Zap className="h-4 w-4" />
             Get Started
           </Link>
-          <button className="px-8 py-3 border border-gray-300 text-black rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-200">
+          <a
+            href="#features"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#b9d9ff] bg-white px-8 py-3 font-black text-[#06133a] transition-colors duration-200 hover:bg-[#f0f7ff]"
+          >
             Learn More
-          </button>
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
 
-        {/* Google Play Badge */}
-        <div className="mt-6">
-          <p className="text-xs text-gray-600 mb-3">Available on</p>
-          <img 
-            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" 
-            alt="Get it on Google Play" 
-            className="h-12 mx-auto"
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <p className="inline-flex items-center gap-2 text-xs font-bold text-[#526079]">
+            <ShieldCheck className="h-4 w-4 text-[#00a040]" />
+            Available on
+          </p>
+          <img
+            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+            alt="Get it on Google Play"
+            className="h-12"
           />
         </div>
-      </div>
-
-      {/* Soft background accent */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gray-100/50 rounded-full -mr-48 -mt-48 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gray-100/30 rounded-full -ml-48 mb-96 blur-3xl"></div>
       </div>
     </section>
   );

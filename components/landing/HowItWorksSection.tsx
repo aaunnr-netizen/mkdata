@@ -22,52 +22,41 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section id="howitworks" className="relative bg-gray-50 py-16 sm:py-24 px-6 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+    <section id="howitworks" className="relative bg-[#eaf6ff] px-6 py-16 sm:px-8 sm:py-24 lg:px-12">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-14 text-center">
+          <p className="mb-3 text-xs font-black uppercase text-[#008fef]">Three steps</p>
+          <h2 className="mb-4 text-4xl font-black text-[#06133a] sm:text-5xl">
             How It Works
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="mx-auto max-w-2xl text-lg text-[#526079]">
             Simple and straightforward. Get data in just three steps.
           </p>
         </div>
 
-        {/* Steps grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="mb-16 grid grid-cols-1 gap-5 md:grid-cols-3">
           {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {/* Step indicator */}
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold mb-6">
-                  {step.number}
-                </div>
-
-                <h3 className="text-xl font-semibold text-black mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {step.description}
-                </p>
+            <div key={index} className="rounded-lg border border-white bg-white/85 p-8 text-center shadow-sm">
+              <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-[#008fef] text-2xl font-black text-white">
+                {step.number}
               </div>
-
-              {/* Connector line for desktop */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-8 left-full w-full h-px bg-gray-300" style={{ width: "calc(100% + 2rem)" }} />
-              )}
+              <h3 className="mb-3 text-xl font-black text-[#06133a]">
+                {step.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-[#526079]">
+                {step.description}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* Bottom section */}
         <div className="text-center">
-          <p className="text-gray-600 mb-6">
+          <p className="mb-6 text-[#526079]">
             Get started in minutes. No complicated setup required.
           </p>
           <Link
             href="/app"
-            className="inline-block px-8 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors"
+            className="inline-block rounded-lg bg-[#008fef] px-8 py-3 font-black text-white transition-colors hover:bg-[#0060d0]"
           >
             Get Started
           </Link>

@@ -145,12 +145,21 @@
     border-color: var(--border-primary);
   }
 
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid rgba(0, 143, 239, 0.42);
+    outline-offset: 2px;
+  }
+
   /* TYPOGRAPHY DEFAULTS */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     font-weight: 700;
     line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 
   h1 {

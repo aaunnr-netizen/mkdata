@@ -42,32 +42,15 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 overflow-hidden">
-      {/* Navigation */}
+    <main className="min-h-screen overflow-hidden bg-[#f5faff] text-[#06133a]">
       <Navbar />
-
-      {/* Hero Section */}
       <HeroSection />
-
-      {/* Features Section */}
       <FeaturesSection />
-
-      {/* Plans Section */}
       <PlansSection />
-
-      {/* How It Works */}
       <HowItWorksSection />
-
-      {/* Premium Value Proposition */}
       <PremiumValueSection />
-
-      {/* FAQ */}
       <FAQSection />
-
-      {/* CTA Banner */}
       <CTABanner />
-
-      {/* Footer */}
       <Footer />
     </main>
   );

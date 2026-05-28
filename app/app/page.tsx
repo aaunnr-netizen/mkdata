@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Phone,
   Receipt,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   User,
@@ -34,26 +35,27 @@ const fontStyle = `
 `;
 
 const T = {
-  bg: "#fbfbfd",
-  surface: "#f4f7fb",
+  bg: "#f5faff",
+  surface: "#eef7ff",
   card: "#ffffff",
-  border: "#e6ebf2",
-  borderStrong: "#d5ddea",
-  blueLight: "#e8f0ff",
-  blue: "#2463eb",
-  blueDark: "#17357d",
-  blueShadow: "0 18px 40px rgba(36, 99, 235, 0.14)",
-  green: "#16a34a",
+  border: "#d7e8ff",
+  borderStrong: "#b8d5fa",
+  blueLight: "#e7f5ff",
+  blue: "#008fef",
+  blueDark: "#06133a",
+  blueShadow: "0 18px 44px rgba(0, 143, 239, 0.16)",
+  green: "#00a040",
   amber: "#d97706",
   rose: "#e11d48",
-  text: "#111827",
-  textMid: "#667085",
-  textDim: "#98a2b3",
+  text: "#06133a",
+  textMid: "#526079",
+  textDim: "#8aa0bc",
   font: "'DM Sans', sans-serif",
   mono: "'DM Mono', monospace",
 };
 
-type AppTab = "home" | "transactions" | "accounts" | "agent" | "profile" | "airtime-cash";
+type AppTab = "home" | "transactions" | "accounts" | "agent" | "profile" | "airtime-cash" | "buy";
+type PurchaseMode = "data" | "airtime";
 
 interface UserData {
   id: string;
@@ -161,6 +163,13 @@ const getPriceForTier = (plan: DataPlan, tier: string = "user"): number => {
   if (tier === "agent" && plan.agent_price > 0) return plan.agent_price;
   return plan.user_price > 0 ? plan.user_price : plan.price;
 };
+
+const formatNaira = (value: number) =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  }).format(value);
 
 function BottomSheet({
   open,
@@ -299,6 +308,52 @@ function NetworkPill({
       >
         {net.name}
       </span>
+    </motion.button>
+  );
+}
+
+function NetworkLogoChip({
+  net,
+  selected,
+  onSelect,
+}: {
+  net: (typeof NETWORKS)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={onSelect}
+      style={{
+        minWidth: 0,
+        height: 58,
+        borderRadius: 16,
+        border: `1.5px solid ${selected ? net.color : T.border}`,
+        background: selected ? net.bg : T.card,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "8px 6px",
+        cursor: "pointer",
+        boxShadow: selected ? "0 10px 20px rgba(0,143,239,0.12)" : "none",
+      }}
+      aria-label={`Select ${net.name}`}
+    >
+      {net.logo && !imageError ? (
+        <img
+          src={net.logo}
+          alt={net.name}
+          style={{ height: 28, maxWidth: "100%", objectFit: "contain" }}
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <span style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: selected ? T.text : T.textMid }}>
+          {net.name}
+        </span>
+      )}
     </motion.button>
   );
 }
@@ -1120,17 +1175,17 @@ function HomeTab({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 100%)",
-          borderRadius: 26,
-          padding: "18px 18px",
+          background: "linear-gradient(135deg, #ffffff 0%, #e7f5ff 54%, #eafaf2 100%)",
+          borderRadius: 22,
+          padding: 16,
           border: `1px solid ${T.borderStrong}`,
           boxShadow: T.blueShadow,
-          marginBottom: 22,
+          marginBottom: 18,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 800, color: T.textDim, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+            <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: 0 }}>
               Wallet Balance
             </p>
             <p style={{ display: "none", fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.blueDark, margin: "0 0 8px" }}>
@@ -1139,13 +1194,28 @@ function HomeTab({
             <p style={{ display: "none", fontFamily: T.font, fontSize: 12, fontWeight: 700, color: T.textMid, margin: 0 }}>
               Payment channel update in progress
             </p>
+            <p
+              style={{
+                fontFamily: T.mono,
+                fontSize: "clamp(20px, 6vw, 30px)",
+                lineHeight: 1,
+                fontWeight: 900,
+                color: T.blueDark,
+                margin: 0,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {showBalance ? formatNaira(user.balance / 100) : "******"}
+            </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", flex: "0 0 auto", gap: 8 }}>
             <button
               onClick={onToggleBalance}
               style={{
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 borderRadius: 14,
                 border: `1px solid ${T.borderStrong}`,
                 background: T.card,
@@ -1160,8 +1230,8 @@ function HomeTab({
             <button
               onClick={onSyncBalance}
               style={{
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 borderRadius: 14,
                 border: `1px solid ${T.borderStrong}`,
                 background: T.card,
@@ -1171,20 +1241,20 @@ function HomeTab({
                 cursor: "pointer",
               }}
             >
-              {syncingBalance ? <Loader2 size={17} className="animate-spin" color={T.blue} /> : <Sparkles size={17} color={T.blue} />}
+              {syncingBalance ? <Loader2 size={17} className="animate-spin" color={T.blue} /> : <RefreshCw size={16} color={T.blue} />}
             </button>
           </div>
         </div>
 
-        <p style={{ fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.blueDark, margin: "0 0 10px" }}>
+        <p style={{ display: "none", fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.blueDark, margin: "0 0 10px" }}>
           {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(user.balance / 100) : "••••••"}
         </p>
 
         <div
           style={{
             border: `1px solid ${T.border}`,
-            borderRadius: 18,
-            padding: "10px 12px",
+            borderRadius: 16,
+            padding: "9px 11px",
             background: "rgba(255,255,255,0.82)",
           }}
         >
@@ -1869,6 +1939,219 @@ function ProfileTab({
   );
 }
 
+function ModernProfileTab({
+  user,
+  onLogout,
+}: {
+  user: UserData;
+  onLogout: () => void;
+}) {
+  const [securityOpen, setSecurityOpen] = useState(false);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [darkThemeEnabled, setDarkThemeEnabled] = useState(false);
+  const [metrics, setMetrics] = useState({ volume: 0, count: 0 });
+
+  useEffect(() => {
+    fetch("/api/transactions?limit=100", { credentials: "include", cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => {
+        const transactions = Array.isArray(payload?.transactions) ? payload.transactions : [];
+        setMetrics({
+          volume: transactions.reduce((sum: number, tx: TransactionItem) => sum + Number(tx.amount || 0), 0),
+          count: transactions.length,
+        });
+      })
+      .catch(() => setMetrics({ volume: 0, count: 0 }));
+  }, []);
+
+  const initials = user.fullName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const settingRows = [
+    {
+      label: "Haptics",
+      sub: hapticsEnabled ? "Enabled" : "Disabled",
+      action: () => {
+        setHapticsEnabled((value) => !value);
+        toast.success(`Haptics ${hapticsEnabled ? "disabled" : "enabled"}.`);
+      },
+      icon: <Sparkles size={17} color={T.blue} />,
+    },
+    {
+      label: "Theme",
+      sub: darkThemeEnabled ? "Dark preference saved" : "Light preference saved",
+      action: () => {
+        setDarkThemeEnabled((value) => !value);
+        toast.info("Theme preference saved on this device.");
+      },
+      icon: <Moon size={17} color={T.blue} />,
+    },
+    {
+      label: "Change PIN",
+      sub: "Update your transaction PIN",
+      action: () => setSecurityOpen(true),
+      icon: <CreditCard size={17} color={T.blue} />,
+    },
+    {
+      label: "Sign out",
+      sub: "Log out from this device",
+      action: onLogout,
+      icon: <LogOut size={17} color={T.rose} />,
+    },
+  ];
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <div
+          style={{
+            borderRadius: 24,
+            border: `1px solid ${T.borderStrong}`,
+            background: "linear-gradient(135deg, #06133a 0%, #0060d0 100%)",
+            padding: 18,
+            color: "#fff",
+            boxShadow: T.blueShadow,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 18,
+                background: "#fff",
+                color: T.blue,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: T.font,
+                fontWeight: 900,
+                fontSize: 18,
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ margin: "0 0 5px", fontFamily: T.font, fontSize: 11, fontWeight: 900, textTransform: "uppercase", color: "rgba(255,255,255,0.68)" }}>
+                Profile
+              </p>
+              <h2 style={{ margin: 0, fontFamily: T.font, fontSize: 24, fontWeight: 900, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user.fullName}
+              </h2>
+              <p style={{ margin: "4px 0 0", fontFamily: T.font, fontSize: 12, color: "rgba(255,255,255,0.72)" }}>
+                {user.tier === "agent" ? "Agent account" : "User account"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          {[
+            ["Transaction volume", formatNaira(metrics.volume)],
+            ["Transaction count", metrics.count.toString()],
+          ].map(([label, value]) => (
+            <div key={label} style={{ border: `1px solid ${T.border}`, background: T.card, borderRadius: 18, padding: 14 }}>
+              <p style={{ margin: "0 0 6px", fontFamily: T.font, fontSize: 10, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+                {label}
+              </p>
+              <p style={{ margin: 0, fontFamily: T.mono, fontSize: 15, fontWeight: 900, color: T.text, overflow: "hidden", textOverflow: "ellipsis" }}>
+                {value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 22, padding: 16, marginBottom: 16 }}>
+          <p style={{ margin: "0 0 13px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+            Account details
+          </p>
+          {[
+            ["Name", user.fullName],
+            ["Email", user.email || "nil"],
+            ["Phone", user.phone],
+            ["Date joined", user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : "-"],
+          ].map(([label, value]) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: `1px solid ${T.border}` }}>
+              <span style={{ fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>{label}</span>
+              <span style={{ fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, textAlign: "right", minWidth: 0, overflowWrap: "anywhere" }}>{value}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 22, padding: 14, marginBottom: 16 }}>
+          <p style={{ margin: "0 0 12px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+            Settings
+          </p>
+          {settingRows.map((item) => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              style={{
+                width: "100%",
+                border: `1px solid ${T.border}`,
+                background: T.card,
+                borderRadius: 16,
+                padding: "13px 14px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 10,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 13, background: T.blueLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {item.icon}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, margin: "0 0 4px" }}>
+                    {item.label}
+                  </p>
+                  <p style={{ fontFamily: T.font, fontSize: 11, color: T.textDim, margin: 0 }}>{item.sub}</p>
+                </div>
+              </div>
+              <ChevronRight size={16} color={T.textDim} />
+            </button>
+          ))}
+        </div>
+
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: 15, marginBottom: 12 }}>
+          <p style={{ margin: "0 0 10px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+            Customer Care
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <a href="tel:09066120642" style={{ color: T.blue, fontFamily: T.font, fontWeight: 900, textDecoration: "none", borderRadius: 999, background: T.blueLight, padding: "9px 12px" }}>
+              09066120642
+            </a>
+            <a href="https://wa.me/2349066120642" target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", borderRadius: 999, padding: "9px 12px", background: "rgba(0,160,64,0.12)", color: T.green, fontFamily: T.font, fontWeight: 900 }}>
+              <MessageCircle size={14} />
+              WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src="https://anjalventures.com/logo.png" alt="Anjal Ventures" style={{ width: 30, height: 30, borderRadius: 8 }} />
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text }}>
+              Built by Anjal Ventures
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      <SecurityModal open={securityOpen} onClose={() => setSecurityOpen(false)} />
+    </>
+  );
+}
+
 function AgentTab() {
   const [data, setData] = useState<AgentStatusData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -2011,6 +2294,405 @@ function AgentTab() {
   );
 }
 
+function PurchaseScreen({
+  mode,
+  onModeChange,
+  user,
+  selectedNetwork,
+  dataPlans,
+  selectedPlan,
+  plansLoading,
+  phoneNumber,
+  pin,
+  purchasingData,
+  onDataNetworkSelect,
+  onPlanSelect,
+  onPhoneChange,
+  onPinChange,
+  onDataPurchase,
+  airtimeNetwork,
+  airtimeAmount,
+  airtimePhone,
+  airtimePin,
+  purchasingAirtime,
+  onAirtimeNetworkSelect,
+  onAirtimeAmountSelect,
+  onAirtimePhoneChange,
+  onAirtimePinChange,
+  onAirtimePurchase,
+  onBack,
+}: {
+  mode: PurchaseMode;
+  onModeChange: (mode: PurchaseMode) => void;
+  user: UserData;
+  selectedNetwork: string;
+  dataPlans: DataPlan[];
+  selectedPlan: DataPlan | null;
+  plansLoading: boolean;
+  phoneNumber: string;
+  pin: string;
+  purchasingData: boolean;
+  onDataNetworkSelect: (networkId: string) => void;
+  onPlanSelect: (plan: DataPlan) => void;
+  onPhoneChange: (value: string) => void;
+  onPinChange: (value: string) => void;
+  onDataPurchase: () => void;
+  airtimeNetwork: string;
+  airtimeAmount: number | null;
+  airtimePhone: string;
+  airtimePin: string;
+  purchasingAirtime: boolean;
+  onAirtimeNetworkSelect: (networkId: string) => void;
+  onAirtimeAmountSelect: (amount: number) => void;
+  onAirtimePhoneChange: (value: string) => void;
+  onAirtimePinChange: (value: string) => void;
+  onAirtimePurchase: () => void;
+  onBack: () => void;
+}) {
+  const selectedAirtimeNetwork = NETWORKS.find((network) => network.id === airtimeNetwork) || NETWORKS[0];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <button
+        onClick={onBack}
+        style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 900, cursor: "pointer", padding: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}
+      >
+        <ChevronLeft size={16} />
+        Home
+      </button>
+
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>
+          Buy
+        </p>
+        <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>
+          Data & Airtime
+        </h2>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, background: T.surface, border: `1px solid ${T.borderStrong}`, borderRadius: 18, padding: 6, marginBottom: 16 }}>
+        {[
+          ["data", "Data"],
+          ["airtime", "Airtime"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => onModeChange(value as PurchaseMode)}
+            style={{
+              border: "none",
+              borderRadius: 13,
+              padding: "11px 12px",
+              background: mode === value ? T.card : "transparent",
+              color: mode === value ? T.blue : T.textMid,
+              fontFamily: T.font,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: mode === value ? "0 8px 18px rgba(0,143,239,0.12)" : "none",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "data" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
+              Phone number
+            </label>
+            <input
+              type="tel"
+              maxLength={11}
+              value={phoneNumber}
+              onChange={(event) => onPhoneChange(event.target.value.replace(/\D/g, ""))}
+              placeholder="08012345678"
+              style={{
+                width: "100%",
+                padding: "14px 14px",
+                borderRadius: 14,
+                border: `1px solid ${T.borderStrong}`,
+                background: T.surface,
+                fontFamily: T.mono,
+                fontSize: 16,
+                boxSizing: "border-box",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
+              Network
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
+              {NETWORKS.map((network) => (
+                <NetworkLogoChip
+                  key={network.id}
+                  net={network}
+                  selected={selectedNetwork === network.id}
+                  onSelect={() => onDataNetworkSelect(network.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+              <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: 0, textTransform: "uppercase" }}>
+                Plans
+              </p>
+              <span style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue }}>
+                {selectedNetwork.toUpperCase()}
+              </span>
+            </div>
+            {plansLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "36px 0" }}>
+                <Loader2 size={24} className="animate-spin" color={T.blue} />
+              </div>
+            ) : dataPlans.length ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
+                {dataPlans.map((plan) => {
+                  const selected = selectedPlan?.id === plan.id;
+                  return (
+                    <button
+                      key={plan.id}
+                      onClick={() => onPlanSelect(plan)}
+                      style={{
+                        border: `1.5px solid ${selected ? T.blue : T.border}`,
+                        borderRadius: 15,
+                        background: selected ? T.blueLight : "#fff",
+                        padding: "12px 10px",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        minHeight: 86,
+                      }}
+                    >
+                      <p style={{ fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, margin: "0 0 4px" }}>
+                        {plan.sizeLabel}
+                      </p>
+                      <p style={{ fontFamily: T.font, fontSize: 11, color: T.textDim, margin: "0 0 9px" }}>{plan.validity}</p>
+                      <p style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 900, color: T.blue, margin: 0 }}>
+                        {formatNaira(getPriceForTier(plan, user?.tier || "user"))}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p style={{ fontFamily: T.font, fontSize: 13, color: T.textMid, margin: 0 }}>
+                No plans are available for this network right now.
+              </p>
+            )}
+          </div>
+
+          <div style={{ border: `1px solid ${selectedPlan ? T.blue : T.borderStrong}`, background: selectedPlan ? T.blueLight : T.card, borderRadius: 20, padding: 15 }}>
+            <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
+              Preview
+            </p>
+            {selectedPlan ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>
+                      {selectedPlan.sizeLabel} - {selectedPlan.validity}
+                    </p>
+                    <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>
+                      {selectedNetwork.toUpperCase()} to {phoneNumber || "recipient phone"}
+                    </p>
+                  </div>
+                  <p style={{ margin: 0, fontFamily: T.mono, fontSize: 16, fontWeight: 900, color: T.blue }}>
+                    {formatNaira(getPriceForTier(selectedPlan, user?.tier || "user"))}
+                  </p>
+                </div>
+
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="Transaction PIN"
+                  style={{
+                    width: "100%",
+                    padding: "14px 14px",
+                    textAlign: "center",
+                    borderRadius: 14,
+                    border: `1px solid ${pin ? T.blue : T.borderStrong}`,
+                    background: "#fff",
+                    fontFamily: T.mono,
+                    fontSize: 17,
+                    fontWeight: 900,
+                    outline: "none",
+                    boxSizing: "border-box",
+                    letterSpacing: "0.16em",
+                    marginBottom: 12,
+                  }}
+                />
+
+                <button
+                  onClick={onDataPurchase}
+                  disabled={purchasingData}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    borderRadius: 14,
+                    padding: 15,
+                    background: T.blue,
+                    color: "#fff",
+                    fontFamily: T.font,
+                    fontWeight: 900,
+                    fontSize: 15,
+                    cursor: purchasingData ? "not-allowed" : "pointer",
+                    opacity: purchasingData ? 0.7 : 1,
+                  }}
+                >
+                  {purchasingData ? "Processing..." : "Confirm Data Purchase"}
+                </button>
+              </>
+            ) : (
+              <p style={{ fontFamily: T.font, fontSize: 13, color: T.textMid, margin: 0 }}>
+                Select a data plan to see the preview and complete purchase.
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
+              Network
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
+              {NETWORKS.map((network) => (
+                <NetworkLogoChip
+                  key={network.id}
+                  net={network}
+                  selected={airtimeNetwork === network.id}
+                  onSelect={() => onAirtimeNetworkSelect(network.id)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
+              Amount
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 9 }}>
+              {AIRTIME_AMOUNTS.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => onAirtimeAmountSelect(amount)}
+                  style={{
+                    border: `1.5px solid ${airtimeAmount === amount ? T.green : T.border}`,
+                    borderRadius: 14,
+                    padding: "12px 10px",
+                    background: airtimeAmount === amount ? "rgba(0,160,64,0.12)" : "#fff",
+                    cursor: "pointer",
+                    fontFamily: T.mono,
+                    fontWeight: 900,
+                    color: T.text,
+                  }}
+                >
+                  {formatNaira(amount)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+            <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
+              Phone number
+            </label>
+            <input
+              type="tel"
+              maxLength={11}
+              value={airtimePhone}
+              onChange={(event) => onAirtimePhoneChange(event.target.value.replace(/\D/g, ""))}
+              placeholder="08012345678"
+              style={{
+                width: "100%",
+                padding: "14px 14px",
+                borderRadius: 14,
+                border: `1px solid ${T.borderStrong}`,
+                background: T.surface,
+                fontFamily: T.mono,
+                fontSize: 16,
+                boxSizing: "border-box",
+                outline: "none",
+                marginBottom: 12,
+              }}
+            />
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={airtimePin}
+              onChange={(event) => onAirtimePinChange(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="Transaction PIN"
+              style={{
+                width: "100%",
+                padding: "14px 14px",
+                textAlign: "center",
+                borderRadius: 14,
+                border: `1px solid ${airtimePin ? T.green : T.borderStrong}`,
+                background: airtimePin ? "rgba(0,160,64,0.08)" : T.surface,
+                fontFamily: T.mono,
+                fontSize: 17,
+                fontWeight: 900,
+                outline: "none",
+                boxSizing: "border-box",
+                letterSpacing: "0.16em",
+              }}
+            />
+          </div>
+
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: "linear-gradient(135deg,#ffffff 0%,#eafaf2 100%)", borderRadius: 20, padding: 15 }}>
+            <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
+              Preview
+            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+              <div>
+                <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>
+                  {selectedAirtimeNetwork.name} airtime
+                </p>
+                <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>
+                  {airtimePhone || "recipient phone"}
+                </p>
+              </div>
+              <p style={{ margin: 0, fontFamily: T.mono, fontSize: 16, fontWeight: 900, color: T.green }}>
+                {airtimeAmount ? formatNaira(airtimeAmount) : "Select amount"}
+              </p>
+            </div>
+            <button
+              onClick={onAirtimePurchase}
+              disabled={purchasingAirtime}
+              style={{
+                width: "100%",
+                border: "none",
+                borderRadius: 14,
+                padding: 15,
+                background: T.green,
+                color: "#fff",
+                fontFamily: T.font,
+                fontWeight: 900,
+                fontSize: 15,
+                cursor: purchasingAirtime ? "not-allowed" : "pointer",
+                opacity: purchasingAirtime ? 0.7 : 1,
+              }}
+            >
+              {purchasingAirtime ? "Processing..." : "Buy Airtime"}
+            </button>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function TabBar({
   activeTab,
   onChange,
@@ -2026,11 +2708,11 @@ function TabBar({
   ];
 
   return (
-    <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 14px 16px" }}>
+    <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 12px 14px" }}>
       <div
         style={{
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 430,
           borderRadius: 26,
           background: "rgba(255,255,255,0.95)",
           backdropFilter: "blur(18px)",
@@ -2096,9 +2778,8 @@ export default function DashboardPage() {
   const [broadcasts, setBroadcasts] = useState<BroadcastNotice[]>([]);
   const rewardBalanceSeenRef = useRef<number | null>(null);
 
-  const [buyDataOpen, setBuyDataOpen] = useState(false);
-  const [buyDataStep, setBuyDataStep] = useState(1);
-  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+  const [purchaseMode, setPurchaseMode] = useState<PurchaseMode>("data");
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>("mtn");
   const [dataPlans, setDataPlans] = useState<DataPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -2106,8 +2787,7 @@ export default function DashboardPage() {
   const [purchasingData, setPurchasingData] = useState(false);
   const [plansLoading, setPlansLoading] = useState(false);
 
-  const [airtimeOpen, setAirtimeOpen] = useState(false);
-  const [airtimeNetwork, setAirtimeNetwork] = useState<string | null>(null);
+  const [airtimeNetwork, setAirtimeNetwork] = useState<string | null>("mtn");
   const [airtimeAmount, setAirtimeAmount] = useState<number | null>(null);
   const [airtimePhone, setAirtimePhone] = useState("");
   const [airtimePin, setAirtimePin] = useState("");
@@ -2282,16 +2962,29 @@ export default function DashboardPage() {
 
   const handleNetworkSelect = async (networkId: string) => {
     setSelectedNetwork(networkId);
+    setSelectedPlan(null);
     setPlansLoading(true);
     try {
       const response = await fetch(`/api/data/plans?network=${networkId}`, { cache: "no-store" });
       const payload = await response.json();
       setDataPlans(payload.data || []);
-      setBuyDataStep(2);
     } catch {
       toast.error("Ahh, sorry, plans could not load right now. Please try again shortly.");
     } finally {
       setPlansLoading(false);
+    }
+  };
+
+  const openPurchase = (mode: PurchaseMode) => {
+    setShowRewards(false);
+    setPurchaseMode(mode);
+    setActiveTab("buy");
+    if (mode === "data") {
+      setPhoneNumber("");
+      setPin("");
+      void handleNetworkSelect("mtn");
+    } else {
+      setAirtimeNetwork((current) => current || "mtn");
     }
   };
 
@@ -2334,9 +3027,8 @@ export default function DashboardPage() {
         return;
       }
 
-      setBuyDataOpen(false);
-      setBuyDataStep(1);
-      setSelectedNetwork(null);
+      setActiveTab("home");
+      setSelectedNetwork("mtn");
       setSelectedPlan(null);
       setPhoneNumber("");
       setPin("");
@@ -2395,8 +3087,8 @@ export default function DashboardPage() {
         return;
       }
 
-      setAirtimeOpen(false);
-      setAirtimeNetwork(null);
+      setActiveTab("home");
+      setAirtimeNetwork("mtn");
       setAirtimeAmount(null);
       setAirtimePhone("");
       setAirtimePin("");
@@ -2436,53 +3128,37 @@ export default function DashboardPage() {
     <>
       <style>{fontStyle}</style>
 
-      <div style={{ minHeight: "100vh", background: T.bg, paddingBottom: 108 }}>
+      <div style={{ minHeight: "100vh", background: T.bg, paddingBottom: activeTab === "buy" || showRewards ? 32 : 108 }}>
         <div
           style={{
             position: "sticky",
             top: 0,
             zIndex: 40,
-            background: "rgba(251,251,253,0.92)",
-            backdropFilter: "blur(16px)",
-            borderBottom: `1px solid ${T.border}`,
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(18px)",
+            borderBottom: `1px solid ${T.borderStrong}`,
           }}
         >
           <div
             style={{
               maxWidth: 520,
               margin: "0 auto",
-              padding: "16px 20px",
+              padding: "14px 20px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 16,
-                  background: "linear-gradient(135deg, #2463eb 0%, #4f8cff 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontFamily: T.font,
-                  fontWeight: 800,
-                  fontSize: 15,
-                }}
-              >
-                {initials}
-              </div>
+              <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
               <div>
-                <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 800, color: T.textDim, margin: "0 0 4px", textTransform: "uppercase" }}>
+                <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue, margin: "0 0 4px", textTransform: "uppercase" }}>
                   MK Data
                 </p>
-                <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 800, color: T.text, margin: 0 }}>
+                <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text, margin: 0, maxWidth: 190, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.fullName}
                 </p>
-                <p style={{ fontFamily: T.font, fontSize: 11, color: T.textMid, margin: "2px 0 0" }}>
+                <p style={{ display: "inline-flex", borderRadius: 999, padding: "3px 8px", background: user.tier === "agent" ? "rgba(0,160,64,0.12)" : T.blueLight, color: user.tier === "agent" ? T.green : T.blue, fontFamily: T.font, fontSize: 10, fontWeight: 900, margin: "5px 0 0" }}>
                   {user.tier === "agent" ? "Agent" : "User"}
                 </p>
               </div>
@@ -2491,20 +3167,20 @@ export default function DashboardPage() {
               onClick={handleLogout}
               style={{
                 border: "none",
-                borderRadius: 14,
-                padding: "10px 12px",
-                background: T.card,
-                color: T.textMid,
+                borderRadius: 999,
+                padding: "10px 11px",
+                background: T.blueLight,
+                color: T.blue,
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
                 fontFamily: T.font,
-                fontWeight: 800,
+                fontWeight: 900,
                 cursor: "pointer",
               }}
             >
               <LogOut size={14} />
-              Exit
+              <span style={{ display: "none" }}>Exit</span>
             </button>
           </div>
         </div>
@@ -2524,11 +3200,43 @@ export default function DashboardPage() {
               onToggleBalance={() => setShowBalance((value) => !value)}
               onSyncBalance={handleSyncBalance}
               onCopyAccount={handleCopyAccount}
-              onOpenData={() => setBuyDataOpen(true)}
-              onOpenAirtime={() => setAirtimeOpen(true)}
+              onOpenData={() => openPurchase("data")}
+              onOpenAirtime={() => openPurchase("airtime")}
               onOpenRewards={() => setShowRewards(true)}
               onOpenAccounts={() => setActiveTab("accounts")}
               onViewAllTransactions={() => setActiveTab("transactions")}
+            />
+          ) : activeTab === "buy" ? (
+            <PurchaseScreen
+              mode={purchaseMode}
+              onModeChange={(nextMode) => {
+                setPurchaseMode(nextMode);
+                if (nextMode === "data" && dataPlans.length === 0) void handleNetworkSelect(selectedNetwork || "mtn");
+              }}
+              user={user}
+              selectedNetwork={selectedNetwork || "mtn"}
+              dataPlans={dataPlans}
+              selectedPlan={selectedPlan}
+              plansLoading={plansLoading}
+              phoneNumber={phoneNumber}
+              pin={pin}
+              purchasingData={purchasingData}
+              onDataNetworkSelect={handleNetworkSelect}
+              onPlanSelect={setSelectedPlan}
+              onPhoneChange={setPhoneNumber}
+              onPinChange={setPin}
+              onDataPurchase={handleDataPurchase}
+              airtimeNetwork={airtimeNetwork || "mtn"}
+              airtimeAmount={airtimeAmount}
+              airtimePhone={airtimePhone}
+              airtimePin={airtimePin}
+              purchasingAirtime={purchasingAirtime}
+              onAirtimeNetworkSelect={setAirtimeNetwork}
+              onAirtimeAmountSelect={setAirtimeAmount}
+              onAirtimePhoneChange={setAirtimePhone}
+              onAirtimePinChange={setAirtimePin}
+              onAirtimePurchase={handleAirtimePurchase}
+              onBack={() => setActiveTab("home")}
             />
           ) : activeTab === "transactions" ? (
             <TransactionsTab />
@@ -2539,324 +3247,25 @@ export default function DashboardPage() {
           ) : activeTab === "agent" ? (
             <AgentTab />
           ) : (
-            <ProfileTab user={user} onLogout={handleLogout} />
+            <ModernProfileTab user={user} onLogout={handleLogout} />
           )}
         </main>
 
-        <TabBar
-          activeTab={activeTab}
-          onChange={(tab) => {
-            setShowRewards(false);
-            setActiveTab(tab);
-          }}
-        />
+        {activeTab === "buy" || showRewards ? null : (
+          <TabBar
+            activeTab={activeTab}
+            onChange={(tab) => {
+              setShowRewards(false);
+              setActiveTab(tab);
+            }}
+          />
+        )}
       </div>
 
       <PurchaseSuccessScreen
         state={successState}
         onClose={() => setSuccessState({ open: false, title: "", description: "", reference: undefined })}
       />
-
-      <BottomSheet
-        open={buyDataOpen}
-        onClose={() => {
-          setBuyDataOpen(false);
-          setBuyDataStep(1);
-          setSelectedNetwork(null);
-          setSelectedPlan(null);
-          setPhoneNumber("");
-          setPin("");
-        }}
-        title="Buy Data"
-        accentColor={T.blue}
-      >
-        {buyDataStep === 1 && (
-          <>
-            <p style={{ fontFamily: T.font, fontSize: 14, color: T.textMid, margin: "0 0 18px" }}>
-              Select a network to continue
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {NETWORKS.map((network) => (
-                <NetworkPill
-                  key={network.id}
-                  net={network}
-                  selected={selectedNetwork === network.id}
-                  onSelect={() => handleNetworkSelect(network.id)}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
-        {buyDataStep === 2 && (
-          <>
-            <button
-              onClick={() => setBuyDataStep(1)}
-              style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 800, cursor: "pointer", padding: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <ChevronLeft size={16} />
-              Back
-            </button>
-
-            {plansLoading ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: "50px 0" }}>
-                <Loader2 size={24} className="animate-spin" color={T.blue} />
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {dataPlans.map((plan) => (
-                  <button
-                    key={plan.id}
-                    onClick={() => {
-                      setSelectedPlan(plan);
-                      setBuyDataStep(3);
-                    }}
-                    style={{
-                      border: `1px solid ${T.border}`,
-                      borderRadius: 18,
-                      background: T.card,
-                      padding: "16px 16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ textAlign: "left" }}>
-                      <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 800, color: T.text, margin: "0 0 4px" }}>{plan.sizeLabel}</p>
-                      <p style={{ fontFamily: T.font, fontSize: 12, color: T.textDim, margin: 0 }}>{plan.validity}</p>
-                    </div>
-                    <p style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 800, color: T.blue, margin: 0 }}>
-                      ₦{getPriceForTier(plan, user.tier).toLocaleString()}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {buyDataStep === 3 && selectedPlan && (
-          <>
-            <button
-              onClick={() => setBuyDataStep(2)}
-              style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 800, cursor: "pointer", padding: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <ChevronLeft size={16} />
-              Back
-            </button>
-
-            <div style={{ background: T.blueLight, borderRadius: 18, padding: 16, marginBottom: 18 }}>
-              <p style={{ fontFamily: T.font, fontSize: 12, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase", fontWeight: 800 }}>
-                Selected plan
-              </p>
-              <p style={{ fontFamily: T.font, fontSize: 16, fontWeight: 800, color: T.text, margin: "0 0 8px" }}>
-                {selectedPlan.sizeLabel} • {selectedPlan.validity}
-              </p>
-              <p style={{ fontFamily: T.mono, fontSize: 18, fontWeight: 800, color: T.blue, margin: 0 }}>
-                ₦{getPriceForTier(selectedPlan, user.tier).toLocaleString()}
-              </p>
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
-                Phone number
-              </label>
-              <input
-                type="tel"
-                maxLength={11}
-                value={phoneNumber}
-                onChange={(event) => setPhoneNumber(event.target.value.replace(/\D/g, ""))}
-                style={{
-                  width: "100%",
-                  padding: "15px 16px",
-                  borderRadius: 16,
-                  border: `1px solid ${T.borderStrong}`,
-                  background: T.surface,
-                  fontFamily: T.mono,
-                  fontSize: 16,
-                  boxSizing: "border-box",
-                  outline: "none",
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 18 }}>
-              <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
-                Transaction PIN
-              </label>
-              <input
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={pin}
-                onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                style={{
-                  width: "100%",
-                  padding: "15px 16px",
-                  textAlign: "center",
-                  borderRadius: 14,
-                  border: `1px solid ${pin ? T.blue : T.borderStrong}`,
-                  background: pin ? T.blueLight : T.surface,
-                  fontFamily: T.mono,
-                  fontSize: 18,
-                  fontWeight: 800,
-                  outline: "none",
-                  boxSizing: "border-box",
-                  letterSpacing: "0.18em",
-                }}
-              />
-            </div>
-
-            <button
-              onClick={handleDataPurchase}
-              disabled={purchasingData}
-              style={{
-                width: "100%",
-                border: "none",
-                borderRadius: 16,
-                padding: 16,
-                background: T.blue,
-                color: "#fff",
-                fontFamily: T.font,
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: purchasingData ? "not-allowed" : "pointer",
-                opacity: purchasingData ? 0.7 : 1,
-              }}
-            >
-              {purchasingData ? "Processing..." : "Confirm Purchase"}
-            </button>
-          </>
-        )}
-      </BottomSheet>
-
-      <BottomSheet
-        open={airtimeOpen}
-        onClose={() => {
-          setAirtimeOpen(false);
-          setAirtimeNetwork(null);
-          setAirtimeAmount(null);
-          setAirtimePhone("");
-          setAirtimePin("");
-        }}
-        title="Buy Airtime"
-        accentColor={T.green}
-      >
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
-            Choose network
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {NETWORKS.map((network) => (
-              <NetworkPill
-                key={network.id}
-                net={network}
-                selected={airtimeNetwork === network.id}
-                onSelect={() => setAirtimeNetwork(network.id)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
-            Amount
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {AIRTIME_AMOUNTS.map((amount) => (
-              <button
-                key={amount}
-                onClick={() => setAirtimeAmount(amount)}
-                style={{
-                  border: `1px solid ${airtimeAmount === amount ? T.green : T.border}`,
-                  borderRadius: 14,
-                  padding: "12px 10px",
-                  background: airtimeAmount === amount ? "rgba(22,163,74,0.12)" : T.card,
-                  cursor: "pointer",
-                  fontFamily: T.mono,
-                  fontWeight: 800,
-                  color: T.text,
-                }}
-              >
-                ₦{amount}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
-            Phone number
-          </label>
-          <input
-            type="tel"
-            maxLength={11}
-            value={airtimePhone}
-            onChange={(event) => setAirtimePhone(event.target.value.replace(/\D/g, ""))}
-            style={{
-              width: "100%",
-              padding: "15px 16px",
-              borderRadius: 16,
-              border: `1px solid ${T.borderStrong}`,
-              background: T.surface,
-              fontFamily: T.mono,
-              fontSize: 16,
-              boxSizing: "border-box",
-              outline: "none",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>
-            Transaction PIN
-          </label>
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={airtimePin}
-            onChange={(event) => setAirtimePin(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            style={{
-              width: "100%",
-              padding: "15px 16px",
-              textAlign: "center",
-              borderRadius: 14,
-              border: `1px solid ${airtimePin ? T.green : T.borderStrong}`,
-              background: airtimePin ? "rgba(22,163,74,0.12)" : T.surface,
-              fontFamily: T.mono,
-              fontSize: 18,
-              fontWeight: 800,
-              outline: "none",
-              boxSizing: "border-box",
-              letterSpacing: "0.18em",
-            }}
-          />
-        </div>
-
-        <button
-          onClick={handleAirtimePurchase}
-          disabled={purchasingAirtime}
-          style={{
-            width: "100%",
-            border: "none",
-            borderRadius: 16,
-            padding: 16,
-            background: T.green,
-            color: "#fff",
-            fontFamily: T.font,
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: purchasingAirtime ? "not-allowed" : "pointer",
-            opacity: purchasingAirtime ? 0.7 : 1,
-          }}
-        >
-          {purchasingAirtime ? "Processing..." : "Buy Airtime"}
-        </button>
-      </BottomSheet>
     </>
   );
 }

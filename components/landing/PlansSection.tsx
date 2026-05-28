@@ -45,104 +45,88 @@ const plans = [
 
 export function PlansSection() {
   return (
-    <section id="pricing" className="relative bg-white py-16 sm:py-24 px-6 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+    <section id="pricing" className="relative bg-white px-6 py-16 sm:px-8 sm:py-24 lg:px-12">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-14 text-center">
+          <p className="mb-3 text-xs font-black uppercase text-[#00a040]">Simple pricing</p>
+          <h2 className="mb-4 text-4xl font-black text-[#06133a] sm:text-5xl">
             Pricing That Works For You
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="mx-auto max-w-2xl text-lg text-[#526079]">
             No hidden fees. No surprises. Just honest pricing for every network.
           </p>
         </div>
 
-        {/* Plans grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative rounded-lg border transition-all ${
+              className={`relative rounded-lg border p-6 transition-all ${
                 plan.featured
-                  ? "border-black bg-black text-white shadow-lg"
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                  ? "border-[#008fef] bg-[#06133a] text-white shadow-[0_18px_40px_rgba(0,16,64,0.22)]"
+                  : "border-[#d7e8ff] bg-[#f9fcff] text-[#06133a] hover:border-[#008fef]"
               }`}
             >
               {plan.featured && (
-                <div className="absolute -top-3 left-4 px-3 py-1 bg-black text-white text-xs font-semibold rounded-full">
+                <div className="absolute -top-3 left-4 rounded-full bg-[#00a040] px-3 py-1 text-xs font-black text-white">
                   Best Value
                 </div>
               )}
 
-              <div className="p-6">
-                {/* Network badge */}
-                <div className="mb-4">
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    plan.featured
-                      ? "bg-white/10 text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}>
-                    {plan.network}
-                  </span>
-                </div>
-
-                {/* Plan details */}
-                <h3 className="text-3xl font-bold mb-1">
-                  {plan.size}
-                </h3>
-                <p className={`text-sm ${plan.featured ? "text-gray-300" : "text-gray-600"} mb-6`}>
-                  {plan.validity}
-                </p>
-
-                {/* Price */}
-                <div className="mb-6">
-                  <div className="text-4xl font-bold">
-                    ₦{plan.price.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div className="space-y-3 mb-8 py-6 border-t border-b" style={{
-                  borderColor: plan.featured ? "rgba(255,255,255,0.1)" : "rgb(229, 231, 235)"
-                }}>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 flex-shrink-0" />
-                    Instant delivery
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 flex-shrink-0" />
-                    Valid for {plan.validity.toLowerCase()}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 flex-shrink-0" />
-                    Best market rate
-                  </div>
-                </div>
-
-                {/* CTA Button */}
-                <Link
-                  href={`/app?plan=${encodeURIComponent(plan.size)}`}
-                  className={`w-full px-4 py-2 rounded-lg font-semibold text-center block transition-colors ${
-                    plan.featured
-                      ? "bg-white text-black hover:bg-gray-100"
-                      : "bg-black text-white hover:bg-gray-900"
+              <div className="mb-5">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    plan.featured ? "bg-white/12 text-white" : "bg-[#e7f5ff] text-[#0060d0]"
                   }`}
                 >
-                  Get {plan.size}
-                </Link>
+                  {plan.network}
+                </span>
               </div>
+
+              <h3 className="mb-1 text-3xl font-black">{plan.size}</h3>
+              <p className={`mb-6 text-sm font-semibold ${plan.featured ? "text-white/72" : "text-[#526079]"}`}>
+                {plan.validity}
+              </p>
+
+              <div className="mb-6 text-4xl font-black">
+                {"\u20a6"}{plan.price.toLocaleString()}
+              </div>
+
+              <div
+                className="mb-8 space-y-3 border-y py-6"
+                style={{
+                  borderColor: plan.featured ? "rgba(255,255,255,0.14)" : "#d7e8ff",
+                }}
+              >
+                {["Instant delivery", `Valid for ${plan.validity.toLowerCase()}`, "Best market rate"].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm font-semibold">
+                    <Check className="h-4 w-4 flex-shrink-0 text-[#00a040]" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href={`/app?plan=${encodeURIComponent(plan.size)}`}
+                className={`block w-full rounded-lg px-4 py-3 text-center font-black transition-colors ${
+                  plan.featured
+                    ? "bg-white text-[#06133a] hover:bg-[#eef7ff]"
+                    : "bg-[#008fef] text-white hover:bg-[#0060d0]"
+                }`}
+              >
+                Get {plan.size}
+              </Link>
             </div>
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="text-center mt-12">
-          <p className="text-gray-600 mb-4">
+        <div className="mt-12 text-center">
+          <p className="mb-4 text-[#526079]">
             All plans available in-app with more options
           </p>
           <Link
             href="/app"
-            className="inline-block px-8 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors"
+            className="inline-block rounded-lg bg-[#06133a] px-8 py-3 font-black text-white transition-colors hover:bg-[#001040]"
           >
             View All Plans
           </Link>

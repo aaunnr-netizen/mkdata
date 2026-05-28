@@ -37,44 +37,42 @@ const faqs = [
 
 export function FAQSection() {
   return (
-    <section id="faq" className="relative bg-white py-16 sm:py-24 px-6 sm:px-8 lg:px-12">
-      <div className="max-w-3xl mx-auto">
-        {/* Section header */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4">
+    <section id="faq" className="relative bg-[#f5faff] px-6 py-16 sm:px-8 sm:py-24 lg:px-12">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-12 text-center">
+          <p className="mb-3 text-xs font-black uppercase text-[#008fef]">Support</p>
+          <h2 className="mb-4 text-4xl font-black text-[#06133a] sm:text-5xl">
             Frequently Asked Questions
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[#526079]">
             Find answers to common questions about MK DATA.
           </p>
         </div>
 
-        {/* FAQ Accordion */}
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full rounded-lg border border-[#d7e8ff] bg-white px-5 shadow-sm">
           {faqs.map((faq, index) => (
             <AccordionItem
               key={index}
               value={`item-${index}`}
-              className="border-b border-gray-200 py-4"
+              className="border-b border-[#d7e8ff] py-4 last:border-b-0"
             >
-              <AccordionTrigger className="text-left font-semibold text-black hover:text-gray-700 transition-colors text-base">
+              <AccordionTrigger className="text-left text-base font-black text-[#06133a] transition-colors hover:text-[#008fef]">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="text-gray-600 text-base pt-4">
+              <AccordionContent className="pt-4 text-base text-[#526079]">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
 
-        {/* Contact section */}
-        <div className="mt-12 text-center pt-12 border-t border-gray-200">
-          <p className="text-gray-600 mb-4">
-            Can't find what you're looking for?
+        <div className="mt-12 border-t border-[#d7e8ff] pt-12 text-center">
+          <p className="mb-4 text-[#526079]">
+            Can&apos;t find what you&apos;re looking for?
           </p>
           <a
             href="mailto:support@mkdata.com"
-            className="inline-block text-black font-semibold hover:text-gray-700 transition-colors"
+            className="inline-block font-black text-[#008fef] transition-colors hover:text-[#0060d0]"
           >
             Contact our support team
           </a>

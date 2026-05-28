@@ -22,32 +22,31 @@ const features = [
 
 export function PremiumValueSection() {
   return (
-    <section className="bg-gray-50 py-16 sm:py-24 px-6 sm:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-4 leading-tight">
+    <section className="bg-white px-6 py-16 sm:px-8 sm:py-24 lg:px-12">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-14 text-center">
+          <p className="mb-3 text-xs font-black uppercase text-[#00a040]">Reliable service</p>
+          <h2 className="mb-4 text-4xl font-black leading-tight text-[#06133a] sm:text-5xl">
             Why customers choose us
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We've built the fastest and most reliable data platform in Nigeria.
+          <p className="mx-auto max-w-2xl text-lg text-[#526079]">
+            We&apos;ve built the fastest and most reliable data platform in Nigeria.
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="mb-16 grid gap-5 md:grid-cols-3">
           {features.map((feature, idx) => {
             const Icon = feature.icon;
             return (
-              <div key={idx} className="bg-white rounded-lg p-8 border border-gray-200">
-                <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center mb-6">
-                  <Icon className="w-6 h-6 text-white" />
+              <div key={idx} className="rounded-lg border border-[#d7e8ff] bg-[#f8fcff] p-8">
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-[#06133a] text-white">
+                  <Icon className="h-6 w-6" />
                 </div>
 
-                <h3 className="text-lg font-semibold text-black mb-3">
+                <h3 className="mb-3 text-lg font-black text-[#06133a]">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-sm leading-relaxed text-[#526079]">
                   {feature.description}
                 </p>
               </div>
@@ -55,20 +54,19 @@ export function PremiumValueSection() {
           })}
         </div>
 
-        {/* Stats Section */}
-        <div className="border-t border-gray-200 pt-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="border-t border-[#d7e8ff] pt-14">
+          <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
             {[
               { number: "50K+", label: "Users" },
               { number: "99.9%", label: "Uptime" },
               { number: "2sec", label: "Delivery" },
-              { number: "₦500M+", label: "Volume" },
+              { number: "\u20a6500M+", label: "Volume" },
             ].map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <p className="text-3xl md:text-4xl font-bold text-black mb-2">
+              <div key={idx} className="rounded-lg bg-[#eef7ff] p-5 text-center">
+                <p className="mb-2 text-3xl font-black text-[#06133a] md:text-4xl">
                   {stat.number}
                 </p>
-                <p className="text-gray-600 font-medium text-sm">{stat.label}</p>
+                <p className="text-sm font-bold text-[#526079]">{stat.label}</p>
               </div>
             ))}
           </div>

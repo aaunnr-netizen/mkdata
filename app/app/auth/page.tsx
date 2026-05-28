@@ -1,34 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Loader2, User } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  Phone,
+  UserRound,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
 
-const T = {
-  bg: "#ffffff",
-  surface: "#f3f4f6",
-  card: "#ffffff",
-  border: "#e5e7eb",
-  blue: "#2563eb",
-  blueLight: "#dbeafe",
-  blueDim: "rgba(37, 99, 235, 0.1)",
-  green: "#10b981",
-  greenDim: "rgba(16, 185, 129, 0.1)",
-  text: "#1f2937",
-  textMid: "#6b7280",
-  textDim: "#9ca3af",
-  font: "'DM Sans', sans-serif",
-  mono: "'DM Mono', monospace",
-};
+type AuthMode = "login" | "signup";
 
-const fontImportStyle = `@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');`;
+const inputBase =
+  "h-12 w-full rounded-lg border border-[#cfe2fb] bg-white px-4 text-[15px] text-[#06133a] shadow-sm outline-none transition focus:border-[#008fef] focus:ring-4 focus:ring-[#008fef]/12";
 
 export default function AuthPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<AuthMode>("login");
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -47,7 +43,7 @@ export default function AuthPage() {
       const timeout = setTimeout(() => controller.abort(), 12000);
       try {
         const cacheBuster = `_cb=${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const res = await fetch(`/api/auth/me?${cacheBuster}`, { 
+        const res = await fetch(`/api/auth/me?${cacheBuster}`, {
           credentials: "include",
           cache: "no-store",
           signal: controller.signal,
@@ -60,8 +56,7 @@ export default function AuthPage() {
       finally {
         clearTimeout(timeout);
       }
-      
-      // Load saved phone for smart login
+
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("saved_phone");
         if (saved) {
@@ -74,7 +69,17 @@ export default function AuthPage() {
     checkAuth();
   }, [router]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const resetFormForMode = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setName("");
+    setEmail("");
+    setPhone(nextMode === "login" ? savedPhone : "");
+    setPin("");
+    setConfirmPin("");
+    setAcceptTerms(false);
+  };
+
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!phone || phone.length !== 11) {
       toast.error("Enter your 11-digit phone number to continue.");
@@ -95,7 +100,6 @@ export default function AuthPage() {
       });
 
       if (res.ok) {
-        // Save phone number for smart login next time
         if (typeof window !== "undefined") {
           localStorage.setItem("saved_phone", phone);
         }
@@ -112,7 +116,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || name.length < 2) {
       toast.error("Enter your full name to continue.");
@@ -173,419 +177,293 @@ export default function AuthPage() {
   };
 
   if (!hasCheckedAuth) {
-    return <div style={{ minHeight: "100vh", background: T.bg }} />;
+    return <div className="min-h-screen bg-[#f5faff]" />;
   }
 
   return (
-    <>
-      <style>{fontImportStyle}</style>
-      <div
-        style={{
-          minHeight: "100vh",
-          background: `linear-gradient(135deg, #f9fafb 0%, ${T.surface} 50%, #ffffff 100%)`,
-          fontFamily: T.font,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-        }}
-      >
+    <div className="min-h-screen bg-[linear-gradient(135deg,#e7f5ff_0%,#ffffff_44%,#eafaf2_100%)] px-4 py-6 text-[#06133a] sm:px-6">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            background: T.card,
-            borderRadius: 24,
-            border: `1px solid ${T.border}`,
-            padding: "40px 24px",
-            maxWidth: 380,
-            width: "100%",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.1)",
-          }}
+          transition={{ duration: 0.25 }}
+          className="w-full overflow-hidden rounded-lg border border-white bg-white/86 shadow-[0_24px_70px_rgba(0,16,64,0.14)] backdrop-blur-xl"
         >
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            style={{
-              width: 72,
-              height: 72,
-              margin: "0 auto 24px",
-              borderRadius: 20,
-              background: T.surface,
-              border: `2px solid ${T.border}`,
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <img
-              src="/logo.jpeg"
-              alt="MK DATA"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
-          </motion.div>
+          <div className="bg-[#06133a] p-6 text-white">
+            <div>
+              <img src="/logo.jpeg" alt="MK DATA" className="mb-5 h-16 w-16 rounded-lg bg-white object-cover p-1" />
+              <p className="mb-3 text-xs font-black uppercase text-[#71c7ff]">MK Data account</p>
+              <h1 className="mb-3 text-3xl font-black leading-tight">
+                Fast access to data, airtime, wallet and rewards.
+              </h1>
+              <p className="text-sm leading-6 text-white/72">
+                Sign in or create your account with your phone number and secure transaction PIN.
+              </p>
+            </div>
 
-          {/* Title */}
-          <h1 style={{ textAlign: "center", fontSize: 24, fontWeight: 700, color: T.text, margin: "0 0 8px" }}>
-            {mode === "login" ? "Welcome Back" : "Create Account"}
-          </h1>
-          <p style={{ textAlign: "center", fontSize: 13, color: T.textMid, margin: "0 0 32px" }}>
-            {mode === "login" ? "Sign in to your account" : "Get started in seconds"}
-          </p>
+            <div className="mt-5 grid gap-2">
+              {["Instant plan access", "Secure PIN checkout", "Rewards-ready wallet"].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-lg bg-white/8 px-3 py-2.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#00c76a]" />
+                  <span className="text-sm font-bold text-white/88">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          <AnimatePresence mode="wait">
-            {mode === "login" ? (
-              <motion.form
-                key="login"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onSubmit={handleLogin}
-                style={{ display: "flex", flexDirection: "column", gap: 16 }}
-              >
-                {/* Phone */}
+          <div className="p-5 sm:p-7">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
                 <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Phone</label>
-                  <div style={{ position: "relative" }}>
-                    <User size={16} color={T.textDim} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+                  <p className="text-xs font-black uppercase text-[#008fef]">Welcome to</p>
+                  <h1 className="text-2xl font-black text-[#06133a]">MK DATA</h1>
+                </div>
+              </div>
+              <a href="/" className="text-sm font-black text-[#008fef] hover:text-[#0060d0]">
+                Home
+              </a>
+            </div>
+
+            <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg border border-[#d7e8ff] bg-[#eef7ff] p-1">
+              {[
+                ["login", "Sign in"],
+                ["signup", "Create account"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => resetFormForMode(value as AuthMode)}
+                  className={`h-11 rounded-md text-sm font-black transition ${
+                    mode === value
+                      ? "bg-white text-[#008fef] shadow-sm"
+                      : "text-[#526079] hover:text-[#06133a]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mb-6">
+              <h2 className="mb-2 text-3xl font-black text-[#06133a]">
+                {mode === "login" ? "Sign in to your account" : "Get started in seconds"}
+              </h2>
+              <p className="text-sm leading-6 text-[#526079]">
+                {mode === "login"
+                  ? "Continue with your phone number and secure 6-digit PIN."
+                  : "Create your MK DATA profile with the same secure PIN flow."}
+              </p>
+              {mode === "login" && savedPhone ? (
+                <p className="mt-3 inline-flex rounded-full bg-[#eafaf2] px-3 py-1 text-xs font-bold text-[#00a040]">
+                  Saved number restored
+                </p>
+              ) : null}
+            </div>
+
+            <AnimatePresence mode="wait">
+              {mode === "login" ? (
+                <motion.form
+                  key="login"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  onSubmit={handleLogin}
+                  className="space-y-5"
+                >
+                  <div>
+                    <label className="mb-2 block text-xs font-black uppercase text-[#526079]">Phone</label>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        maxLength={11}
+                        placeholder="08012345678"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                        className={`${inputBase} pl-11 font-mono`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-black uppercase text-[#526079]">PIN</label>
+                    <div className="relative">
+                      <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                      <input
+                        type={showPin ? "text" : "password"}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="current-password"
+                        maxLength={6}
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className={`${inputBase} px-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPin((value) => !value)}
+                        className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
+                        aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                      >
+                        {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#008fef] text-sm font-black text-white shadow-[0_14px_30px_rgba(0,143,239,0.24)] transition hover:bg-[#0060d0] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {loading ? "Signing in..." : "Sign in"}
+                    {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+                  </button>
+                </motion.form>
+              ) : (
+                <motion.form
+                  key="signup"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  onSubmit={handleSignup}
+                  className="space-y-5"
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-xs font-black uppercase text-[#526079]">Name</label>
+                      <div className="relative">
+                        <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                        <input
+                          type="text"
+                          autoComplete="name"
+                          placeholder="John Doe"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className={`${inputBase} pl-11`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-xs font-black uppercase text-[#526079]">Email</label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value.trim())}
+                          className={`${inputBase} pl-11`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-xs font-black uppercase text-[#526079]">Phone</label>
+                      <div className="relative">
+                        <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa0bc]" />
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel"
+                          maxLength={11}
+                          placeholder="08012345678"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                          className={`${inputBase} pl-11 font-mono`}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-black uppercase text-[#526079]">PIN</label>
+                      <div className="relative">
+                        <input
+                          type={showPin ? "text" : "password"}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          autoComplete="new-password"
+                          maxLength={6}
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className={`${inputBase} pr-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPin((value) => !value)}
+                          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
+                          aria-label={showPin ? "Hide PIN" : "Show PIN"}
+                        >
+                          {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-black uppercase text-[#526079]">Confirm</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPin ? "text" : "password"}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          autoComplete="new-password"
+                          maxLength={6}
+                          value={confirmPin}
+                          onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className={`${inputBase} pr-11 text-center font-mono text-lg font-black tracking-[0.18em]`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPin((value) => !value)}
+                          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#008fef] hover:bg-[#eef7ff]"
+                          aria-label={showConfirmPin ? "Hide confirm PIN" : "Show confirm PIN"}
+                        >
+                          {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d7e8ff] bg-[#f8fcff] p-3">
                     <input
-                      type="tel"
-                      maxLength={11}
-                      placeholder="08012345678"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                      style={{
-                        width: "100%",
-                        padding: "13px 12px 13px 36px",
-                        borderRadius: 14,
-                        background: T.surface,
-                        border: `1.5px solid ${T.border}`,
-                        fontFamily: T.mono,
-                        fontSize: 15,
-                        color: T.text,
-                        outline: "none",
-                        boxSizing: "border-box",
-                        transition: "all 0.2s",
-                      }}
-                      onFocus={(e) => {
-                        (e.target as HTMLInputElement).style.borderColor = T.blue;
-                        (e.target as HTMLInputElement).style.backgroundColor = T.blueLight;
-                      }}
-                      onBlur={(e) => {
-                        (e.target as HTMLInputElement).style.borderColor = T.border;
-                        (e.target as HTMLInputElement).style.backgroundColor = T.surface;
-                      }}
+                      type="checkbox"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-[#cfe2fb] accent-[#008fef]"
                     />
-                  </div>
-                </div>
+                    <span className="text-sm leading-5 text-[#526079]">I agree to terms</span>
+                  </label>
 
-                {/* PIN */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: T.textDim, textTransform: "uppercase" }}>PIN</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPin(!showPin)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: T.blue, fontSize: 12, fontWeight: 600 }}
-                    >
-                      {showPin ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <input
-                    type={showPin ? "text" : "password"}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 14,
-                      background: pin ? T.blueDim : T.surface,
-                      border: `1.5px solid ${pin ? T.blue : T.border}`,
-                      fontFamily: T.mono,
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: T.text,
-                      outline: "none",
-                      transition: "all 0.2s",
-                      boxSizing: "border-box",
-                      letterSpacing: "0.18em",
-                    }}
-                  />
-                </div>
-
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    marginTop: 20,
-                    padding: "14px 24px",
-                    borderRadius: 14,
-                    background: T.blue,
-                    border: "none",
-                    color: "#fff",
-                    fontFamily: T.font,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    opacity: loading ? 0.7 : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
-                  {loading && <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />}
-                  {loading ? "Signing in..." : "Sign In"}
-                </motion.button>
-
-                <p style={{ textAlign: "center", fontSize: 13, color: T.textMid, marginTop: 16 }}>
-                  No account?{" "}
                   <button
-                    type="button"
-                      onClick={() => {
-                        setMode("signup");
-                        setName("");
-                        setEmail("");
-                        setPhone("");
-                        setPin("");
-                        setConfirmPin("");
-                      }}
-                    style={{ background: "none", border: "none", color: T.blue, cursor: "pointer", fontWeight: 600, fontSize: 13 }}
+                    type="submit"
+                    disabled={loading}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#00a040] text-sm font-black text-white shadow-[0_14px_30px_rgba(0,160,64,0.22)] transition hover:bg-[#008735] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    Create
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {loading ? "Creating..." : "Create account"}
+                    {!loading ? <ArrowRight className="h-4 w-4" /> : null}
                   </button>
-                </p>
-              </motion.form>
-            ) : (
-              <motion.form
-                key="signup"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onSubmit={handleSignup}
-                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                </motion.form>
+              )}
+            </AnimatePresence>
+
+            <p className="mt-7 text-center text-sm text-[#526079]">
+              {mode === "login" ? "No account?" : "Have account?"}{" "}
+              <button
+                type="button"
+                onClick={() => resetFormForMode(mode === "login" ? "signup" : "login")}
+                className="font-black text-[#008fef] hover:text-[#0060d0]"
               >
-                {/* Name */}
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Name</label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "13px 12px",
-                      borderRadius: 14,
-                      background: T.surface,
-                      border: `1.5px solid ${T.border}`,
-                      fontFamily: T.font,
-                      fontSize: 15,
-                      color: T.text,
-                      outline: "none",
-                      boxSizing: "border-box",
-                      transition: "all 0.2s",
-                    }}
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Email</label>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value.trim())}
-                    style={{
-                      width: "100%",
-                      padding: "13px 12px",
-                      borderRadius: 14,
-                      background: T.surface,
-                      border: `1.5px solid ${T.border}`,
-                      fontFamily: T.font,
-                      fontSize: 15,
-                      color: T.text,
-                      outline: "none",
-                      boxSizing: "border-box",
-                      transition: "all 0.2s",
-                    }}
-                  />
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Phone</label>
-                  <input
-                    type="tel"
-                    maxLength={11}
-                    placeholder="08012345678"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                    style={{
-                      width: "100%",
-                      padding: "13px 12px",
-                      borderRadius: 14,
-                      background: T.surface,
-                      border: `1.5px solid ${T.border}`,
-                      fontFamily: T.mono,
-                      fontSize: 15,
-                      color: T.text,
-                      outline: "none",
-                      boxSizing: "border-box",
-                      transition: "all 0.2s",
-                    }}
-                  />
-                </div>
-
-                {/* PIN */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: T.textDim, textTransform: "uppercase" }}>PIN</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPin(!showPin)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: T.blue, fontSize: 12, fontWeight: 600 }}
-                    >
-                      {showPin ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <input
-                    type={showPin ? "text" : "password"}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 14,
-                      background: pin ? T.blueDim : T.surface,
-                      border: `1.5px solid ${pin ? T.blue : T.border}`,
-                      fontFamily: T.mono,
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: T.text,
-                      outline: "none",
-                      transition: "all 0.2s",
-                      boxSizing: "border-box",
-                      letterSpacing: "0.18em",
-                    }}
-                  />
-                </div>
-
-                {/* Confirm PIN */}
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: T.textDim, textTransform: "uppercase" }}>Confirm</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPin(!showConfirmPin)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: T.blue, fontSize: 12, fontWeight: 600 }}
-                    >
-                      {showConfirmPin ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <input
-                    type={showConfirmPin ? "text" : "password"}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    value={confirmPin}
-                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 14,
-                      background: confirmPin ? T.greenDim : T.surface,
-                      border: `1.5px solid ${confirmPin ? T.green : T.border}`,
-                      fontFamily: T.mono,
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: T.text,
-                      outline: "none",
-                      transition: "all 0.2s",
-                      boxSizing: "border-box",
-                      letterSpacing: "0.18em",
-                    }}
-                  />
-                </div>
-
-                {/* Terms */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <input
-                    type="checkbox"
-                    checked={acceptTerms}
-                    onChange={(e) => setAcceptTerms(e.target.checked)}
-                    style={{ marginTop: 4, width: 18, height: 18, cursor: "pointer", accentColor: T.blue }}
-                  />
-                  <label style={{ fontSize: 12, color: T.textMid, cursor: "pointer" }}>I agree to terms</label>
-                </div>
-
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    marginTop: 20,
-                    padding: "14px 24px",
-                    borderRadius: 14,
-                    background: T.green,
-                    border: "none",
-                    color: "#fff",
-                    fontFamily: T.font,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    opacity: loading ? 0.7 : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
-                  {loading && <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />}
-                  {loading ? "Creating..." : "Create Account"}
-                </motion.button>
-
-                <p style={{ textAlign: "center", fontSize: 13, color: T.textMid, marginTop: 16 }}>
-                  Have account?{" "}
-                  <button
-                    type="button"
-                      onClick={() => {
-                        setMode("login");
-                        setName("");
-                        setEmail("");
-                        setPhone("");
-                        setPin("");
-                        setConfirmPin("");
-                      }}
-                    style={{ background: "none", border: "none", color: T.blue, cursor: "pointer", fontWeight: 600, fontSize: 13 }}
-                  >
-                    Sign in
-                  </button>
-                </p>
-              </motion.form>
-            )}
-          </AnimatePresence>
+                {mode === "login" ? "Create" : "Sign in"}
+              </button>
+            </p>
+          </div>
         </motion.div>
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </>
+    </div>
   );
 }

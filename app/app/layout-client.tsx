@@ -62,13 +62,13 @@ export default function AppLayoutClient({
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-0 bg-white">
+    <div className="min-h-screen flex items-center justify-center p-0 bg-[#f5faff]">
       {/* Phone mockup shadow for desktop */}
       <div className="hidden md:block fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-        <div className="shadow-2xl rounded-[2.5rem] w-[430px] h-[90vh] bg-gray-200/50 blur-2xl" />
+        <div className="shadow-2xl rounded-[2.5rem] w-[430px] h-[90vh] bg-[#008fef]/10 blur-2xl" />
       </div>
       <div
-        className="w-full max-w-[430px] min-h-screen relative overflow-hidden z-10 bg-white"
+        className="w-full max-w-[430px] min-h-screen relative overflow-hidden z-10 bg-[#f5faff]"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
