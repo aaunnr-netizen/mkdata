@@ -2686,7 +2686,7 @@ function TabBar({
       <div
         style={{
           width: "100%",
-          maxWidth: 430,
+          maxWidth: 390,
           borderRadius: 26,
           background: "rgba(255,255,255,0.95)",
           backdropFilter: "blur(18px)",
@@ -3102,7 +3102,7 @@ export default function DashboardPage() {
     <>
       <style>{fontStyle}</style>
 
-      <div style={{ minHeight: "100vh", background: T.bg, paddingBottom: activeTab === "buy" || showRewards ? 32 : 108 }}>
+      <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: activeTab === "buy" || showRewards ? 28 : 104 }}>
         <div
           style={{
             position: "sticky",
@@ -3115,9 +3115,9 @@ export default function DashboardPage() {
         >
           <div
             style={{
-              maxWidth: 520,
+              maxWidth: 390,
               margin: "0 auto",
-              padding: "14px 20px",
+              padding: "12px 16px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -3159,7 +3159,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <main style={{ maxWidth: 520, margin: "0 auto", padding: "20px 20px 0" }}>
+        <main style={{ maxWidth: 390, margin: "0 auto", padding: "16px 16px 0" }}>
           <BroadcastBanner notice={broadcasts[0] || null} onDismiss={() => broadcasts[0] && dismissBroadcast(broadcasts[0].id)} />
 
           {showRewards ? (

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
-  CheckCircle2,
   Eye,
   EyeOff,
   Loader2,
@@ -181,39 +180,18 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#e7f5ff_0%,#ffffff_44%,#eafaf2_100%)] px-4 py-6 text-[#06133a] sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl items-center justify-center">
+    <div className="min-h-[100dvh] bg-[linear-gradient(135deg,#e7f5ff_0%,#ffffff_44%,#eafaf2_100%)] px-4 py-4 text-[#06133a]">
+      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-[390px] items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="w-full overflow-hidden rounded-lg border border-white bg-white/86 shadow-[0_24px_70px_rgba(0,16,64,0.14)] backdrop-blur-xl"
+          className="w-full overflow-hidden rounded-lg border border-white bg-white/92 shadow-[0_18px_48px_rgba(0,16,64,0.12)] backdrop-blur-xl"
         >
-          <div className="bg-[#06133a] p-6 text-white">
-            <div>
-              <img src="/logo.jpeg" alt="MK DATA" className="mb-5 h-16 w-16 rounded-lg bg-white object-cover p-1" />
-              <p className="mb-3 text-xs font-black uppercase text-[#71c7ff]">MK Data account</p>
-              <h1 className="mb-3 text-3xl font-black leading-tight">
-                Fast access to data, airtime, wallet and rewards.
-              </h1>
-              <p className="text-sm leading-6 text-white/72">
-                Sign in or create your account with your phone number and secure transaction PIN.
-              </p>
-            </div>
-
-            <div className="mt-5 grid gap-2">
-              {["Instant plan access", "Secure PIN checkout", "Rewards-ready wallet"].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-lg bg-white/8 px-3 py-2.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#00c76a]" />
-                  <span className="text-sm font-bold text-white/88">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-7">
+          <div className="p-5 sm:p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
+                <img src="/logo.jpeg" alt="MK DATA" className="h-12 w-12 rounded-lg bg-white object-cover p-0.5 shadow-sm" />
                 <div>
                   <p className="text-xs font-black uppercase text-[#008fef]">Welcome to</p>
                   <h1 className="text-2xl font-black text-[#06133a]">MK DATA</h1>
