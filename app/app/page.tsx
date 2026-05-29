@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
+import { InAppAdminShell } from "./admin-in-app";
 
 const fontStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
@@ -65,6 +66,7 @@ type MKBiometricBridge = {
   isAvailable?: () => BridgeValue<boolean>;
   hasCredential?: (phone: string) => BridgeValue<boolean>;
   authenticate?: (phone: string) => BridgeValue<void>;
+  enrollCredential?: (phone: string, token: string) => BridgeValue<void>;
   saveCredential?: (phone: string, token: string) => BridgeValue<void>;
   clearCredential?: (phone: string) => BridgeValue<void>;
 };
@@ -2046,7 +2048,14 @@ function ModernProfileTab({
   const handleEnrollFingerprint = async () => {
     const bridge = getBiometricBridge();
 
-    if (typeof bridge?.saveCredential !== "function") {
+    const enrollWithBridge =
+      typeof bridge?.enrollCredential === "function"
+        ? bridge.enrollCredential.bind(bridge)
+        : typeof bridge?.saveCredential === "function"
+          ? bridge.saveCredential.bind(bridge)
+          : null;
+
+    if (!enrollWithBridge) {
       toast.error("Fingerprint setup is only available inside the Android app.");
       return;
     }
@@ -2071,7 +2080,7 @@ function ModernProfileTab({
         return;
       }
 
-      await Promise.resolve(bridge.saveCredential(user.phone, payload.token));
+      await Promise.resolve(enrollWithBridge(user.phone, payload.token));
       if (typeof window !== "undefined") {
         localStorage.setItem("saved_phone", user.phone);
       }
@@ -3620,12 +3629,12 @@ function AdminManageTab() {
       />
 
       <div style={{ display: "grid", gap: 10 }}>
-        <AdminActionLink icon={<User size={17} color={T.blue} />} title="Users" subtitle="Accounts, roles, wallet adjustments" metric={summary.users.toLocaleString()} href="/admin/users" />
-        <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Agents" subtitle="Applications and agent status" metric={summary.agents.toLocaleString()} href="/admin/agents" />
-        <AdminActionLink icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="API A, API B, API C plan catalog" metric={summary.plans.toLocaleString()} href="/admin/plans" />
-        <AdminActionLink icon={<Lightbulb size={17} color={T.amber} />} title="API C services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} href="/admin/services" />
-        <AdminActionLink icon={<CreditCard size={17} color={T.blueDark} />} title="Pricing" subtitle="Customer and agent pricing controls" href="/admin/pricing" />
-        <AdminActionLink icon={<Phone size={17} color={T.green} />} title="Airtime cash" subtitle="Conversion fee setup" metric={summary.airtimeCash} href="/admin/airtime-cash" />
+        <AdminActionLink icon={<User size={17} color={T.blue} />} title="Users" subtitle="Accounts, roles, wallet adjustments" metric={summary.users.toLocaleString()} onClick={() => toast.info("Users now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Agents" subtitle="Applications and agent status" metric={summary.agents.toLocaleString()} onClick={() => toast.info("Agents now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="API A, API B, API C plan catalog" metric={summary.plans.toLocaleString()} onClick={() => toast.info("Data plans now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<Lightbulb size={17} color={T.amber} />} title="API C services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} onClick={() => toast.info("API C services now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<CreditCard size={17} color={T.blueDark} />} title="Pricing" subtitle="Customer and agent pricing controls" onClick={() => toast.info("Pricing now opens inside the /app Manage tab.")} />
+        <AdminActionLink icon={<Phone size={17} color={T.green} />} title="Airtime cash" subtitle="Conversion fee setup" metric={summary.airtimeCash} onClick={() => toast.info("Airtime cash now opens inside the /app Manage tab.")} />
       </div>
 
       <div style={{ marginTop: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 18, padding: 14 }}>
@@ -3705,10 +3714,10 @@ function AdminOpsTab() {
       />
 
       <div style={{ display: "grid", gap: 10, marginBottom: 15 }}>
-        <AdminActionLink icon={<Receipt size={17} color={T.blue} />} title="Transactions" subtitle="Filter and inspect all orders" metric={state.transactions.length.toLocaleString()} href="/admin/transactions" />
-        <AdminActionLink icon={<MessageCircle size={17} color={T.green} />} title="Broadcasts" subtitle="Customer notices and promos" metric={state.notices.toLocaleString()} href="/admin/notices" />
-        <AdminActionLink icon={<Sparkles size={17} color={T.amber} />} title="Rewards" subtitle="Reward catalog and resets" metric={state.rewards.toLocaleString()} href="/admin/rewards" />
-        <AdminActionLink icon={<Wallet size={17} color={T.blueDark} />} title="Webhooks" subtitle="Payment webhook events" metric={state.webhooks.toLocaleString()} href="/admin/webhooks" />
+        <AdminActionLink icon={<Receipt size={17} color={T.blue} />} title="Transactions" subtitle="Filter and inspect all orders" metric={state.transactions.length.toLocaleString()} onClick={() => toast.info("Transactions now open inside the /app Ops tab.")} />
+        <AdminActionLink icon={<MessageCircle size={17} color={T.green} />} title="Broadcasts" subtitle="Customer notices and promos" metric={state.notices.toLocaleString()} onClick={() => toast.info("Broadcasts now open inside the /app Ops tab.")} />
+        <AdminActionLink icon={<Sparkles size={17} color={T.amber} />} title="Rewards" subtitle="Reward catalog and resets" metric={state.rewards.toLocaleString()} onClick={() => toast.info("Rewards now open inside the /app Ops tab.")} />
+        <AdminActionLink icon={<Wallet size={17} color={T.blueDark} />} title="Webhooks" subtitle="Payment webhook events" metric={state.webhooks.toLocaleString()} onClick={() => toast.info("Webhooks now open inside the /app Ops tab.")} />
       </div>
 
       <div style={{ border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 22, padding: 14 }}>
@@ -3772,7 +3781,7 @@ function AdminProfileTab({
 
         <div style={{ display: "grid", gap: 10 }}>
           <AdminActionLink icon={<CreditCard size={17} color={T.blue} />} title="Change PIN" subtitle="Update the admin transaction PIN" onClick={() => setSecurityOpen(true)} />
-          <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Legacy admin" subtitle="Open the full admin fallback" href="/admin" />
+          <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Admin workspace" subtitle="Everything is now inside this app" onClick={() => toast.info("Admin tools are available inside the /app tabs.")} />
           <AdminActionLink icon={<Headphones size={17} color={T.green} />} title="Support line" subtitle="09066120642" href="https://wa.me/2349066120642" />
           <AdminActionLink icon={<LogOut size={17} color={T.rose} />} title="Sign out" subtitle="Log out from this device" onClick={onLogout} />
         </div>
@@ -4528,11 +4537,17 @@ export default function DashboardPage() {
     return (
       <>
         <style>{fontStyle}</style>
-        <AdminAppShell
+        <InAppAdminShell
           user={user}
-          purchaseProps={purchaseScreenProps}
+          buyMode={purchaseMode}
           onPurchaseModeChange={openAdminPurchase}
           onLogout={handleLogout}
+          renderBuy={(onBack) => (
+            <PurchaseScreen
+              {...purchaseScreenProps}
+              onBack={onBack}
+            />
+          )}
         />
         <PurchaseSuccessScreen
           state={successState}

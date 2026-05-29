@@ -25,6 +25,7 @@ type MKBiometricBridge = {
   isAvailable?: () => BridgeValue<boolean>;
   hasCredential?: (phone: string) => BridgeValue<boolean>;
   authenticate?: (phone: string) => BridgeValue<void>;
+  enrollCredential?: (phone: string, token: string) => BridgeValue<void>;
   saveCredential?: (phone: string, token: string) => BridgeValue<void>;
   clearCredential?: (phone: string) => BridgeValue<void>;
 };
@@ -128,11 +129,20 @@ export default function AuthPage() {
 
   const enrollBiometricCredential = useCallback(async (loginPhone: string) => {
     const bridge = getBiometricBridge();
-    if (typeof bridge?.saveCredential !== "function") return;
+    const enrollWithBridge =
+      typeof bridge?.enrollCredential === "function"
+        ? bridge.enrollCredential.bind(bridge)
+        : typeof bridge?.saveCredential === "function"
+          ? bridge.saveCredential.bind(bridge)
+          : null;
+
+    if (!enrollWithBridge) return;
 
     try {
       const available = await bridgeIsAvailable();
       if (!available) return;
+
+      toast.info("Set up fingerprint login on this phone.");
 
       const res = await fetch("/api/auth/biometric/enroll", {
         method: "POST",
@@ -144,10 +154,12 @@ export default function AuthPage() {
 
       const payload = await res.json();
       if (payload?.success && payload?.phone === loginPhone && payload?.token) {
-        await Promise.resolve(bridge.saveCredential(loginPhone, payload.token));
+        await Promise.resolve(enrollWithBridge(loginPhone, payload.token));
+        toast.success("Fingerprint login is ready on this phone.");
       }
     } catch {
       // Biometric enrollment is optional; PIN login must still complete.
+      toast.info("Fingerprint setup was skipped. You can continue with PIN.");
     }
   }, []);
 
