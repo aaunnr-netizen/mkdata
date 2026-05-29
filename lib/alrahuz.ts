@@ -127,7 +127,16 @@ async function postToAlrahuz(
   }
 ): Promise<AlrahuzResult> {
   try {
-    const response = await axios.post(`${getBaseUrl()}${path}`, body, {
+    const url = `${getBaseUrl()}${path}`;
+    console.log("[ALRAHUZ REQUEST]", {
+      url,
+      body,
+      reference: options.reference,
+      tokenKind: options.tokenKind || "default",
+      timestamp: new Date().toISOString(),
+    });
+
+    const response = await axios.post(url, body, {
       headers: {
         Authorization: `Token ${getToken(options.tokenKind)}`,
         "Content-Type": "application/json",
@@ -137,6 +146,13 @@ async function postToAlrahuz(
     });
 
     const data = response.data;
+    console.log("[ALRAHUZ RESPONSE]", {
+      url,
+      status: response.status,
+      data,
+      reference: options.reference,
+      timestamp: new Date().toISOString(),
+    });
 
     if (response.status >= 400 || isFailurePayload(data)) {
       return {
@@ -159,8 +175,10 @@ async function postToAlrahuz(
     console.error("[ALRAHUZ API ERROR]", {
       message: error.message,
       status: error.response?.status,
+      response: error.response?.data,
       path,
       reference: options.reference,
+      timestamp: new Date().toISOString(),
     });
 
     if (error.code === "ECONNABORTED") {

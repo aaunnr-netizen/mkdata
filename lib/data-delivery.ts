@@ -3,6 +3,7 @@ import * as smeplug from "@/lib/smeplug";
 import * as saiful from "@/lib/saiful";
 import * as alrahuz from "@/lib/alrahuz";
 import { normalizeProviderFailureMessage } from "@/lib/purchase-utils";
+import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { Transaction } from "@prisma/client";
 
 /**
@@ -25,26 +26,28 @@ export async function deliverGuestData(transaction: Transaction) {
     }
 
     let result;
+    const providerIds = getDataPlanProviderIds(plan);
 
     // Call appropriate API based on plan's API source
     if (plan.apiSource === "API_A") {
       result = await smeplug.purchaseData({
-        externalNetworkId: plan.externalNetworkId,
-        externalPlanId: plan.externalPlanId,
+        externalNetworkId: providerIds.networkId,
+        externalPlanId: providerIds.planId,
         phone: transaction.phone,
         reference: transaction.reference,
       });
     } else if (plan.apiSource === "API_B") {
       result = await saiful.purchaseData({
-        plan: plan.externalPlanId,
+        plan: providerIds.planId,
         mobileNumber: transaction.phone,
         network: plan.network,
+        networkId: providerIds.networkId,
         reference: transaction.reference,
       });
     } else {
       result = await alrahuz.purchaseData({
-        network: plan.externalNetworkId,
-        plan: plan.externalPlanId,
+        network: providerIds.networkId,
+        plan: providerIds.planId,
         mobileNumber: transaction.phone,
         reference: transaction.reference,
       });

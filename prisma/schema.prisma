@@ -195,6 +195,12 @@ model Plan {
   apiSource           ApiSource
   externalPlanId      Int
   externalNetworkId   Int
+  apiAPlanId          Int?
+  apiANetworkId       Int?
+  apiBPlanId          Int?
+  apiBNetworkId       Int?
+  apiCPlanId          Int?
+  apiCNetworkId       Int?
   isActive            Boolean    @default(true)
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt

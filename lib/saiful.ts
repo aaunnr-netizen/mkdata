@@ -4,6 +4,7 @@ interface SaifulPurchaseParams {
   plan: number;  // Plan ID as integer
   mobileNumber: string;
   network: string;
+  networkId?: number;
   reference: string;
 }
 
@@ -15,7 +16,7 @@ interface SaifulResponse {
 
 export async function purchaseData(params: SaifulPurchaseParams): Promise<SaifulResponse> {
   try {
-    const { plan, mobileNumber, network, reference } = params;
+    const { plan, mobileNumber, network, networkId: explicitNetworkId, reference } = params;
 
     const SAIFUL_API_URL = process.env.SAIFUL_API_URL || "https://app.saifulegendconnect.com/api";
     const SAIFUL_API_KEY = process.env.SAIFUL_API_KEY;
@@ -32,7 +33,7 @@ export async function purchaseData(params: SaifulPurchaseParams): Promise<Saiful
       "AIRTEL": 4,
     };
     
-    const networkId = networkMap[network.toUpperCase()] || 1;
+    const networkId = explicitNetworkId || networkMap[network.toUpperCase()] || 1;
 
     const requestBody = {
       plan: plan,  // Send plan as integer ID, not string
@@ -133,11 +134,12 @@ interface AirtimePurchaseParams {
   mobileNumber: string;
   amount: number;
   network: number; // Network ID: MTN=1, Glo=2, 9Mobile=3, Airtel=4
+  reference?: string;
 }
 
 export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<SaifulResponse> {
   try {
-    const { mobileNumber, amount, network } = params;
+    const { mobileNumber, amount, network, reference } = params;
 
     // Saiful API endpoint and authentication
     const SAIFUL_API_URL = process.env.SAIFUL_API_URL || "https://app.saifulegendconnect.com/api";
@@ -146,14 +148,22 @@ export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<Sa
     if (!SAIFUL_API_KEY) {
       throw new Error("Saiful API key not configured");
     }
+    const requestBody = {
+      mobile_number: mobileNumber,
+      amount,
+      network,
+    };
+
+    console.log("[SAIFUL AIRTIME REQUEST]", {
+      url: `${SAIFUL_API_URL}/topup`,
+      body: requestBody,
+      reference,
+      timestamp: new Date().toISOString(),
+    });
 
     const response = await axios.post(
       `${SAIFUL_API_URL}/topup`,
-      {
-        mobile_number: mobileNumber,
-        amount,
-        network,
-      },
+      requestBody,
       {
         headers: {
           "Authorization": `Bearer ${SAIFUL_API_KEY}`,
@@ -162,6 +172,13 @@ export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<Sa
         timeout: 30000, // 30 seconds
       }
     );
+
+    console.log("[SAIFUL AIRTIME RESPONSE]", {
+      status: response.status,
+      data: response.data,
+      reference,
+      timestamp: new Date().toISOString(),
+    });
 
     // Parse response - Saiful returns data nested under 'data' key
     const responseData = response.data?.data || response.data;

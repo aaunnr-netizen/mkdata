@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceAdminMutationGuard, requireAdmin } from "@/lib/adminAuth";
+import { getExternalIdsForSource } from "@/lib/data-plan-provider-ids";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
@@ -12,8 +13,12 @@ const planSchema = z
     user_price: z.number().min(50, "Minimum user price is N50"),
     agent_price: z.number().min(50, "Minimum agent price is N50"),
     apiSource: z.enum(["API_A", "API_B", "API_C"]),
-    externalPlanId: z.number().int().positive(),
-    externalNetworkId: z.number().int().positive(),
+    apiAPlanId: z.number().int().positive("SMEPlug plan ID is required"),
+    apiANetworkId: z.number().int().positive("SMEPlug network ID is required"),
+    apiBPlanId: z.number().int().positive("Saiful plan ID is required"),
+    apiBNetworkId: z.number().int().positive("Saiful network ID is required"),
+    apiCPlanId: z.number().int().positive("Alrahuz plan ID is required"),
+    apiCNetworkId: z.number().int().positive("Alrahuz network ID is required"),
   })
   .refine((data) => data.agent_price <= data.user_price, {
     message: "Agent price cannot exceed user price",
@@ -52,12 +57,20 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = planSchema.parse(body);
+    const activeIds = getExternalIdsForSource(data);
+
+    if (!activeIds.externalPlanId || !activeIds.externalNetworkId) {
+      return NextResponse.json(
+        { error: "Selected provider plan and network IDs are required" },
+        { status: 400 }
+      );
+    }
 
     const existing = await prisma.plan.findFirst({
       where: {
         apiSource: data.apiSource,
-        externalPlanId: data.externalPlanId,
-        externalNetworkId: data.externalNetworkId,
+        externalPlanId: activeIds.externalPlanId,
+        externalNetworkId: activeIds.externalNetworkId,
       },
     });
 
@@ -71,6 +84,8 @@ export async function POST(req: NextRequest) {
     const plan = await prisma.plan.create({
       data: {
         ...data,
+        externalPlanId: activeIds.externalPlanId,
+        externalNetworkId: activeIds.externalNetworkId,
         price: data.user_price,
         isActive: true,
       },

@@ -4,6 +4,7 @@ import { purchaseData as purchaseFromSmeplug } from "@/lib/smeplug";
 import { purchaseData as purchaseFromSaiful } from "@/lib/saiful";
 import { purchaseData as purchaseFromAlrahuz } from "@/lib/alrahuz";
 import { findRecentDuplicateTransaction, normalizeProviderFailureMessage, DATA_INSUFFICIENT_FUNDS_MESSAGE } from "@/lib/purchase-utils";
+import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { getPlanPriceForUser } from "@/lib/pricing";
 import { checkAndAwardRewards } from "@/lib/rewards";
 import { getSessionUser } from "@/lib/auth";
@@ -239,24 +240,26 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      const providerIds = getDataPlanProviderIds(plan);
       const apiResult =
         plan.apiSource === "API_A"
           ? await purchaseFromSmeplug({
-              externalNetworkId: plan.externalNetworkId,
-              externalPlanId: plan.externalPlanId,
+              externalNetworkId: providerIds.networkId,
+              externalPlanId: providerIds.planId,
               phone: recipientPhone,
               reference,
             })
           : plan.apiSource === "API_B"
             ? await purchaseFromSaiful({
-                plan: plan.externalPlanId,
+                plan: providerIds.planId,
                 mobileNumber: recipientPhone,
                 network: plan.network,
+                networkId: providerIds.networkId,
                 reference,
               })
             : await purchaseFromAlrahuz({
-                network: plan.externalNetworkId,
-                plan: plan.externalPlanId,
+                network: providerIds.networkId,
+                plan: providerIds.planId,
                 mobileNumber: recipientPhone,
                 reference,
               });

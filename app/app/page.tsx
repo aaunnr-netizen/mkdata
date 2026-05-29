@@ -37,24 +37,28 @@ import { InAppAdminShell } from "./admin-in-app";
 
 const fontStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
+  body { background: #030b1f; }
+  input, select, textarea { color: #f8fbff; caret-color: #25b8ff; }
+  option { background: #0a1734; color: #f8fbff; }
+  input::placeholder, textarea::placeholder { color: #7fa5d8; }
 `;
 
 const T = {
-  bg: "#f5faff",
-  surface: "#eef7ff",
-  card: "#ffffff",
-  border: "#d7e8ff",
-  borderStrong: "#b8d5fa",
-  blueLight: "#e7f5ff",
-  blue: "#008fef",
+  bg: "#030b1f",
+  surface: "#0a1734",
+  card: "#0f2146",
+  border: "#1d3f73",
+  borderStrong: "#2d63a8",
+  blueLight: "rgba(0, 143, 239, 0.16)",
+  blue: "#25b8ff",
   blueDark: "#06133a",
-  blueShadow: "0 18px 44px rgba(0, 143, 239, 0.16)",
-  green: "#00a040",
-  amber: "#d97706",
-  rose: "#e11d48",
-  text: "#06133a",
-  textMid: "#526079",
-  textDim: "#8aa0bc",
+  blueShadow: "0 20px 54px rgba(0, 143, 239, 0.28)",
+  green: "#17d96f",
+  amber: "#facc15",
+  rose: "#fb7185",
+  text: "#f8fbff",
+  textMid: "#bed4f7",
+  textDim: "#7fa5d8",
   font: "'DM Sans', sans-serif",
   mono: "'DM Mono', monospace",
 };
@@ -1232,7 +1236,7 @@ function HomeTab({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: "linear-gradient(135deg, #ffffff 0%, #e7f5ff 54%, #eafaf2 100%)",
+          background: "radial-gradient(circle at 12% 0%, rgba(37,184,255,0.36) 0%, rgba(6,19,58,0.96) 38%, rgba(3,11,31,1) 100%)",
           borderRadius: 22,
           padding: 16,
           border: `1px solid ${T.borderStrong}`,
@@ -1257,7 +1261,7 @@ function HomeTab({
                 fontSize: "clamp(20px, 6vw, 30px)",
                 lineHeight: 1,
                 fontWeight: 900,
-                color: T.blueDark,
+                color: T.text,
                 margin: 0,
                 whiteSpace: "nowrap",
                 overflow: "hidden",
@@ -1312,7 +1316,7 @@ function HomeTab({
             border: `1px solid ${T.border}`,
             borderRadius: 16,
             padding: "9px 11px",
-            background: "rgba(255,255,255,0.82)",
+            background: "rgba(3,11,31,0.58)",
           }}
         >
           {primaryAccount ? (
@@ -2573,7 +2577,7 @@ function PurchaseScreen({
                       style={{
                         border: `1.5px solid ${selected ? T.blue : T.border}`,
                         borderRadius: 15,
-                        background: selected ? T.blueLight : "#fff",
+                        background: selected ? T.blueLight : T.card,
                         padding: "12px 10px",
                         cursor: "pointer",
                         textAlign: "left",
@@ -2632,7 +2636,8 @@ function PurchaseScreen({
                     textAlign: "center",
                     borderRadius: 14,
                     border: `1px solid ${pin ? T.blue : T.borderStrong}`,
-                    background: "#fff",
+                    background: T.surface,
+                    color: T.text,
                     fontFamily: T.mono,
                     fontSize: 17,
                     fontWeight: 900,
@@ -2762,7 +2767,7 @@ function PurchaseScreen({
             />
           </div>
 
-          <div style={{ border: `1px solid ${T.borderStrong}`, background: "linear-gradient(135deg,#ffffff 0%,#eafaf2 100%)", borderRadius: 20, padding: 15 }}>
+          <div style={{ border: `1px solid ${T.borderStrong}`, background: "linear-gradient(135deg, rgba(23,217,111,0.16) 0%, rgba(15,33,70,0.96) 100%)", borderRadius: 20, padding: 15 }}>
             <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>
               Preview
             </p>
@@ -3016,7 +3021,7 @@ function ElectricityPurchaseTab({
             </div>
             <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.amber }}>{amount ? formatNaira(Number(amount)) : "Amount"}</p>
           </div>
-          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.amber : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.amber : T.borderStrong}`, background: T.surface, color: T.text, fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
           <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.amber, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
             {purchasing ? "Processing..." : "Pay Electricity"}
           </button>
@@ -3093,7 +3098,7 @@ function CablePurchaseTab({
           {plans.length ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
               {plans.map((plan) => (
-                <button key={plan.id} onClick={() => onPlanSelect(plan.id)} style={{ border: `1.5px solid ${selectedPlanId === plan.id ? T.blueDark : T.border}`, borderRadius: 15, background: selectedPlanId === plan.id ? T.blueLight : "#fff", padding: 12, cursor: "pointer", textAlign: "left" }}>
+                <button key={plan.id} onClick={() => onPlanSelect(plan.id)} style={{ border: `1.5px solid ${selectedPlanId === plan.id ? T.blue : T.border}`, borderRadius: 15, background: selectedPlanId === plan.id ? T.blueLight : T.card, padding: 12, cursor: "pointer", textAlign: "left" }}>
                   <p style={{ margin: "0 0 6px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{plan.name}</p>
                   <p style={{ margin: 0, fontFamily: T.mono, color: T.blue, fontWeight: 900 }}>{formatNaira(plan.price)}</p>
                 </button>
@@ -3118,7 +3123,7 @@ function CablePurchaseTab({
             </div>
             <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.blue }}>{selectedPlan ? formatNaira(selectedPlan.price) : "Plan"}</p>
           </div>
-          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.blue : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.blue : T.borderStrong}`, background: T.surface, color: T.text, fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
           <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.blue, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
             {purchasing ? "Processing..." : "Subscribe Cable TV"}
           </button>
@@ -3206,7 +3211,7 @@ function ExamPurchaseTab({
             </div>
             <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.rose }}>{total ? formatNaira(total) : "Total"}</p>
           </div>
-          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.rose : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.rose : T.borderStrong}`, background: T.surface, color: T.text, fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
           <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.rose, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
             {purchasing ? "Processing..." : "Buy Exam PIN"}
           </button>
@@ -3236,7 +3241,7 @@ function TabBar({
           width: "100%",
           maxWidth: 390,
           borderRadius: 26,
-          background: "rgba(255,255,255,0.95)",
+          background: "rgba(6,19,58,0.92)",
           backdropFilter: "blur(18px)",
           border: `1px solid ${T.borderStrong}`,
           boxShadow: T.blueShadow,
@@ -3809,7 +3814,7 @@ function AdminBottomNav({
 
   return (
     <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 10px 12px" }}>
-      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
+      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(6,19,58,0.92)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -3891,7 +3896,7 @@ function AdminAppShell({
 
   return (
     <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: 104 }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(255,255,255,0.9)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(3,11,31,0.88)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
         <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
@@ -4569,7 +4574,7 @@ export default function DashboardPage() {
             position: "sticky",
             top: 0,
             zIndex: 40,
-            background: "rgba(255,255,255,0.9)",
+            background: "rgba(3,11,31,0.88)",
             backdropFilter: "blur(18px)",
             borderBottom: `1px solid ${T.borderStrong}`,
           }}

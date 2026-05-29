@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceAdminMutationGuard, requireAdmin } from "@/lib/adminAuth";
+import { getExternalIdsForSource } from "@/lib/data-plan-provider-ids";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
@@ -11,8 +12,12 @@ const updatePlanSchema = z.object({
   user_price: z.number().min(50).optional(),
   agent_price: z.number().min(50).optional(),
   apiSource: z.enum(["API_A", "API_B", "API_C"]).optional(),
-  externalPlanId: z.number().int().positive().optional(),
-  externalNetworkId: z.number().int().positive().optional(),
+  apiAPlanId: z.number().int().positive().optional(),
+  apiANetworkId: z.number().int().positive().optional(),
+  apiBPlanId: z.number().int().positive().optional(),
+  apiBNetworkId: z.number().int().positive().optional(),
+  apiCPlanId: z.number().int().positive().optional(),
+  apiCNetworkId: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -40,6 +45,8 @@ export async function PATCH(
 
     const nextUserPrice = data.user_price ?? plan.user_price;
     const nextAgentPrice = data.agent_price ?? plan.agent_price;
+    const merged = { ...plan, ...data };
+    const activeIds = getExternalIdsForSource(merged);
 
     if (nextAgentPrice > nextUserPrice) {
       return NextResponse.json(
@@ -48,10 +55,19 @@ export async function PATCH(
       );
     }
 
+    if (!activeIds.externalPlanId || !activeIds.externalNetworkId) {
+      return NextResponse.json(
+        { error: "Selected provider plan and network IDs are required" },
+        { status: 400 }
+      );
+    }
+
     const updated = await prisma.plan.update({
       where: { id },
       data: {
         ...data,
+        externalPlanId: activeIds.externalPlanId,
+        externalNetworkId: activeIds.externalNetworkId,
         price: nextUserPrice,
       },
     });

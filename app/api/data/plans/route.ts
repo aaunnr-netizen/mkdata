@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getExternalIdsForSource } from "@/lib/data-plan-provider-ids";
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,9 +53,24 @@ export async function POST(req: NextRequest) {
       apiSource,
       externalPlanId,
       externalNetworkId,
+      apiAPlanId,
+      apiANetworkId,
+      apiBPlanId,
+      apiBNetworkId,
+      apiCPlanId,
+      apiCNetworkId,
     } = body;
 
     const fallbackPrice = Number(user_price || agent_price || 0);
+    const providerIds = {
+      apiAPlanId: apiAPlanId ? parseInt(apiAPlanId, 10) : apiSource === "API_A" ? parseInt(externalPlanId, 10) : undefined,
+      apiANetworkId: apiANetworkId ? parseInt(apiANetworkId, 10) : apiSource === "API_A" ? parseInt(externalNetworkId, 10) : undefined,
+      apiBPlanId: apiBPlanId ? parseInt(apiBPlanId, 10) : apiSource === "API_B" ? parseInt(externalPlanId, 10) : undefined,
+      apiBNetworkId: apiBNetworkId ? parseInt(apiBNetworkId, 10) : apiSource === "API_B" ? parseInt(externalNetworkId, 10) : undefined,
+      apiCPlanId: apiCPlanId ? parseInt(apiCPlanId, 10) : apiSource === "API_C" ? parseInt(externalPlanId, 10) : undefined,
+      apiCNetworkId: apiCNetworkId ? parseInt(apiCNetworkId, 10) : apiSource === "API_C" ? parseInt(externalNetworkId, 10) : undefined,
+    };
+    const activeIds = getExternalIdsForSource({ apiSource, ...providerIds });
 
     const plan = await prisma.plan.create({
       data: {
@@ -66,8 +82,9 @@ export async function POST(req: NextRequest) {
         validity,
         network,
         apiSource,
-        externalPlanId: parseInt(externalPlanId, 10),
-        externalNetworkId: parseInt(externalNetworkId, 10),
+        externalPlanId: activeIds.externalPlanId || parseInt(externalPlanId, 10),
+        externalNetworkId: activeIds.externalNetworkId || parseInt(externalNetworkId, 10),
+        ...providerIds,
         isActive: true,
       },
     });

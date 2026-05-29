@@ -26,21 +26,21 @@ import {
 import { toast } from "sonner";
 
 const T = {
-  bg: "#f5faff",
-  surface: "#eef7ff",
-  card: "#ffffff",
-  border: "#d7e8ff",
-  borderStrong: "#b8d5fa",
-  blueLight: "#e7f5ff",
-  blue: "#008fef",
+  bg: "#030b1f",
+  surface: "#0a1734",
+  card: "#0f2146",
+  border: "#1d3f73",
+  borderStrong: "#2d63a8",
+  blueLight: "rgba(0, 143, 239, 0.16)",
+  blue: "#25b8ff",
   blueDark: "#06133a",
-  blueShadow: "0 18px 44px rgba(0, 143, 239, 0.16)",
-  green: "#00a040",
-  amber: "#d97706",
-  rose: "#e11d48",
-  text: "#06133a",
-  textMid: "#526079",
-  textDim: "#8aa0bc",
+  blueShadow: "0 20px 54px rgba(0, 143, 239, 0.28)",
+  green: "#17d96f",
+  amber: "#facc15",
+  rose: "#fb7185",
+  text: "#f8fbff",
+  textMid: "#bed4f7",
+  textDim: "#7fa5d8",
   font: "'DM Sans', sans-serif",
   mono: "'DM Mono', monospace",
 };
@@ -141,6 +141,12 @@ type AdminPlan = {
   apiSource: "API_A" | "API_B" | "API_C";
   externalPlanId: number;
   externalNetworkId: number;
+  apiAPlanId?: number | null;
+  apiANetworkId?: number | null;
+  apiBPlanId?: number | null;
+  apiBNetworkId?: number | null;
+  apiCPlanId?: number | null;
+  apiCNetworkId?: number | null;
   isActive: boolean;
 };
 
@@ -852,8 +858,12 @@ const emptyPlan = {
   user_price: 0,
   agent_price: 0,
   apiSource: "API_A" as AdminPlan["apiSource"],
-  externalPlanId: 0,
-  externalNetworkId: 1,
+  apiAPlanId: 0,
+  apiANetworkId: 1,
+  apiBPlanId: 0,
+  apiBNetworkId: 1,
+  apiCPlanId: 0,
+  apiCNetworkId: 1,
 };
 
 function PlansAdminScreen({ onBack }: { onBack: () => void }) {
@@ -912,9 +922,20 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
           <input value={form.validity} onChange={(e) => setForm({ ...form, validity: e.target.value })} placeholder="30 Days" style={inputStyle} />
           <input value={form.user_price || ""} onChange={(e) => setForm({ ...form, user_price: Number(e.target.value) })} placeholder="User price" type="number" style={inputStyle} />
           <input value={form.agent_price || ""} onChange={(e) => setForm({ ...form, agent_price: Number(e.target.value) })} placeholder="Agent price" type="number" style={inputStyle} />
-          <input value={form.externalNetworkId || ""} onChange={(e) => setForm({ ...form, externalNetworkId: Number(e.target.value) })} placeholder="Network ID" type="number" style={inputStyle} />
-          <input value={form.externalPlanId || ""} onChange={(e) => setForm({ ...form, externalPlanId: Number(e.target.value) })} placeholder="Plan ID" type="number" style={inputStyle} />
         </div>
+        {[
+          { label: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
+          { label: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
+          { label: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+        ].map((source) => (
+          <div key={source.label} style={{ border: `1px solid ${T.border}`, borderRadius: 16, padding: 10, background: T.card }}>
+            <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>{source.label} IDs</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <input value={(form as any)[source.plan] || ""} onChange={(e) => setForm({ ...form, [source.plan]: Number(e.target.value) })} placeholder={`${source.label} plan ID`} type="number" style={inputStyle} />
+              <input value={(form as any)[source.network] || ""} onChange={(e) => setForm({ ...form, [source.network]: Number(e.target.value) })} placeholder={`${source.label} network ID`} type="number" style={inputStyle} />
+            </div>
+          </div>
+        ))}
         <MiniButton onClick={() => void save()}>{editingId ? "Update Plan" : "Create Plan"}</MiniButton>
         {editingId ? <MiniButton onClick={() => { setEditingId(""); setForm(emptyPlan); }} tone="plain">Cancel Edit</MiniButton> : null}
       </div>
@@ -941,7 +962,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
                 <Field label="Agent" value={formatNaira(plan.agent_price)} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
-                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, externalPlanId: plan.externalPlanId, externalNetworkId: plan.externalNetworkId }); }} tone="plain">Edit</MiniButton>
+                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0), apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1), apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0), apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1), apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0), apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1) }); }} tone="plain">Edit</MiniButton>
                 <MiniButton onClick={() => void toggle(plan)} tone="plain">{plan.isActive ? "Disable" : "Enable"}</MiniButton>
                 <MiniButton onClick={() => void remove(plan.id)} tone="rose">Delete</MiniButton>
               </div>
@@ -1485,7 +1506,7 @@ function AdminBottomNav({ activeTab, onChange }: { activeTab: AdminTab; onChange
 
   return (
     <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 10px 12px" }}>
-      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
+      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(6,19,58,0.92)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -1570,7 +1591,7 @@ export function InAppAdminShell({
 
   return (
     <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: 104 }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(255,255,255,0.9)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(3,11,31,0.88)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
         <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />

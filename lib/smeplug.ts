@@ -144,14 +144,22 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
   try {
     const { networkId, amount, phone, reference } = params;
     const { baseUrl, apiKey } = getSmeplugConfig();
+    const requestBody = {
+      network_id: networkId,
+      amount,
+      phone: formatSmeplugPhone(phone),
+    };
+
+    console.log("[SMEPLUG AIRTIME REQUEST]", {
+      url: `${baseUrl}/airtime/purchase`,
+      body: requestBody,
+      reference,
+      timestamp: new Date().toISOString(),
+    });
 
     const response = await axios.post(
       `${baseUrl}/airtime/purchase`,
-      {
-        network_id: networkId,
-        amount,
-        phone: formatSmeplugPhone(phone),
-      },
+      requestBody,
       {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -160,6 +168,13 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
         timeout: 30000,
       }
     );
+
+    console.log("[SMEPLUG AIRTIME RESPONSE]", {
+      status: response.status,
+      data: response.data,
+      reference,
+      timestamp: new Date().toISOString(),
+    });
 
     if (response.data?.status === true && response.data?.data) {
       return {

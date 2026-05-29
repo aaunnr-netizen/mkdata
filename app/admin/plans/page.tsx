@@ -30,6 +30,12 @@ interface Plan {
   apiSource: string;
   externalPlanId: number;
   externalNetworkId: number;
+  apiAPlanId?: number | null;
+  apiANetworkId?: number | null;
+  apiBPlanId?: number | null;
+  apiBNetworkId?: number | null;
+  apiCPlanId?: number | null;
+  apiCNetworkId?: number | null;
   isActive: boolean;
 }
 
@@ -53,8 +59,12 @@ export default function PlansPage() {
     user_price: 0,
     agent_price: 0,
     apiSource: "API_A",
-    externalPlanId: 0,
-    externalNetworkId: 0,
+    apiAPlanId: 0,
+    apiANetworkId: 1,
+    apiBPlanId: 0,
+    apiBNetworkId: 1,
+    apiCPlanId: 0,
+    apiCNetworkId: 1,
   });
 
   useEffect(() => {
@@ -84,8 +94,12 @@ export default function PlansPage() {
       user_price: 0,
       agent_price: 0,
       apiSource: "API_A",
-      externalPlanId: 0,
-      externalNetworkId: 0,
+      apiAPlanId: 0,
+      apiANetworkId: 1,
+      apiBPlanId: 0,
+      apiBNetworkId: 1,
+      apiCPlanId: 0,
+      apiCNetworkId: 1,
     });
   };
 
@@ -126,8 +140,12 @@ export default function PlansPage() {
       user_price: plan.user_price,
       agent_price: plan.agent_price,
       apiSource: plan.apiSource,
-      externalPlanId: plan.externalPlanId,
-      externalNetworkId: plan.externalNetworkId,
+      apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0),
+      apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1),
+      apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0),
+      apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1),
+      apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0),
+      apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1),
     });
     setEditingId(plan.id);
     setOpenDialog(true);
@@ -232,16 +250,25 @@ export default function PlansPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>External Plan ID</Label>
-                  <Input type="number" value={formData.externalPlanId} onChange={(e) => setFormData({ ...formData, externalPlanId: parseInt(e.target.value, 10) || 0 })} required />
+              {[
+                { name: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
+                { name: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
+                { name: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+              ].map((source) => (
+                <div key={source.name} className="rounded-lg border border-slate-200 p-3">
+                  <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{source.name} IDs</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>{source.name} Plan ID</Label>
+                      <Input type="number" value={(formData as any)[source.plan]} onChange={(e) => setFormData({ ...formData, [source.plan]: parseInt(e.target.value, 10) || 0 })} required />
+                    </div>
+                    <div>
+                      <Label>{source.name} Network ID</Label>
+                      <Input type="number" value={(formData as any)[source.network]} onChange={(e) => setFormData({ ...formData, [source.network]: parseInt(e.target.value, 10) || 0 })} required />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label>External Network ID</Label>
-                  <Input type="number" value={formData.externalNetworkId} onChange={(e) => setFormData({ ...formData, externalNetworkId: parseInt(e.target.value, 10) || 0 })} required />
-                </div>
-              </div>
+              ))}
               <Button type="submit" className="w-full">
                 {editingId ? "Update" : "Create"} Plan
               </Button>
