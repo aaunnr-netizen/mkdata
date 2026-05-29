@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { purchaseData as purchaseFromSmeplug } from "@/lib/smeplug";
 import { purchaseData as purchaseFromSaiful } from "@/lib/saiful";
+import { purchaseData as purchaseFromAlrahuz } from "@/lib/alrahuz";
 import { getPlanPriceForUser } from "@/lib/pricing";
 import { normalizeProviderFailureMessage } from "@/lib/purchase-utils";
 import { z } from "zod";
@@ -51,12 +52,19 @@ export async function POST(req: NextRequest) {
               phone,
               reference,
             })
-          : await purchaseFromSaiful({
-              plan: plan.externalPlanId,
-              mobileNumber: phone,
-              network: plan.network,
-              reference,
-            });
+          : plan.apiSource === "API_B"
+            ? await purchaseFromSaiful({
+                plan: plan.externalPlanId,
+                mobileNumber: phone,
+                network: plan.network,
+                reference,
+              })
+            : await purchaseFromAlrahuz({
+                network: plan.externalNetworkId,
+                plan: plan.externalPlanId,
+                mobileNumber: phone,
+                reference,
+              });
 
       if (apiResult.success) {
         await prisma.transaction.update({

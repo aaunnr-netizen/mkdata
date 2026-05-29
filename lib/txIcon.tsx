@@ -1,9 +1,12 @@
-import { Zap, Wallet, Gift, CreditCard } from "lucide-react";
+import { Zap, Wallet, Gift, CreditCard, Lightbulb, Tv, BookOpen } from "lucide-react";
 import { ReactNode } from "react";
 
 export type TransactionType =
   | "DATA_PURCHASE"
   | "AIRTIME_PURCHASE"
+  | "ELECTRICITY_PURCHASE"
+  | "CABLE_TV_PURCHASE"
+  | "EXAM_PIN_PURCHASE"
   | "WALLET_FUNDING"
   | "REWARD_CREDIT";
 
@@ -13,6 +16,12 @@ export function getTxIcon(type: TransactionType): ReactNode {
       return <Zap className="w-5 h-5" />;
     case "AIRTIME_PURCHASE":
       return <CreditCard className="w-5 h-5" />;
+    case "ELECTRICITY_PURCHASE":
+      return <Lightbulb className="w-5 h-5" />;
+    case "CABLE_TV_PURCHASE":
+      return <Tv className="w-5 h-5" />;
+    case "EXAM_PIN_PURCHASE":
+      return <BookOpen className="w-5 h-5" />;
     case "WALLET_FUNDING":
       return <Wallet className="w-5 h-5" />;
     case "REWARD_CREDIT":
@@ -28,6 +37,12 @@ export function getTxLabel(type: TransactionType): string {
       return "Data Purchase";
     case "AIRTIME_PURCHASE":
       return "Airtime Purchase";
+    case "ELECTRICITY_PURCHASE":
+      return "Electricity Purchase";
+    case "CABLE_TV_PURCHASE":
+      return "Cable TV Purchase";
+    case "EXAM_PIN_PURCHASE":
+      return "Exam PIN Purchase";
     case "WALLET_FUNDING":
       return "Wallet Funding";
     case "REWARD_CREDIT":
@@ -45,6 +60,12 @@ export function getTxColor(
       return "text-info";
     case "AIRTIME_PURCHASE":
       return "text-warning";
+    case "ELECTRICITY_PURCHASE":
+      return "text-warning";
+    case "CABLE_TV_PURCHASE":
+      return "text-info";
+    case "EXAM_PIN_PURCHASE":
+      return "text-error";
     case "WALLET_FUNDING":
       return "text-success";
     case "REWARD_CREDIT":

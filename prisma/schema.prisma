@@ -30,6 +30,9 @@ enum NetworkType {
 enum TransactionType {
   DATA_PURCHASE
   AIRTIME_PURCHASE
+  ELECTRICITY_PURCHASE
+  CABLE_TV_PURCHASE
+  EXAM_PIN_PURCHASE
   WALLET_FUNDING
   REWARD_CREDIT
 }
@@ -44,6 +47,7 @@ enum TransactionStatus {
 enum ApiSource {
   API_A
   API_B
+  API_C
 }
 
 enum RewardType {
@@ -201,6 +205,63 @@ model Plan {
   @@index([network])
   @@index([isActive])
   @@map("plans")
+}
+
+model ElectricityProvider {
+  id          String   @id @default(cuid())
+  name        String
+  discoName   Int      @unique
+  minAmount   Int      @default(500)
+  maxAmount   Int      @default(50000)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("electricity_providers")
+}
+
+model CableProvider {
+  id        String      @id @default(cuid())
+  name      String
+  cablename Int         @unique
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  plans     CablePlan[]
+
+  @@index([isActive])
+  @@map("cable_providers")
+}
+
+model CablePlan {
+  id         String        @id @default(cuid())
+  providerId String
+  provider   CableProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name       String
+  cableplan  Int
+  price      Int
+  isActive   Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([providerId, cableplan])
+  @@index([providerId, isActive])
+  @@map("cable_plans")
+}
+
+model ExamProduct {
+  id          String   @id @default(cuid())
+  examName    String   @unique
+  displayName String
+  price       Int
+  maxQuantity Int      @default(5)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("exam_products")
 }
 
 model Transaction {

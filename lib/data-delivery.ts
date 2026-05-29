@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import * as smeplug from "@/lib/smeplug";
 import * as saiful from "@/lib/saiful";
+import * as alrahuz from "@/lib/alrahuz";
 import { normalizeProviderFailureMessage } from "@/lib/purchase-utils";
 import { Transaction } from "@prisma/client";
 
@@ -33,11 +34,18 @@ export async function deliverGuestData(transaction: Transaction) {
         phone: transaction.phone,
         reference: transaction.reference,
       });
-    } else {
+    } else if (plan.apiSource === "API_B") {
       result = await saiful.purchaseData({
         plan: plan.externalPlanId,
         mobileNumber: transaction.phone,
         network: plan.network,
+        reference: transaction.reference,
+      });
+    } else {
+      result = await alrahuz.purchaseData({
+        network: plan.externalNetworkId,
+        plan: plan.externalPlanId,
+        mobileNumber: transaction.phone,
         reference: transaction.reference,
       });
     }

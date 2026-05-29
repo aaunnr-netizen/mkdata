@@ -27,6 +27,7 @@ interface AdminInfo {
 const NAV_ITEMS = [
   { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
   { icon: Package, label: "Data Plans", href: "/admin/plans" },
+  { icon: CreditCard, label: "Services", href: "/admin/services" },
   { icon: CreditCard, label: "Pricing", href: "/admin/pricing" },
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },

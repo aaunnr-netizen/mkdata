@@ -134,6 +134,9 @@ export default function TransactionsPage() {
                 <SelectItem value="ALL">All Types</SelectItem>
                 <SelectItem value="DATA_PURCHASE">Data Purchase</SelectItem>
                 <SelectItem value="AIRTIME_PURCHASE">Airtime Purchase</SelectItem>
+                <SelectItem value="ELECTRICITY_PURCHASE">Electricity Purchase</SelectItem>
+                <SelectItem value="CABLE_TV_PURCHASE">Cable TV Purchase</SelectItem>
+                <SelectItem value="EXAM_PIN_PURCHASE">Exam PIN Purchase</SelectItem>
                 <SelectItem value="WALLET_FUNDING">Wallet Funding</SelectItem>
               </SelectContent>
             </Select>

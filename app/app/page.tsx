@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Bolt,
-  Building2,
+  BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -14,7 +14,9 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
+  Headphones,
   Home,
+  Lightbulb,
   Loader2,
   LogOut,
   Moon,
@@ -24,6 +26,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Tv,
   User,
   Wallet,
   X,
@@ -55,7 +58,7 @@ const T = {
   mono: "'DM Mono', monospace",
 };
 
-type AppTab = "home" | "transactions" | "accounts" | "agent" | "profile" | "airtime-cash" | "buy";
+type AppTab = "home" | "support" | "profile" | "transactions" | "accounts" | "agent" | "electricity" | "cable" | "exam" | "buy";
 type PurchaseMode = "data" | "airtime";
 type BridgeValue<T> = T | Promise<T>;
 type MKBiometricBridge = {
@@ -110,6 +113,33 @@ interface DataPlan {
   sizeLabel: string;
   validity: string;
   network: string;
+}
+
+interface ElectricityProvider {
+  id: string;
+  name: string;
+  minAmount: number;
+  maxAmount: number;
+}
+
+interface CablePlanProduct {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface CableProviderProduct {
+  id: string;
+  name: string;
+  plans: CablePlanProduct[];
+}
+
+interface ExamProduct {
+  id: string;
+  examName: string;
+  displayName: string;
+  price: number;
+  maxQuantity: number;
 }
 
 interface TransactionItem {
@@ -1110,7 +1140,7 @@ function InfiniteTransactionFeed({
                       color: T.blue,
                     }}
                   >
-                    {transaction.type === "DATA_PURCHASE" ? <Bolt size={18} /> : transaction.type === "AIRTIME_PURCHASE" ? <Phone size={18} /> : <Wallet size={18} />}
+                    {transaction.type === "DATA_PURCHASE" ? <Bolt size={18} /> : transaction.type === "AIRTIME_PURCHASE" ? <Phone size={18} /> : transaction.type === "ELECTRICITY_PURCHASE" ? <Lightbulb size={18} /> : transaction.type === "CABLE_TV_PURCHASE" ? <Tv size={18} /> : transaction.type === "EXAM_PIN_PURCHASE" ? <BookOpen size={18} /> : <Wallet size={18} />}
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <p style={{ fontFamily: T.font, fontWeight: 700, fontSize: compact ? 13 : 14, color: T.text, margin: "0 0 4px" }}>
@@ -1164,28 +1194,32 @@ function HomeTab({
   user,
   showBalance,
   syncingBalance,
-  rewardBalance,
   primaryAccount,
   onToggleBalance,
   onSyncBalance,
   onCopyAccount,
   onOpenData,
   onOpenAirtime,
-  onOpenRewards,
+  onOpenElectricity,
+  onOpenCable,
+  onOpenExam,
+  onOpenAgent,
   onOpenAccounts,
   onViewAllTransactions,
 }: {
   user: UserData;
   showBalance: boolean;
   syncingBalance: boolean;
-  rewardBalance: number;
   primaryAccount: BankAccountItem | null;
   onToggleBalance: () => void;
   onSyncBalance: () => void;
   onCopyAccount: () => void;
   onOpenData: () => void;
   onOpenAirtime: () => void;
-  onOpenRewards: () => void;
+  onOpenElectricity: () => void;
+  onOpenCable: () => void;
+  onOpenExam: () => void;
+  onOpenAgent: () => void;
   onOpenAccounts: () => void;
   onViewAllTransactions: () => void;
 }) {
@@ -1346,7 +1380,7 @@ function HomeTab({
           marginBottom: 20,
         }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
           <HomeActionCard
             icon={<Bolt size={16} color={T.blue} />}
             title="Data"
@@ -1364,20 +1398,36 @@ function HomeTab({
             onClick={onOpenAirtime}
           />
           <HomeActionCard
-            icon={<Sparkles size={16} color={T.amber} />}
-            title="Rewards"
-            subtitle={`₦${rewardBalance.toLocaleString()}`}
+            icon={<Lightbulb size={16} color={T.amber} />}
+            title="Electricity"
+            subtitle="Pay bills"
             color={T.amber}
             background="rgba(217,119,6,0.12)"
-            onClick={onOpenRewards}
+            onClick={onOpenElectricity}
           />
           <HomeActionCard
-            icon={<Building2 size={16} color={T.text} />}
-            title="Accounts"
-            subtitle="Manage"
+            icon={<Tv size={16} color={T.blueDark} />}
+            title="Cable TV"
+            subtitle="Renew"
             color={T.text}
             background="rgba(17,24,39,0.08)"
-            onClick={onOpenAccounts}
+            onClick={onOpenCable}
+          />
+          <HomeActionCard
+            icon={<BookOpen size={16} color={T.rose} />}
+            title="Exam"
+            subtitle="Checker"
+            color={T.rose}
+            background="rgba(225,29,72,0.1)"
+            onClick={onOpenExam}
+          />
+          <HomeActionCard
+            icon={<ShieldCheck size={16} color={T.green} />}
+            title="Agent"
+            subtitle="Apply"
+            color={T.green}
+            background="rgba(0,160,64,0.12)"
+            onClick={onOpenAgent}
           />
         </div>
       </motion.div>
@@ -2745,6 +2795,417 @@ function PurchaseScreen({
   );
 }
 
+function SupportTab() {
+  const supportPhone = "09066120642";
+  const whatsappUrl = "https://wa.me/2349066120642";
+
+  const copySupportPhone = async () => {
+    await navigator.clipboard.writeText(supportPhone);
+    toast.success("Support number copied.");
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <div
+        style={{
+          borderRadius: 24,
+          border: `1px solid ${T.borderStrong}`,
+          background: "linear-gradient(135deg,#06133a 0%,#008fef 100%)",
+          padding: 18,
+          color: "#fff",
+          boxShadow: T.blueShadow,
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ width: 52, height: 52, borderRadius: 18, background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+          <Headphones size={26} />
+        </div>
+        <p style={{ margin: "0 0 6px", fontFamily: T.font, fontSize: 12, fontWeight: 900, textTransform: "uppercase", color: "rgba(255,255,255,0.72)" }}>
+          Support
+        </p>
+        <h2 style={{ margin: 0, fontFamily: T.font, fontSize: 26, fontWeight: 900, color: "#fff" }}>
+          How can we help?
+        </h2>
+        <p style={{ margin: "8px 0 0", fontFamily: T.font, fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.78)" }}>
+          Reach MK Data customer care for wallet funding, failed purchase, account, and service questions.
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        <a
+          href={`tel:${supportPhone}`}
+          style={{
+            border: `1px solid ${T.borderStrong}`,
+            borderRadius: 20,
+            background: T.card,
+            padding: 16,
+            textDecoration: "none",
+            color: T.text,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 15, background: T.blueLight, color: T.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Phone size={19} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontWeight: 900, fontSize: 14 }}>Call customer care</p>
+              <p style={{ margin: 0, fontFamily: T.mono, color: T.textMid, fontSize: 13 }}>{supportPhone}</p>
+            </div>
+          </div>
+          <ChevronRight size={17} color={T.textDim} />
+        </a>
+
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            border: `1px solid ${T.borderStrong}`,
+            borderRadius: 20,
+            background: "rgba(0,160,64,0.08)",
+            padding: 16,
+            textDecoration: "none",
+            color: T.text,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 15, background: "rgba(0,160,64,0.14)", color: T.green, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <MessageCircle size={19} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontWeight: 900, fontSize: 14 }}>Chat on WhatsApp</p>
+              <p style={{ margin: 0, fontFamily: T.font, color: T.textMid, fontSize: 13 }}>Fastest for transaction complaints</p>
+            </div>
+          </div>
+          <ChevronRight size={17} color={T.textDim} />
+        </a>
+
+        <button
+          onClick={copySupportPhone}
+          style={{
+            border: `1px solid ${T.borderStrong}`,
+            borderRadius: 20,
+            background: T.card,
+            padding: 16,
+            color: T.text,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            cursor: "pointer",
+            textAlign: "left",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 15, background: T.surface, color: T.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Copy size={18} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontWeight: 900, fontSize: 14 }}>Copy support number</p>
+              <p style={{ margin: 0, fontFamily: T.font, color: T.textMid, fontSize: 13 }}>Keep it for follow-up calls</p>
+            </div>
+          </div>
+          <ChevronRight size={17} color={T.textDim} />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function ElectricityPurchaseTab({
+  providers,
+  selectedProviderId,
+  amount,
+  meterNumber,
+  meterType,
+  pin,
+  loading,
+  purchasing,
+  onProviderSelect,
+  onAmountChange,
+  onMeterNumberChange,
+  onMeterTypeChange,
+  onPinChange,
+  onPurchase,
+  onBack,
+}: {
+  providers: ElectricityProvider[];
+  selectedProviderId: string;
+  amount: string;
+  meterNumber: string;
+  meterType: "prepaid" | "postpaid";
+  pin: string;
+  loading: boolean;
+  purchasing: boolean;
+  onProviderSelect: (id: string) => void;
+  onAmountChange: (value: string) => void;
+  onMeterNumberChange: (value: string) => void;
+  onMeterTypeChange: (value: "prepaid" | "postpaid") => void;
+  onPinChange: (value: string) => void;
+  onPurchase: () => void;
+  onBack: () => void;
+}) {
+  const selectedProvider = providers.find((provider) => provider.id === selectedProviderId) || null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <button onClick={onBack} style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 900, cursor: "pointer", padding: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+        <ChevronLeft size={16} />
+        Home
+      </button>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>Bills</p>
+        <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>Buy Electricity</h2>
+      </div>
+
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Disco</p>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 24 }}><Loader2 size={22} className="animate-spin" color={T.blue} /></div>
+          ) : providers.length ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
+              {providers.map((provider) => (
+                <button key={provider.id} onClick={() => onProviderSelect(provider.id)} style={{ border: `1.5px solid ${selectedProviderId === provider.id ? T.amber : T.border}`, borderRadius: 15, background: selectedProviderId === provider.id ? "rgba(217,119,6,0.12)" : "#fff", padding: 12, cursor: "pointer", textAlign: "left", fontFamily: T.font, fontWeight: 900, color: T.text }}>
+                  {provider.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>No electricity providers are configured yet.</p>
+          )}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Meter details</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+            {(["prepaid", "postpaid"] as const).map((type) => (
+              <button key={type} onClick={() => onMeterTypeChange(type)} style={{ border: `1.5px solid ${meterType === type ? T.amber : T.border}`, borderRadius: 14, padding: 12, background: meterType === type ? "rgba(217,119,6,0.12)" : "#fff", cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text, textTransform: "capitalize" }}>
+                {type}
+              </button>
+            ))}
+          </div>
+          <input value={meterNumber} onChange={(event) => onMeterNumberChange(event.target.value.replace(/\D/g, ""))} placeholder="Meter number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box", marginBottom: 12 }} />
+          <input value={amount} onChange={(event) => onAmountChange(event.target.value.replace(/\D/g, ""))} placeholder={selectedProvider ? `${selectedProvider.minAmount} - ${selectedProvider.maxAmount}` : "Amount"} style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
+        </div>
+
+        <div style={{ border: `1px solid ${selectedProvider ? T.amber : T.borderStrong}`, background: selectedProvider ? "rgba(217,119,6,0.1)" : T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Preview</p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>{selectedProvider?.name || "Select disco"}</p>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>{meterType} meter - {meterNumber || "meter number"}</p>
+            </div>
+            <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.amber }}>{amount ? formatNaira(Number(amount)) : "Amount"}</p>
+          </div>
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.amber : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.amber, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
+            {purchasing ? "Processing..." : "Pay Electricity"}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function CablePurchaseTab({
+  providers,
+  selectedProviderId,
+  selectedPlanId,
+  smartCardNumber,
+  pin,
+  loading,
+  purchasing,
+  onProviderSelect,
+  onPlanSelect,
+  onSmartCardChange,
+  onPinChange,
+  onPurchase,
+  onBack,
+}: {
+  providers: CableProviderProduct[];
+  selectedProviderId: string;
+  selectedPlanId: string;
+  smartCardNumber: string;
+  pin: string;
+  loading: boolean;
+  purchasing: boolean;
+  onProviderSelect: (id: string) => void;
+  onPlanSelect: (id: string) => void;
+  onSmartCardChange: (value: string) => void;
+  onPinChange: (value: string) => void;
+  onPurchase: () => void;
+  onBack: () => void;
+}) {
+  const provider = providers.find((item) => item.id === selectedProviderId) || null;
+  const plans = provider?.plans || [];
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) || null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <button onClick={onBack} style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 900, cursor: "pointer", padding: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+        <ChevronLeft size={16} />
+        Home
+      </button>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>Subscriptions</p>
+        <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>Cable TV</h2>
+      </div>
+
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Provider</p>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 24 }}><Loader2 size={22} className="animate-spin" color={T.blue} /></div>
+          ) : providers.length ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+              {providers.map((item) => (
+                <button key={item.id} onClick={() => onProviderSelect(item.id)} style={{ border: `1.5px solid ${selectedProviderId === item.id ? T.blueDark : T.border}`, borderRadius: 15, background: selectedProviderId === item.id ? "rgba(17,24,39,0.08)" : "#fff", padding: 12, cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text }}>
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>No cable products are configured yet.</p>
+          )}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Plan</p>
+          {plans.length ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
+              {plans.map((plan) => (
+                <button key={plan.id} onClick={() => onPlanSelect(plan.id)} style={{ border: `1.5px solid ${selectedPlanId === plan.id ? T.blueDark : T.border}`, borderRadius: 15, background: selectedPlanId === plan.id ? T.blueLight : "#fff", padding: 12, cursor: "pointer", textAlign: "left" }}>
+                  <p style={{ margin: "0 0 6px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{plan.name}</p>
+                  <p style={{ margin: 0, fontFamily: T.mono, color: T.blue, fontWeight: 900 }}>{formatNaira(plan.price)}</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>Select a provider to see plans.</p>
+          )}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Smart card number</label>
+          <input value={smartCardNumber} onChange={(event) => onSmartCardChange(event.target.value.replace(/\D/g, ""))} placeholder="Smart card / IUC number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
+        </div>
+
+        <div style={{ border: `1px solid ${selectedPlan ? T.blue : T.borderStrong}`, background: selectedPlan ? T.blueLight : T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Preview</p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>{provider?.name || "Provider"} {selectedPlan?.name || ""}</p>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>{smartCardNumber || "smart card number"}</p>
+            </div>
+            <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.blue }}>{selectedPlan ? formatNaira(selectedPlan.price) : "Plan"}</p>
+          </div>
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.blue : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.blue, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
+            {purchasing ? "Processing..." : "Subscribe Cable TV"}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ExamPurchaseTab({
+  products,
+  selectedProductId,
+  quantity,
+  pin,
+  loading,
+  purchasing,
+  onProductSelect,
+  onQuantityChange,
+  onPinChange,
+  onPurchase,
+  onBack,
+}: {
+  products: ExamProduct[];
+  selectedProductId: string;
+  quantity: number;
+  pin: string;
+  loading: boolean;
+  purchasing: boolean;
+  onProductSelect: (id: string) => void;
+  onQuantityChange: (value: number) => void;
+  onPinChange: (value: string) => void;
+  onPurchase: () => void;
+  onBack: () => void;
+}) {
+  const product = products.find((item) => item.id === selectedProductId) || null;
+  const total = product ? product.price * quantity : 0;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <button onClick={onBack} style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 900, cursor: "pointer", padding: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+        <ChevronLeft size={16} />
+        Home
+      </button>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>Education</p>
+        <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>Exam Checker</h2>
+      </div>
+
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Product</p>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: 24 }}><Loader2 size={22} className="animate-spin" color={T.blue} /></div>
+          ) : products.length ? (
+            <div style={{ display: "grid", gap: 9 }}>
+              {products.map((item) => (
+                <button key={item.id} onClick={() => onProductSelect(item.id)} style={{ border: `1.5px solid ${selectedProductId === item.id ? T.rose : T.border}`, borderRadius: 15, background: selectedProductId === item.id ? "rgba(225,29,72,0.1)" : "#fff", padding: 12, cursor: "pointer", textAlign: "left" }}>
+                  <p style={{ margin: "0 0 5px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{item.displayName}</p>
+                  <p style={{ margin: 0, fontFamily: T.mono, color: T.rose, fontWeight: 900 }}>{formatNaira(item.price)} each</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>No exam products are configured yet.</p>
+          )}
+        </div>
+
+        <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Quantity</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+            {Array.from({ length: product?.maxQuantity || 5 }, (_, index) => index + 1).map((value) => (
+              <button key={value} onClick={() => onQuantityChange(value)} style={{ border: `1.5px solid ${quantity === value ? T.rose : T.border}`, borderRadius: 14, padding: 12, background: quantity === value ? "rgba(225,29,72,0.1)" : "#fff", cursor: "pointer", fontFamily: T.mono, fontWeight: 900 }}>
+                {value}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ border: `1px solid ${product ? T.rose : T.borderStrong}`, background: product ? "rgba(225,29,72,0.08)" : T.card, borderRadius: 20, padding: 15 }}>
+          <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Preview</p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+            <div>
+              <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>{product?.displayName || "Select product"}</p>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>Quantity {quantity}</p>
+            </div>
+            <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.rose }}>{total ? formatNaira(total) : "Total"}</p>
+          </div>
+          <input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(event) => onPinChange(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Transaction PIN" style={{ width: "100%", padding: "14px", textAlign: "center", borderRadius: 14, border: `1px solid ${pin ? T.rose : T.borderStrong}`, background: "#fff", fontFamily: T.mono, fontSize: 17, fontWeight: 900, boxSizing: "border-box", letterSpacing: "0.16em", marginBottom: 12 }} />
+          <button onClick={onPurchase} disabled={purchasing} style={{ width: "100%", border: "none", borderRadius: 14, padding: 15, background: T.rose, color: "#fff", fontFamily: T.font, fontWeight: 900, cursor: purchasing ? "not-allowed" : "pointer", opacity: purchasing ? 0.7 : 1 }}>
+            {purchasing ? "Processing..." : "Buy Exam PIN"}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function TabBar({
   activeTab,
   onChange,
@@ -2754,8 +3215,7 @@ function TabBar({
 }) {
   const items = [
     { id: "home" as const, label: "Home", icon: Home },
-    { id: "airtime-cash" as const, label: "Airtime Cash", icon: MessageCircle },
-    { id: "agent" as const, label: "Agent", icon: ShieldCheck },
+    { id: "support" as const, label: "Support", icon: Headphones },
     { id: "profile" as const, label: "Profile", icon: User },
   ];
 
@@ -2772,7 +3232,7 @@ function TabBar({
           boxShadow: T.blueShadow,
           padding: 10,
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: 8,
         }}
       >
@@ -2816,11 +3276,9 @@ export default function DashboardPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AppTab>("home");
-  const [showRewards, setShowRewards] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
   const [syncingBalance, setSyncingBalance] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccountItem[]>([]);
-  const [rewardSnapshot, setRewardSnapshot] = useState<RewardSnapshot | null>(null);
   const [successState, setSuccessState] = useState<SuccessState>({
     open: false,
     title: "",
@@ -2828,7 +3286,6 @@ export default function DashboardPage() {
     reference: undefined,
   });
   const [broadcasts, setBroadcasts] = useState<BroadcastNotice[]>([]);
-  const rewardBalanceSeenRef = useRef<number | null>(null);
 
   const [purchaseMode, setPurchaseMode] = useState<PurchaseMode>("data");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>("mtn");
@@ -2844,6 +3301,30 @@ export default function DashboardPage() {
   const [airtimePhone, setAirtimePhone] = useState("");
   const [airtimePin, setAirtimePin] = useState("");
   const [purchasingAirtime, setPurchasingAirtime] = useState(false);
+
+  const [electricityProviders, setElectricityProviders] = useState<ElectricityProvider[]>([]);
+  const [electricityProviderId, setElectricityProviderId] = useState("");
+  const [electricityAmount, setElectricityAmount] = useState("");
+  const [meterNumber, setMeterNumber] = useState("");
+  const [meterType, setMeterType] = useState<"prepaid" | "postpaid">("prepaid");
+  const [electricityPin, setElectricityPin] = useState("");
+  const [electricityLoading, setElectricityLoading] = useState(false);
+  const [purchasingElectricity, setPurchasingElectricity] = useState(false);
+
+  const [cableProducts, setCableProducts] = useState<CableProviderProduct[]>([]);
+  const [cableProviderId, setCableProviderId] = useState("");
+  const [cablePlanId, setCablePlanId] = useState("");
+  const [smartCardNumber, setSmartCardNumber] = useState("");
+  const [cablePin, setCablePin] = useState("");
+  const [cableLoading, setCableLoading] = useState(false);
+  const [purchasingCable, setPurchasingCable] = useState(false);
+
+  const [examProducts, setExamProducts] = useState<ExamProduct[]>([]);
+  const [examProductId, setExamProductId] = useState("");
+  const [examQuantity, setExamQuantity] = useState(1);
+  const [examPin, setExamPin] = useState("");
+  const [examLoading, setExamLoading] = useState(false);
+  const [purchasingExam, setPurchasingExam] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2901,40 +3382,6 @@ export default function DashboardPage() {
     setBankAccounts([]);
   };
 
-  const refreshRewards = async () => {
-    const response = await fetch("/api/rewards", { credentials: "include", cache: "no-store" });
-    const payload = await response.json();
-    if (response.ok && payload?.success) {
-      const nextData = payload.data as RewardSnapshot;
-      const nextBalance = Number(nextData?.rewardBalance || 0);
-      const previousBalance = rewardBalanceSeenRef.current;
-      if (previousBalance !== null && nextBalance > previousBalance) {
-        const deltaNaira = Math.round((nextBalance - previousBalance) / 100);
-        if (deltaNaira > 0) {
-          setSuccessState((current) =>
-            current.open
-              ? current
-              : {
-                  open: true,
-                  title: "Reward unlocked",
-                  description: `You have fulfilled a reward and your reward wallet was credited with N${deltaNaira.toLocaleString()}.`,
-                  reference: undefined,
-                }
-          );
-        }
-      }
-      rewardBalanceSeenRef.current = nextBalance;
-      setRewardSnapshot(nextData);
-      return;
-    }
-    throw new Error(payload?.error || "Could not load rewards");
-  };
-
-  useEffect(() => {
-    if (!user) return;
-    refreshRewards().catch(() => undefined);
-  }, [user?.id]);
-
   useEffect(() => {
     if (!user?.id) return;
     refreshAccounts().catch(() => undefined);
@@ -2945,7 +3392,6 @@ export default function DashboardPage() {
 
     const refreshDashboardState = () => {
       refreshUser().catch(() => undefined);
-      refreshRewards().catch(() => undefined);
       refreshAccounts().catch(() => undefined);
     };
 
@@ -2990,7 +3436,6 @@ export default function DashboardPage() {
     setSyncingBalance(true);
     try {
       await refreshUser();
-      await refreshRewards().catch(() => undefined);
       await refreshAccounts().catch(() => undefined);
       toast.success("Your balance is up to date.");
     } catch {
@@ -3028,7 +3473,6 @@ export default function DashboardPage() {
   };
 
   const openPurchase = (mode: PurchaseMode) => {
-    setShowRewards(false);
     setPurchaseMode(mode);
     setActiveTab("buy");
     if (mode === "data") {
@@ -3091,7 +3535,6 @@ export default function DashboardPage() {
         reference: result.reference,
       });
       await refreshUser();
-      await refreshRewards().catch(() => undefined);
     } catch {
       toast.error("Ahh, sorry, we could not complete that data purchase right now.");
     } finally {
@@ -3151,11 +3594,237 @@ export default function DashboardPage() {
         reference: result.reference,
       });
       await refreshUser();
-      await refreshRewards().catch(() => undefined);
     } catch {
       toast.error("Ahh, sorry, we could not complete that airtime purchase right now.");
     } finally {
       setPurchasingAirtime(false);
+    }
+  };
+
+  const submitPurchaseRequest = async (path: string, payload: Record<string, unknown>, duplicateMessage: string) => {
+    let response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    let result = await response.json();
+
+    if (response.status === 409 && result?.requiresConfirmation) {
+      const shouldContinue = window.confirm(duplicateMessage);
+      if (!shouldContinue) return { cancelled: true, response, result };
+
+      response = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, confirmDuplicate: true }),
+      });
+      result = await response.json();
+    }
+
+    return { cancelled: false, response, result };
+  };
+
+  const loadElectricityProviders = async () => {
+    setElectricityLoading(true);
+    try {
+      const response = await fetch("/api/electricity/providers", { cache: "no-store" });
+      const payload = await response.json();
+      const providers = Array.isArray(payload?.data) ? payload.data : [];
+      setElectricityProviders(providers);
+      setElectricityProviderId((current) => current || providers[0]?.id || "");
+    } catch {
+      toast.error("Ahh, sorry, electricity providers could not load right now.");
+    } finally {
+      setElectricityLoading(false);
+    }
+  };
+
+  const loadCableProducts = async () => {
+    setCableLoading(true);
+    try {
+      const response = await fetch("/api/cable/products", { cache: "no-store" });
+      const payload = await response.json();
+      const products = Array.isArray(payload?.data) ? payload.data : [];
+      setCableProducts(products);
+      setCableProviderId((current) => current || products[0]?.id || "");
+      setCablePlanId((current) => current || products[0]?.plans?.[0]?.id || "");
+    } catch {
+      toast.error("Ahh, sorry, cable products could not load right now.");
+    } finally {
+      setCableLoading(false);
+    }
+  };
+
+  const loadExamProducts = async () => {
+    setExamLoading(true);
+    try {
+      const response = await fetch("/api/exam/products", { cache: "no-store" });
+      const payload = await response.json();
+      const products = Array.isArray(payload?.data) ? payload.data : [];
+      setExamProducts(products);
+      setExamProductId((current) => current || products[0]?.id || "");
+    } catch {
+      toast.error("Ahh, sorry, exam products could not load right now.");
+    } finally {
+      setExamLoading(false);
+    }
+  };
+
+  const openElectricity = () => {
+    setActiveTab("electricity");
+    setElectricityPin("");
+    if (!electricityProviders.length) void loadElectricityProviders();
+  };
+
+  const openCable = () => {
+    setActiveTab("cable");
+    setCablePin("");
+    if (!cableProducts.length) void loadCableProducts();
+  };
+
+  const openExam = () => {
+    setActiveTab("exam");
+    setExamPin("");
+    if (!examProducts.length) void loadExamProducts();
+  };
+
+  const handleCableProviderSelect = (providerId: string) => {
+    setCableProviderId(providerId);
+    const provider = cableProducts.find((item) => item.id === providerId);
+    setCablePlanId(provider?.plans?.[0]?.id || "");
+  };
+
+  const handleExamProductSelect = (productId: string) => {
+    setExamProductId(productId);
+    const product = examProducts.find((item) => item.id === productId);
+    setExamQuantity((current) => Math.min(current, product?.maxQuantity || 5));
+  };
+
+  const handleElectricityPurchase = async () => {
+    if (!electricityProviderId || meterNumber.length < 5 || !Number(electricityAmount) || electricityPin.length !== 6 || !user) {
+      toast.error("Ahh, sorry, please complete provider, meter number, amount, and PIN.");
+      return;
+    }
+
+    setPurchasingElectricity(true);
+    try {
+      const { cancelled, response, result } = await submitPurchaseRequest(
+        "/api/electricity/purchase",
+        {
+          buyerPhone: user.phone,
+          providerId: electricityProviderId,
+          meterNumber,
+          meterType,
+          amount: Number(electricityAmount),
+          pin: electricityPin,
+        },
+        "Ahh, sorry, a similar electricity request was noticed. Do you still want to continue?"
+      );
+
+      if (cancelled) return;
+      if (!response.ok || !result.success) {
+        toast.error(getFriendlyMessage(result.error, "We could not complete that electricity purchase right now."));
+        return;
+      }
+
+      setActiveTab("home");
+      setElectricityAmount("");
+      setMeterNumber("");
+      setElectricityPin("");
+      setSuccessState({
+        open: true,
+        title: "Electricity purchase successful",
+        description: result.message || "Your electricity purchase was completed successfully.",
+        reference: result.reference,
+      });
+      await refreshUser();
+    } catch {
+      toast.error("Ahh, sorry, we could not complete that electricity purchase right now.");
+    } finally {
+      setPurchasingElectricity(false);
+    }
+  };
+
+  const handleCablePurchase = async () => {
+    if (!cablePlanId || smartCardNumber.length < 5 || cablePin.length !== 6 || !user) {
+      toast.error("Ahh, sorry, please complete cable plan, smart card number, and PIN.");
+      return;
+    }
+
+    setPurchasingCable(true);
+    try {
+      const { cancelled, response, result } = await submitPurchaseRequest(
+        "/api/cable/purchase",
+        {
+          buyerPhone: user.phone,
+          planId: cablePlanId,
+          smartCardNumber,
+          pin: cablePin,
+        },
+        "Ahh, sorry, a similar cable request was noticed. Do you still want to continue?"
+      );
+
+      if (cancelled) return;
+      if (!response.ok || !result.success) {
+        toast.error(getFriendlyMessage(result.error, "We could not complete that cable subscription right now."));
+        return;
+      }
+
+      setActiveTab("home");
+      setSmartCardNumber("");
+      setCablePin("");
+      setSuccessState({
+        open: true,
+        title: "Cable TV purchase successful",
+        description: result.message || "Your cable TV subscription was completed successfully.",
+        reference: result.reference,
+      });
+      await refreshUser();
+    } catch {
+      toast.error("Ahh, sorry, we could not complete that cable subscription right now.");
+    } finally {
+      setPurchasingCable(false);
+    }
+  };
+
+  const handleExamPurchase = async () => {
+    if (!examProductId || examQuantity < 1 || examPin.length !== 6 || !user) {
+      toast.error("Ahh, sorry, please select exam product, quantity, and PIN.");
+      return;
+    }
+
+    setPurchasingExam(true);
+    try {
+      const { cancelled, response, result } = await submitPurchaseRequest(
+        "/api/exam/purchase",
+        {
+          buyerPhone: user.phone,
+          productId: examProductId,
+          quantity: examQuantity,
+          pin: examPin,
+        },
+        "Ahh, sorry, a similar exam PIN request was noticed. Do you still want to continue?"
+      );
+
+      if (cancelled) return;
+      if (!response.ok || !result.success) {
+        toast.error(getFriendlyMessage(result.error, "We could not complete that exam checker purchase right now."));
+        return;
+      }
+
+      setActiveTab("home");
+      setExamPin("");
+      setSuccessState({
+        open: true,
+        title: "Exam checker purchase successful",
+        description: result.message || "Your exam checker PIN purchase was completed successfully.",
+        reference: result.reference,
+      });
+      await refreshUser();
+    } catch {
+      toast.error("Ahh, sorry, we could not complete that exam checker purchase right now.");
+    } finally {
+      setPurchasingExam(false);
     }
   };
 
@@ -3175,12 +3844,13 @@ export default function DashboardPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const showBottomNav = !(["buy", "electricity", "cable", "exam"] as AppTab[]).includes(activeTab);
 
   return (
     <>
       <style>{fontStyle}</style>
 
-      <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: activeTab === "buy" || showRewards ? 28 : 104 }}>
+      <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: showBottomNav ? 104 : 28 }}>
         <div
           style={{
             position: "sticky",
@@ -3240,21 +3910,21 @@ export default function DashboardPage() {
         <main style={{ maxWidth: 390, margin: "0 auto", padding: "16px 16px 0" }}>
           <BroadcastBanner notice={broadcasts[0] || null} onDismiss={() => broadcasts[0] && dismissBroadcast(broadcasts[0].id)} />
 
-          {showRewards ? (
-            <RewardsScreen rewardSnapshot={rewardSnapshot} onBack={() => setShowRewards(false)} />
-          ) : activeTab === "home" ? (
+          {activeTab === "home" ? (
             <HomeTab
               user={user}
               showBalance={showBalance}
               syncingBalance={syncingBalance}
-              rewardBalance={Math.round((rewardSnapshot?.rewardBalance || user.rewardBalance || 0) / 100)}
               primaryAccount={bankAccounts.find((item) => item.isPrimary) || bankAccounts[0] || null}
               onToggleBalance={() => setShowBalance((value) => !value)}
               onSyncBalance={handleSyncBalance}
               onCopyAccount={handleCopyAccount}
               onOpenData={() => openPurchase("data")}
               onOpenAirtime={() => openPurchase("airtime")}
-              onOpenRewards={() => setShowRewards(true)}
+              onOpenElectricity={openElectricity}
+              onOpenCable={openCable}
+              onOpenExam={openExam}
+              onOpenAgent={() => setActiveTab("agent")}
               onOpenAccounts={() => setActiveTab("accounts")}
               onViewAllTransactions={() => setActiveTab("transactions")}
             />
@@ -3288,8 +3958,56 @@ export default function DashboardPage() {
             />
           ) : activeTab === "transactions" ? (
             <TransactionsTab />
-          ) : activeTab === "airtime-cash" ? (
-            <AirtimeToCashTab />
+          ) : activeTab === "support" ? (
+            <SupportTab />
+          ) : activeTab === "electricity" ? (
+            <ElectricityPurchaseTab
+              providers={electricityProviders}
+              selectedProviderId={electricityProviderId}
+              amount={electricityAmount}
+              meterNumber={meterNumber}
+              meterType={meterType}
+              pin={electricityPin}
+              loading={electricityLoading}
+              purchasing={purchasingElectricity}
+              onProviderSelect={setElectricityProviderId}
+              onAmountChange={setElectricityAmount}
+              onMeterNumberChange={setMeterNumber}
+              onMeterTypeChange={setMeterType}
+              onPinChange={setElectricityPin}
+              onPurchase={handleElectricityPurchase}
+              onBack={() => setActiveTab("home")}
+            />
+          ) : activeTab === "cable" ? (
+            <CablePurchaseTab
+              providers={cableProducts}
+              selectedProviderId={cableProviderId}
+              selectedPlanId={cablePlanId}
+              smartCardNumber={smartCardNumber}
+              pin={cablePin}
+              loading={cableLoading}
+              purchasing={purchasingCable}
+              onProviderSelect={handleCableProviderSelect}
+              onPlanSelect={setCablePlanId}
+              onSmartCardChange={setSmartCardNumber}
+              onPinChange={setCablePin}
+              onPurchase={handleCablePurchase}
+              onBack={() => setActiveTab("home")}
+            />
+          ) : activeTab === "exam" ? (
+            <ExamPurchaseTab
+              products={examProducts}
+              selectedProductId={examProductId}
+              quantity={examQuantity}
+              pin={examPin}
+              loading={examLoading}
+              purchasing={purchasingExam}
+              onProductSelect={handleExamProductSelect}
+              onQuantityChange={setExamQuantity}
+              onPinChange={setExamPin}
+              onPurchase={handleExamPurchase}
+              onBack={() => setActiveTab("home")}
+            />
           ) : activeTab === "accounts" ? (
             <AccountsTab user={user} accounts={bankAccounts} onAccountsUpdated={setBankAccounts} />
           ) : activeTab === "agent" ? (
@@ -3299,15 +4017,14 @@ export default function DashboardPage() {
           )}
         </main>
 
-        {activeTab === "buy" || showRewards ? null : (
+        {showBottomNav ? (
           <TabBar
             activeTab={activeTab}
             onChange={(tab) => {
-              setShowRewards(false);
               setActiveTab(tab);
             }}
           />
-        )}
+        ) : null}
       </div>
 
       <PurchaseSuccessScreen

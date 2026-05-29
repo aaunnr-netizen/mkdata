@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/db";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 
+const revenueTypes = ["DATA_PURCHASE", "AIRTIME_PURCHASE", "ELECTRICITY_PURCHASE", "CABLE_TV_PURCHASE", "EXAM_PIN_PURCHASE"] as const;
+
 /**
  * GET /api/admin/analytics
  * Returns comprehensive analytics for admin dashboard
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest) {
       },
       where: {
         status: "SUCCESS",
-        type: { in: ["DATA_PURCHASE", "AIRTIME_PURCHASE"] },
+        type: { in: [...revenueTypes] },
       },
     });
 
@@ -41,7 +43,7 @@ export async function GET(req: NextRequest) {
       },
       where: {
         status: "SUCCESS",
-        type: { in: ["DATA_PURCHASE", "AIRTIME_PURCHASE"] },
+        type: { in: [...revenueTypes] },
         createdAt: {
           gte: todayStart,
           lte: todayEnd,
