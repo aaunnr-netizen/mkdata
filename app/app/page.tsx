@@ -3631,15 +3631,15 @@ function AdminManageTab() {
       <div style={{ display: "grid", gap: 10 }}>
         <AdminActionLink icon={<User size={17} color={T.blue} />} title="Users" subtitle="Accounts, roles, wallet adjustments" metric={summary.users.toLocaleString()} onClick={() => toast.info("Users now open inside the /app Manage tab.")} />
         <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Agents" subtitle="Applications and agent status" metric={summary.agents.toLocaleString()} onClick={() => toast.info("Agents now open inside the /app Manage tab.")} />
-        <AdminActionLink icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="API A, API B, API C plan catalog" metric={summary.plans.toLocaleString()} onClick={() => toast.info("Data plans now open inside the /app Manage tab.")} />
-        <AdminActionLink icon={<Lightbulb size={17} color={T.amber} />} title="API C services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} onClick={() => toast.info("API C services now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="SMEPlug, Saiful, Alrahuz plan catalog" metric={summary.plans.toLocaleString()} onClick={() => toast.info("Data plans now open inside the /app Manage tab.")} />
+        <AdminActionLink icon={<Lightbulb size={17} color={T.amber} />} title="Alrahuz services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} onClick={() => toast.info("Alrahuz services now open inside the /app Manage tab.")} />
         <AdminActionLink icon={<CreditCard size={17} color={T.blueDark} />} title="Pricing" subtitle="Customer and agent pricing controls" onClick={() => toast.info("Pricing now opens inside the /app Manage tab.")} />
         <AdminActionLink icon={<Phone size={17} color={T.green} />} title="Airtime cash" subtitle="Conversion fee setup" metric={summary.airtimeCash} onClick={() => toast.info("Airtime cash now opens inside the /app Manage tab.")} />
       </div>
 
       <div style={{ marginTop: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 18, padding: 14 }}>
         <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>
-          API C catalog: {summary.electricity} discos, {summary.cableProviders} cable providers, {summary.cablePlans} cable plans, {summary.exams} exam products.
+          Alrahuz catalog: {summary.electricity} discos, {summary.cableProviders} cable providers, {summary.cablePlans} cable plans, {summary.exams} exam products.
         </p>
       </div>
     </motion.div>

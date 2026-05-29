@@ -33,6 +33,12 @@ interface Plan {
   isActive: boolean;
 }
 
+const apiSourceLabels: Record<string, string> = {
+  API_A: "SMEPlug",
+  API_B: "Saiful",
+  API_C: "Alrahuz",
+};
+
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -276,7 +282,7 @@ export default function PlansPage() {
                   <td className="px-4 py-3">{plan.validity}</td>
                   <td className="px-4 py-3 font-semibold">N{plan.user_price}</td>
                   <td className="px-4 py-3 font-semibold">N{plan.agent_price}</td>
-                  <td className="px-4 py-3"><Badge>{plan.apiSource}</Badge></td>
+                  <td className="px-4 py-3"><Badge>{apiSourceLabels[plan.apiSource] || plan.apiSource}</Badge></td>
                   <td className="px-4 py-3">
                     <Badge className={plan.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
                       {plan.isActive ? "Active" : "Inactive"}

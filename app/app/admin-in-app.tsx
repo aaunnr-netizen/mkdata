@@ -144,6 +144,12 @@ type AdminPlan = {
   isActive: boolean;
 };
 
+const apiSourceLabels: Record<AdminPlan["apiSource"], string> = {
+  API_A: "SMEPlug",
+  API_B: "Saiful",
+  API_C: "Alrahuz",
+};
+
 type ElectricityProvider = {
   id: string;
   name: string;
@@ -565,13 +571,13 @@ function AdminManageTab({ view, onView }: { view: AdminView; onView: (view: Admi
       <div style={{ display: "grid", gap: 10 }}>
         <AdminActionButton icon={<User size={17} color={T.blue} />} title="Users" subtitle="Accounts, roles, wallet adjustments" metric={summary.users.toLocaleString()} onClick={() => onView("users")} />
         <AdminActionButton icon={<ShieldCheck size={17} color={T.green} />} title="Agents" subtitle="Applications and agent status" metric={summary.agents.toLocaleString()} onClick={() => onView("agents")} />
-        <AdminActionButton icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="API A, API B, API C catalog" metric={summary.plans.toLocaleString()} onClick={() => onView("plans")} />
-        <AdminActionButton icon={<Lightbulb size={17} color={T.amber} />} title="API C services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} onClick={() => onView("services")} />
+        <AdminActionButton icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="SMEPlug, Saiful, Alrahuz catalog" metric={summary.plans.toLocaleString()} onClick={() => onView("plans")} />
+        <AdminActionButton icon={<Lightbulb size={17} color={T.amber} />} title="Alrahuz services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} onClick={() => onView("services")} />
         <AdminActionButton icon={<CreditCard size={17} color={T.blueDark} />} title="Pricing" subtitle="Customer and agent pricing controls" onClick={() => onView("pricing")} />
         <AdminActionButton icon={<Phone size={17} color={T.green} />} title="Airtime cash" subtitle="Conversion fee setup" metric={summary.airtimeCash} onClick={() => onView("airtimeCash")} />
       </div>
       <div style={{ marginTop: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 18, padding: 14 }}>
-        <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>API C catalog: {summary.electricity} discos, {summary.cableProviders} cable providers, {summary.cablePlans} cable plans, {summary.exams} exam products.</p>
+        <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>Alrahuz catalog: {summary.electricity} discos, {summary.cableProviders} cable providers, {summary.cablePlans} cable plans, {summary.exams} exam products.</p>
       </div>
     </motion.div>
   );
@@ -898,9 +904,9 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
             {["MTN", "GLO", "AIRTEL", "NINEMOBILE"].map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
           <select value={form.apiSource} onChange={(e) => setForm({ ...form, apiSource: e.target.value as AdminPlan["apiSource"] })} style={inputStyle}>
-            <option value="API_A">API A</option>
-            <option value="API_B">API B</option>
-            <option value="API_C">API C</option>
+            {Object.entries(apiSourceLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
           <input value={form.sizeLabel} onChange={(e) => setForm({ ...form, sizeLabel: e.target.value })} placeholder="1GB" style={inputStyle} />
           <input value={form.validity} onChange={(e) => setForm({ ...form, validity: e.target.value })} placeholder="30 Days" style={inputStyle} />
@@ -926,7 +932,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
                 <div>
                   <p style={{ margin: "0 0 4px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{plan.name}</p>
-                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textMid }}>{plan.network} - {plan.sizeLabel} - {plan.apiSource}</p>
+                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textMid }}>{plan.network} - {plan.sizeLabel} - {apiSourceLabels[plan.apiSource]}</p>
                 </div>
                 <StatusPill active={plan.isActive} />
               </div>
@@ -1042,7 +1048,7 @@ function ServicesAdminScreen({ onBack }: { onBack: () => void }) {
   if (loading) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <BackTitle label="Manage" title="API C Services" onBack={onBack} />
+        <BackTitle label="Manage" title="Alrahuz Services" onBack={onBack} />
         <LoadingBlock label="Loading services..." />
       </motion.div>
     );
@@ -1050,7 +1056,7 @@ function ServicesAdminScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <BackTitle label="Manage" title="API C Services" onBack={onBack} />
+      <BackTitle label="Manage" title="Alrahuz Services" onBack={onBack} />
       <ServiceSection title="Electricity discos">
         <input value={electricityForm.name} onChange={(e) => setElectricityForm({ ...electricityForm, name: e.target.value })} placeholder="Disco name" style={inputStyle} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
