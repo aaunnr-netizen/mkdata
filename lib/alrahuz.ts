@@ -15,6 +15,13 @@ type AlrahuzDataParams = {
   reference: string;
 };
 
+type AlrahuzAirtimeParams = {
+  network: number;
+  amount: number;
+  mobileNumber: string;
+  reference: string;
+};
+
 type AlrahuzElectricityParams = {
   discoName: number;
   amount: number;
@@ -204,6 +211,23 @@ export async function purchaseData(params: AlrahuzDataParams): Promise<AlrahuzRe
     {
       reference: params.reference,
       successMessage: "Data purchase successful",
+    }
+  );
+}
+
+export async function purchaseAirtime(params: AlrahuzAirtimeParams): Promise<AlrahuzResult> {
+  return postToAlrahuz(
+    "/api/topup/",
+    {
+      network: params.network,
+      amount: params.amount,
+      mobile_number: formatLocalPhone(params.mobileNumber),
+      Ported_number: true,
+      airtime_type: "VTU",
+    },
+    {
+      reference: params.reference,
+      successMessage: "Airtime purchase successful",
     }
   );
 }

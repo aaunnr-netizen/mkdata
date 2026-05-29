@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { purchaseAirtime } from "@/lib/smeplug";
+import { purchaseAirtime } from "@/lib/alrahuz";
 import { findRecentDuplicateTransaction, normalizeProviderFailureMessage } from "@/lib/purchase-utils";
 import { getSessionUser } from "@/lib/auth";
 import { z } from "zod";
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
           reference,
           description: `Airtime: N${amount} to ${recipientPhone}`,
           phone: recipientPhone,
-          apiUsed: "API_A",
+          apiUsed: "API_C",
           balanceBefore: latestUser.balance,
           balanceAfter: latestUser.balance - amountInKobo,
         },
@@ -205,9 +205,9 @@ export async function POST(req: NextRequest) {
 
     try {
       const apiResult = await purchaseAirtime({
-        networkId,
+        network: networkId,
         amount,
-        phone: recipientPhone,
+        mobileNumber: recipientPhone,
         reference,
       });
 

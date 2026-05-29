@@ -2706,7 +2706,7 @@ function PurchaseScreen({
                     border: `1.5px solid ${airtimeAmount === amount ? T.green : T.border}`,
                     borderRadius: 14,
                     padding: "12px 10px",
-                    background: airtimeAmount === amount ? "rgba(0,160,64,0.12)" : "#fff",
+                    background: airtimeAmount === amount ? "rgba(23,217,111,0.18)" : T.surface,
                     cursor: "pointer",
                     fontFamily: T.mono,
                     fontWeight: 900,
@@ -2989,7 +2989,7 @@ function ElectricityPurchaseTab({
           ) : providers.length ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
               {providers.map((provider) => (
-                <button key={provider.id} onClick={() => onProviderSelect(provider.id)} style={{ border: `1.5px solid ${selectedProviderId === provider.id ? T.amber : T.border}`, borderRadius: 15, background: selectedProviderId === provider.id ? "rgba(217,119,6,0.12)" : "#fff", padding: 12, cursor: "pointer", textAlign: "left", fontFamily: T.font, fontWeight: 900, color: T.text }}>
+                <button key={provider.id} onClick={() => onProviderSelect(provider.id)} style={{ border: `1.5px solid ${selectedProviderId === provider.id ? T.amber : T.border}`, borderRadius: 15, background: selectedProviderId === provider.id ? "rgba(250,204,21,0.16)" : T.surface, padding: 12, cursor: "pointer", textAlign: "left", fontFamily: T.font, fontWeight: 900, color: T.text }}>
                   {provider.name}
                 </button>
               ))}
@@ -3003,7 +3003,7 @@ function ElectricityPurchaseTab({
           <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Meter details</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
             {(["prepaid", "postpaid"] as const).map((type) => (
-              <button key={type} onClick={() => onMeterTypeChange(type)} style={{ border: `1.5px solid ${meterType === type ? T.amber : T.border}`, borderRadius: 14, padding: 12, background: meterType === type ? "rgba(217,119,6,0.12)" : "#fff", cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text, textTransform: "capitalize" }}>
+              <button key={type} onClick={() => onMeterTypeChange(type)} style={{ border: `1.5px solid ${meterType === type ? T.amber : T.border}`, borderRadius: 14, padding: 12, background: meterType === type ? "rgba(250,204,21,0.16)" : T.surface, cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text, textTransform: "capitalize" }}>
                 {type}
               </button>
             ))}
@@ -3083,7 +3083,7 @@ function CablePurchaseTab({
           ) : providers.length ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
               {providers.map((item) => (
-                <button key={item.id} onClick={() => onProviderSelect(item.id)} style={{ border: `1.5px solid ${selectedProviderId === item.id ? T.blueDark : T.border}`, borderRadius: 15, background: selectedProviderId === item.id ? "rgba(17,24,39,0.08)" : "#fff", padding: 12, cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text }}>
+                <button key={item.id} onClick={() => onProviderSelect(item.id)} style={{ border: `1.5px solid ${selectedProviderId === item.id ? T.blue : T.border}`, borderRadius: 15, background: selectedProviderId === item.id ? T.blueLight : T.surface, padding: 12, cursor: "pointer", fontFamily: T.font, fontWeight: 900, color: T.text }}>
                   {item.name}
                 </button>
               ))}
@@ -3180,7 +3180,7 @@ function ExamPurchaseTab({
           ) : products.length ? (
             <div style={{ display: "grid", gap: 9 }}>
               {products.map((item) => (
-                <button key={item.id} onClick={() => onProductSelect(item.id)} style={{ border: `1.5px solid ${selectedProductId === item.id ? T.rose : T.border}`, borderRadius: 15, background: selectedProductId === item.id ? "rgba(225,29,72,0.1)" : "#fff", padding: 12, cursor: "pointer", textAlign: "left" }}>
+                <button key={item.id} onClick={() => onProductSelect(item.id)} style={{ border: `1.5px solid ${selectedProductId === item.id ? T.rose : T.border}`, borderRadius: 15, background: selectedProductId === item.id ? "rgba(251,113,133,0.16)" : T.surface, padding: 12, cursor: "pointer", textAlign: "left" }}>
                   <p style={{ margin: "0 0 5px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{item.displayName}</p>
                   <p style={{ margin: 0, fontFamily: T.mono, color: T.rose, fontWeight: 900 }}>{formatNaira(item.price)} each</p>
                 </button>
@@ -3195,7 +3195,7 @@ function ExamPurchaseTab({
           <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 10px", textTransform: "uppercase" }}>Quantity</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
             {Array.from({ length: product?.maxQuantity || 5 }, (_, index) => index + 1).map((value) => (
-              <button key={value} onClick={() => onQuantityChange(value)} style={{ border: `1.5px solid ${quantity === value ? T.rose : T.border}`, borderRadius: 14, padding: 12, background: quantity === value ? "rgba(225,29,72,0.1)" : "#fff", cursor: "pointer", fontFamily: T.mono, fontWeight: 900 }}>
+              <button key={value} onClick={() => onQuantityChange(value)} style={{ border: `1.5px solid ${quantity === value ? T.rose : T.border}`, borderRadius: 14, padding: 12, background: quantity === value ? "rgba(251,113,133,0.16)" : T.surface, color: T.text, cursor: "pointer", fontFamily: T.mono, fontWeight: 900 }}>
                 {value}
               </button>
             ))}
@@ -3953,6 +3953,7 @@ export default function DashboardPage() {
   const [pin, setPin] = useState("");
   const [purchasingData, setPurchasingData] = useState(false);
   const [plansLoading, setPlansLoading] = useState(false);
+  const dataPlanCache = useRef<Record<string, DataPlan[]>>({});
 
   const [airtimeNetwork, setAirtimeNetwork] = useState<string | null>("mtn");
   const [airtimeAmount, setAirtimeAmount] = useState<number | null>(null);
@@ -4115,14 +4116,23 @@ export default function DashboardPage() {
     }
   };
 
-  const handleNetworkSelect = async (networkId: string) => {
+  const handleNetworkSelect = async (networkId: string, options: { keepSelection?: boolean } = {}) => {
+    const cachedPlans = dataPlanCache.current[networkId];
     setSelectedNetwork(networkId);
-    setSelectedPlan(null);
+    if (!options.keepSelection) setSelectedPlan(null);
+    if (cachedPlans?.length) {
+      setDataPlans(cachedPlans);
+      setPlansLoading(false);
+      return;
+    }
+
     setPlansLoading(true);
     try {
       const response = await fetch(`/api/data/plans?network=${networkId}`, { cache: "no-store" });
       const payload = await response.json();
-      setDataPlans(payload.data || []);
+      const plans = Array.isArray(payload.data) ? payload.data : [];
+      dataPlanCache.current[networkId] = plans;
+      setDataPlans(plans);
     } catch {
       toast.error("Ahh, sorry, plans could not load right now. Please try again shortly.");
     } finally {
@@ -4135,11 +4145,16 @@ export default function DashboardPage() {
     if (mode === "data") {
       setPhoneNumber("");
       setPin("");
-      void handleNetworkSelect("mtn");
+      void handleNetworkSelect("mtn", { keepSelection: selectedNetwork === "mtn" });
     } else {
       setAirtimeNetwork((current) => current || "mtn");
     }
   };
+
+  useEffect(() => {
+    if (!user?.id || dataPlanCache.current.mtn?.length) return;
+    void handleNetworkSelect("mtn", { keepSelection: true });
+  }, [user?.id]);
 
   const openPurchase = (mode: PurchaseMode) => {
     preparePurchaseMode(mode);
