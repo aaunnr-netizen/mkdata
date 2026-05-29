@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE_NAME, clearAdminSessionCookie, setAdminSessionCookie, signToken, verifyAdminToken } from "@/lib/auth";
+import {
+  ADMIN_SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  clearAdminSessionCookie,
+  setAdminSessionCookie,
+  signToken,
+  verifyAdminToken,
+} from "@/lib/auth";
 import { enforceRateLimit, getServerBaseUrl, rejectCrossSiteMutation, secureCompare } from "@/lib/security";
 
 export interface AdminUser {
@@ -15,7 +22,10 @@ export interface AdminUser {
  */
 export async function requireAdmin(req: NextRequest): Promise<AdminUser> {
   try {
-    const token = req.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+    const token =
+      req.cookies.get(ADMIN_SESSION_COOKIE_NAME)?.value ||
+      req.cookies.get(SESSION_COOKIE_NAME)?.value;
+
     if (!token) {
       throw new Error("Unauthorized");
     }

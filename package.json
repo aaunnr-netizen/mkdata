@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "node tests/run.mjs",
     "seed": "tsx prisma/seed.ts",
+    "seed:admin-services": "tsx scripts/seed-admin-services.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

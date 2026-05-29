@@ -85,6 +85,7 @@ interface UserData {
   fullName: string;
   phone: string;
   email?: string | null;
+  role: "USER" | "AGENT" | "ADMIN";
   balance: number;
   rewardBalance?: number;
   tier: "user" | "agent";
@@ -3271,6 +3272,649 @@ function TabBar({
   );
 }
 
+type AdminTab = "home" | "buy" | "manage" | "ops" | "profile";
+type PurchaseScreenProps = Parameters<typeof PurchaseScreen>[0];
+
+interface AdminAnalyticsState {
+  stats?: {
+    totalUsers: number;
+    totalTransactions: number;
+    totalRevenue: number;
+    todayRevenue: number;
+  };
+  recentTransactions?: Array<TransactionItem & { userName?: string; planName?: string }>;
+}
+
+async function loadAdminJson(path: string) {
+  const response = await fetch(path, { credentials: "include", cache: "no-store" });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error || payload?.message || "Admin request failed");
+  }
+  return payload;
+}
+
+function AdminSectionTitle({
+  kicker,
+  title,
+  action,
+}: {
+  kicker: string;
+  title: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: "0 0 5px", textTransform: "uppercase" }}>
+          {kicker}
+        </p>
+        <h2 style={{ fontFamily: T.font, fontSize: 24, lineHeight: 1.05, fontWeight: 900, color: T.text, margin: 0 }}>
+          {title}
+        </h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function AdminMetricCard({
+  label,
+  value,
+  tone = T.blue,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 18, padding: 14, minWidth: 0 }}>
+      <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 10, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+        {label}
+      </p>
+      <p style={{ margin: 0, fontFamily: T.mono, fontSize: 16, fontWeight: 900, color: tone, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AdminActionLink({
+  icon,
+  title,
+  subtitle,
+  metric,
+  href,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  metric?: string;
+  href?: string;
+  onClick?: () => void;
+}) {
+  const content = (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+        <div style={{ width: 38, height: 38, borderRadius: 14, background: T.blueLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {icon}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {title}
+          </p>
+          <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {metric ? (
+          <span style={{ borderRadius: 999, padding: "5px 9px", background: T.surface, color: T.blue, fontFamily: T.mono, fontSize: 11, fontWeight: 900 }}>
+            {metric}
+          </span>
+        ) : null}
+        <ChevronRight size={16} color={T.textDim} />
+      </div>
+    </>
+  );
+
+  const baseStyle: React.CSSProperties = {
+    width: "100%",
+    border: `1px solid ${T.border}`,
+    background: T.card,
+    borderRadius: 17,
+    padding: "13px 14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    textDecoration: "none",
+    textAlign: "left",
+    cursor: "pointer",
+  };
+
+  if (href) {
+    return (
+      <a href={href} style={baseStyle}>
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button onClick={onClick} style={baseStyle}>
+      {content}
+    </button>
+  );
+}
+
+function AdminHomeTab({ onOpenBuy }: { onOpenBuy: (mode: PurchaseMode) => void }) {
+  const [analytics, setAnalytics] = useState<AdminAnalyticsState | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadAdminJson("/api/admin/analytics")
+      .then((payload) => {
+        if (!cancelled) setAnalytics(payload);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Admin analytics could not load right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = analytics?.stats || {
+    totalUsers: 0,
+    totalTransactions: 0,
+    totalRevenue: 0,
+    todayRevenue: 0,
+  };
+  const recentTransactions = analytics?.recentTransactions || [];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <AdminSectionTitle
+        kicker="Admin Home"
+        title="Control center"
+        action={loading ? <Loader2 size={18} className="animate-spin" color={T.blue} /> : null}
+      />
+
+      <div style={{ background: "linear-gradient(135deg, #06133a 0%, #008fef 62%, #00a040 100%)", borderRadius: 24, padding: 18, color: "#fff", boxShadow: T.blueShadow, marginBottom: 14 }}>
+        <p style={{ margin: "0 0 7px", fontFamily: T.font, fontSize: 12, fontWeight: 900, opacity: 0.72, textTransform: "uppercase" }}>
+          Today revenue
+        </p>
+        <p style={{ margin: "0 0 10px", fontFamily: T.mono, fontSize: 28, lineHeight: 1, fontWeight: 900 }}>
+          {formatNaira(Number(stats.todayRevenue || 0))}
+        </p>
+        <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, opacity: 0.76 }}>
+          Total revenue {formatNaira(Number(stats.totalRevenue || 0))}
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 15 }}>
+        <AdminMetricCard label="Users" value={Number(stats.totalUsers || 0).toLocaleString()} />
+        <AdminMetricCard label="Transactions" value={Number(stats.totalTransactions || 0).toLocaleString()} tone={T.green} />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginBottom: 16 }}>
+        <button
+          onClick={() => onOpenBuy("data")}
+          style={{ border: "none", borderRadius: 18, background: T.card, padding: 14, minHeight: 86, display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", cursor: "pointer", boxShadow: "0 8px 18px rgba(15,23,42,0.06)" }}
+        >
+          <Bolt size={18} color={T.blue} />
+          <span style={{ fontFamily: T.font, color: T.text, fontWeight: 900 }}>Buy Data</span>
+        </button>
+        <button
+          onClick={() => onOpenBuy("airtime")}
+          style={{ border: "none", borderRadius: 18, background: T.card, padding: 14, minHeight: 86, display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", cursor: "pointer", boxShadow: "0 8px 18px rgba(15,23,42,0.06)" }}
+        >
+          <Phone size={18} color={T.green} />
+          <span style={{ fontFamily: T.font, color: T.text, fontWeight: 900 }}>Buy Airtime</span>
+        </button>
+      </div>
+
+      <div style={{ border: `1px solid ${T.borderStrong}`, borderRadius: 22, background: T.surface, padding: 14 }}>
+        <p style={{ margin: "0 0 12px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+          Recent transactions
+        </p>
+        {recentTransactions.length ? (
+          <div style={{ display: "grid", gap: 9 }}>
+            {recentTransactions.slice(0, 6).map((transaction) => (
+              <div key={transaction.id} style={{ border: `1px solid ${T.border}`, borderRadius: 15, background: T.card, padding: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {transaction.type.replace(/_/g, " ")}
+                  </p>
+                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textDim, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {transaction.userName || transaction.phone || "Customer"} - {transaction.status}
+                  </p>
+                </div>
+                <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, fontSize: 12, color: T.text }}>
+                  {formatNaira(Number(transaction.amount || 0))}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>
+            No recent admin activity loaded.
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function AdminBuyTab({
+  purchaseProps,
+  onModeChange,
+}: {
+  purchaseProps: PurchaseScreenProps;
+  onModeChange: (mode: PurchaseMode) => void;
+}) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+        {(["data", "airtime"] as PurchaseMode[]).map((mode) => {
+          const active = purchaseProps.mode === mode;
+          return (
+            <button
+              key={mode}
+              onClick={() => onModeChange(mode)}
+              style={{
+                border: `1px solid ${active ? T.blue : T.borderStrong}`,
+                borderRadius: 15,
+                padding: "11px 10px",
+                background: active ? T.blue : T.card,
+                color: active ? "#fff" : T.text,
+                fontFamily: T.font,
+                fontSize: 13,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              {mode === "data" ? "Data" : "Airtime"}
+            </button>
+          );
+        })}
+      </div>
+      <PurchaseScreen {...purchaseProps} />
+    </motion.div>
+  );
+}
+
+function AdminManageTab() {
+  const [summary, setSummary] = useState({
+    loading: true,
+    users: 0,
+    agents: 0,
+    plans: 0,
+    electricity: 0,
+    cableProviders: 0,
+    cablePlans: 0,
+    exams: 0,
+    airtimeCash: "",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([
+      loadAdminJson("/api/admin/users"),
+      loadAdminJson("/api/admin/agents"),
+      loadAdminJson("/api/admin/plans"),
+      loadAdminJson("/api/admin/services/electricity"),
+      loadAdminJson("/api/admin/services/cable-providers"),
+      loadAdminJson("/api/admin/services/cable-plans"),
+      loadAdminJson("/api/admin/services/exams"),
+      loadAdminJson("/api/admin/settings/airtime-cash"),
+    ])
+      .then((results) => {
+        if (cancelled) return;
+        const value = (index: number) => (results[index].status === "fulfilled" ? results[index].value : null);
+        const users = Array.isArray(value(0)) ? value(0) : [];
+        const agentsPayload = value(1);
+        const plans = Array.isArray(value(2)) ? value(2) : [];
+        const electricityPayload = value(3);
+        const cableProvidersPayload = value(4);
+        const cablePlansPayload = value(5);
+        const examsPayload = value(6);
+        const airtimeCashPayload = value(7);
+
+        setSummary({
+          loading: false,
+          users: users.length,
+          agents: Array.isArray(agentsPayload?.data) ? agentsPayload.data.length : 0,
+          plans: plans.length,
+          electricity: Array.isArray(electricityPayload?.data) ? electricityPayload.data.length : 0,
+          cableProviders: Array.isArray(cableProvidersPayload?.data) ? cableProvidersPayload.data.length : 0,
+          cablePlans: Array.isArray(cablePlansPayload?.data) ? cablePlansPayload.data.length : 0,
+          exams: Array.isArray(examsPayload?.data) ? examsPayload.data.length : 0,
+          airtimeCash: airtimeCashPayload?.data?.feePercent !== undefined ? `${airtimeCashPayload.data.feePercent}%` : "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Admin management data could not load right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setSummary((current) => ({ ...current, loading: false }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <AdminSectionTitle
+        kicker="Manage"
+        title="Users, plans, services"
+        action={summary.loading ? <Loader2 size={18} className="animate-spin" color={T.blue} /> : null}
+      />
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <AdminActionLink icon={<User size={17} color={T.blue} />} title="Users" subtitle="Accounts, roles, wallet adjustments" metric={summary.users.toLocaleString()} href="/admin/users" />
+        <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Agents" subtitle="Applications and agent status" metric={summary.agents.toLocaleString()} href="/admin/agents" />
+        <AdminActionLink icon={<Bolt size={17} color={T.blue} />} title="Data plans" subtitle="API A, API B, API C plan catalog" metric={summary.plans.toLocaleString()} href="/admin/plans" />
+        <AdminActionLink icon={<Lightbulb size={17} color={T.amber} />} title="API C services" subtitle="Electricity, cable TV, exam products" metric={`${summary.electricity}/${summary.cablePlans}/${summary.exams}`} href="/admin/services" />
+        <AdminActionLink icon={<CreditCard size={17} color={T.blueDark} />} title="Pricing" subtitle="Customer and agent pricing controls" href="/admin/pricing" />
+        <AdminActionLink icon={<Phone size={17} color={T.green} />} title="Airtime cash" subtitle="Conversion fee setup" metric={summary.airtimeCash} href="/admin/airtime-cash" />
+      </div>
+
+      <div style={{ marginTop: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 18, padding: 14 }}>
+        <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>
+          API C catalog: {summary.electricity} discos, {summary.cableProviders} cable providers, {summary.cablePlans} cable plans, {summary.exams} exam products.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function AdminOpsTab() {
+  const [state, setState] = useState({
+    loading: true,
+    transactions: [] as Array<TransactionItem & { userName?: string }>,
+    notices: 0,
+    rewards: 0,
+    webhooks: 0,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.allSettled([
+      loadAdminJson("/api/admin/transactions?limit=8"),
+      loadAdminJson("/api/admin/notices"),
+      loadAdminJson("/api/admin/rewards"),
+      loadAdminJson("/api/admin/webhooks"),
+    ])
+      .then((results) => {
+        if (cancelled) return;
+        const value = (index: number) => (results[index].status === "fulfilled" ? results[index].value : null);
+        const transactionsPayload = value(0);
+        const noticesPayload = value(1);
+        const rewardsPayload = value(2);
+        const webhooksPayload = value(3);
+        const notices = Array.isArray(noticesPayload?.data)
+          ? noticesPayload.data.length
+          : Array.isArray(noticesPayload)
+            ? noticesPayload.length
+            : 0;
+        const rewards = Array.isArray(rewardsPayload?.data)
+          ? rewardsPayload.data.length
+          : Array.isArray(rewardsPayload)
+            ? rewardsPayload.length
+            : 0;
+        const webhooks = Array.isArray(webhooksPayload?.data)
+          ? webhooksPayload.data.length
+          : Array.isArray(webhooksPayload?.events)
+            ? webhooksPayload.events.length
+            : 0;
+
+        setState({
+          loading: false,
+          transactions: Array.isArray(transactionsPayload?.transactions) ? transactionsPayload.transactions : [],
+          notices,
+          rewards,
+          webhooks,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Admin operations could not load right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setState((current) => ({ ...current, loading: false }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <AdminSectionTitle
+        kicker="Operations"
+        title="Logs and campaigns"
+        action={state.loading ? <Loader2 size={18} className="animate-spin" color={T.blue} /> : null}
+      />
+
+      <div style={{ display: "grid", gap: 10, marginBottom: 15 }}>
+        <AdminActionLink icon={<Receipt size={17} color={T.blue} />} title="Transactions" subtitle="Filter and inspect all orders" metric={state.transactions.length.toLocaleString()} href="/admin/transactions" />
+        <AdminActionLink icon={<MessageCircle size={17} color={T.green} />} title="Broadcasts" subtitle="Customer notices and promos" metric={state.notices.toLocaleString()} href="/admin/notices" />
+        <AdminActionLink icon={<Sparkles size={17} color={T.amber} />} title="Rewards" subtitle="Reward catalog and resets" metric={state.rewards.toLocaleString()} href="/admin/rewards" />
+        <AdminActionLink icon={<Wallet size={17} color={T.blueDark} />} title="Webhooks" subtitle="Payment webhook events" metric={state.webhooks.toLocaleString()} href="/admin/webhooks" />
+      </div>
+
+      <div style={{ border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 22, padding: 14 }}>
+        <p style={{ margin: "0 0 12px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
+          Latest orders
+        </p>
+        {state.transactions.length ? (
+          <div style={{ display: "grid", gap: 9 }}>
+            {state.transactions.slice(0, 5).map((transaction) => (
+              <div key={transaction.id} style={{ border: `1px solid ${T.border}`, borderRadius: 15, background: T.card, padding: 12, display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {transaction.userName || transaction.phone || "Customer"}
+                  </p>
+                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textDim }}>
+                    {transaction.type.replace(/_/g, " ")} - {transaction.status}
+                  </p>
+                </div>
+                <p style={{ margin: 0, fontFamily: T.mono, fontSize: 12, fontWeight: 900, color: T.text }}>
+                  {formatNaira(Number(transaction.amount || 0))}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid }}>No transaction feed loaded.</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function AdminProfileTab({
+  user,
+  onLogout,
+}: {
+  user: UserData;
+  onLogout: () => void;
+}) {
+  const [securityOpen, setSecurityOpen] = useState(false);
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+        <div style={{ borderRadius: 24, border: `1px solid ${T.borderStrong}`, background: "linear-gradient(135deg, #06133a 0%, #0060d0 100%)", padding: 18, color: "#fff", boxShadow: T.blueShadow, marginBottom: 16 }}>
+          <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 12, fontWeight: 900, opacity: 0.72, textTransform: "uppercase" }}>
+            Admin profile
+          </p>
+          <h2 style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 25, fontWeight: 900, color: "#fff" }}>
+            {user.fullName}
+          </h2>
+          <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, opacity: 0.78 }}>
+            {user.phone} - role verified
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <AdminMetricCard label="Wallet" value={formatNaira(user.balance / 100)} />
+          <AdminMetricCard label="Role" value={user.role} tone={T.green} />
+        </div>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          <AdminActionLink icon={<CreditCard size={17} color={T.blue} />} title="Change PIN" subtitle="Update the admin transaction PIN" onClick={() => setSecurityOpen(true)} />
+          <AdminActionLink icon={<ShieldCheck size={17} color={T.green} />} title="Legacy admin" subtitle="Open the full admin fallback" href="/admin" />
+          <AdminActionLink icon={<Headphones size={17} color={T.green} />} title="Support line" subtitle="09066120642" href="https://wa.me/2349066120642" />
+          <AdminActionLink icon={<LogOut size={17} color={T.rose} />} title="Sign out" subtitle="Log out from this device" onClick={onLogout} />
+        </div>
+      </motion.div>
+
+      <SecurityModal open={securityOpen} onClose={() => setSecurityOpen(false)} />
+    </>
+  );
+}
+
+function AdminBottomNav({
+  activeTab,
+  onChange,
+}: {
+  activeTab: AdminTab;
+  onChange: (tab: AdminTab) => void;
+}) {
+  const items = [
+    { id: "home" as const, label: "Home", icon: Home },
+    { id: "buy" as const, label: "Buy", icon: Wallet },
+    { id: "manage" as const, label: "Manage", icon: CreditCard },
+    { id: "ops" as const, label: "Ops", icon: Receipt },
+    { id: "profile" as const, label: "Profile", icon: User },
+  ];
+
+  return (
+    <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 10px 12px" }}>
+      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
+        {items.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onChange(item.id)}
+              style={{
+                border: "none",
+                borderRadius: 16,
+                padding: "9px 3px",
+                background: isActive ? T.blueLight : "transparent",
+                color: isActive ? T.blue : T.textMid,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 5,
+                cursor: "pointer",
+                fontFamily: T.font,
+                fontSize: 10,
+                fontWeight: 900,
+                minWidth: 0,
+              }}
+            >
+              <Icon size={17} />
+              <span style={{ maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AdminAppShell({
+  user,
+  purchaseProps,
+  onPurchaseModeChange,
+  onLogout,
+}: {
+  user: UserData;
+  purchaseProps: PurchaseScreenProps;
+  onPurchaseModeChange: (mode: PurchaseMode) => void;
+  onLogout: () => void;
+}) {
+  const [adminTab, setAdminTab] = useState<AdminTab>("home");
+
+  const openBuy = (mode: PurchaseMode) => {
+    onPurchaseModeChange(mode);
+    setAdminTab("buy");
+  };
+
+  const handleAdminTabChange = (tab: AdminTab) => {
+    if (tab === "buy") {
+      onPurchaseModeChange(purchaseProps.mode);
+    }
+    setAdminTab(tab);
+  };
+
+  const tabContent =
+    adminTab === "home" ? (
+      <AdminHomeTab onOpenBuy={openBuy} />
+    ) : adminTab === "buy" ? (
+      <AdminBuyTab
+        purchaseProps={{
+          ...purchaseProps,
+          onBack: () => setAdminTab("home"),
+        }}
+        onModeChange={onPurchaseModeChange}
+      />
+    ) : adminTab === "manage" ? (
+      <AdminManageTab />
+    ) : adminTab === "ops" ? (
+      <AdminOpsTab />
+    ) : (
+      <AdminProfileTab user={user} onLogout={onLogout} />
+    );
+
+  return (
+    <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: 104 }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(255,255,255,0.9)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
+        <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+            <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue, margin: "0 0 4px", textTransform: "uppercase" }}>
+                MK Data Admin
+              </p>
+              <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text, margin: 0, maxWidth: 185, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {user.fullName}
+              </p>
+              <p style={{ display: "inline-flex", borderRadius: 999, padding: "3px 8px", background: "rgba(0,160,64,0.12)", color: T.green, fontFamily: T.font, fontSize: 10, fontWeight: 900, margin: "5px 0 0" }}>
+                Role verified
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            style={{ border: "none", borderRadius: 999, padding: "10px 11px", background: T.blueLight, color: T.blue, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+            aria-label="Sign out"
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
+      </div>
+
+      <main style={{ maxWidth: 390, margin: "0 auto", padding: "16px 16px 0" }}>{tabContent}</main>
+
+      <AdminBottomNav activeTab={adminTab} onChange={handleAdminTabChange} />
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
@@ -3472,9 +4116,8 @@ export default function DashboardPage() {
     }
   };
 
-  const openPurchase = (mode: PurchaseMode) => {
+  const preparePurchaseMode = (mode: PurchaseMode) => {
     setPurchaseMode(mode);
-    setActiveTab("buy");
     if (mode === "data") {
       setPhoneNumber("");
       setPin("");
@@ -3482,6 +4125,15 @@ export default function DashboardPage() {
     } else {
       setAirtimeNetwork((current) => current || "mtn");
     }
+  };
+
+  const openPurchase = (mode: PurchaseMode) => {
+    preparePurchaseMode(mode);
+    setActiveTab("buy");
+  };
+
+  const openAdminPurchase = (mode: PurchaseMode) => {
+    preparePurchaseMode(mode);
   };
 
   const handleDataPurchase = async () => {
@@ -3844,6 +4496,52 @@ export default function DashboardPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const purchaseScreenProps: PurchaseScreenProps = {
+    mode: purchaseMode,
+    user,
+    selectedNetwork: selectedNetwork || "mtn",
+    dataPlans,
+    selectedPlan,
+    plansLoading,
+    phoneNumber,
+    pin,
+    purchasingData,
+    onDataNetworkSelect: handleNetworkSelect,
+    onPlanSelect: setSelectedPlan,
+    onPhoneChange: setPhoneNumber,
+    onPinChange: setPin,
+    onDataPurchase: handleDataPurchase,
+    airtimeNetwork: airtimeNetwork || "mtn",
+    airtimeAmount,
+    airtimePhone,
+    airtimePin,
+    purchasingAirtime,
+    onAirtimeNetworkSelect: setAirtimeNetwork,
+    onAirtimeAmountSelect: setAirtimeAmount,
+    onAirtimePhoneChange: setAirtimePhone,
+    onAirtimePinChange: setAirtimePin,
+    onAirtimePurchase: handleAirtimePurchase,
+    onBack: () => setActiveTab("home"),
+  };
+
+  if (user.role === "ADMIN") {
+    return (
+      <>
+        <style>{fontStyle}</style>
+        <AdminAppShell
+          user={user}
+          purchaseProps={purchaseScreenProps}
+          onPurchaseModeChange={openAdminPurchase}
+          onLogout={handleLogout}
+        />
+        <PurchaseSuccessScreen
+          state={successState}
+          onClose={() => setSuccessState({ open: false, title: "", description: "", reference: undefined })}
+        />
+      </>
+    );
+  }
+
   const showBottomNav = !(["buy", "electricity", "cable", "exam"] as AppTab[]).includes(activeTab);
 
   return (
