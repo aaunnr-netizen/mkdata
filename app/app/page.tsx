@@ -120,6 +120,7 @@ interface DataPlan {
   sizeLabel: string;
   validity: string;
   network: string;
+  dataType?: string;
 }
 
 interface ElectricityProvider {
@@ -2502,6 +2503,22 @@ function PurchaseScreen({
   const selectedAirtimeNetwork = NETWORKS.find((network) => network.id === airtimeNetwork) || NETWORKS[0];
   const purchaseTitle = mode === "data" ? "Buy Data" : "Buy Airtime";
 
+  const [activeTypeTab, setActiveTypeTab] = useState<string>("SME");
+  const dataTypes = ["SME", "SME2", "GIFTING", "MTN CG"];
+
+  useEffect(() => {
+    if (dataPlans.length > 0) {
+      const availableTypes = Array.from(new Set(dataPlans.map(p => (p.dataType || "SME").toUpperCase())));
+      if (availableTypes.length > 0 && !availableTypes.includes(activeTypeTab.toUpperCase())) {
+        setActiveTypeTab(availableTypes[0]);
+      }
+    }
+  }, [dataPlans]);
+
+  const filteredPlans = dataPlans.filter(
+    (plan) => (plan.dataType || "SME").toUpperCase() === activeTypeTab.toUpperCase()
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <button
@@ -2577,34 +2594,71 @@ function PurchaseScreen({
                 <Loader2 size={24} className="animate-spin" color={T.blue} />
               </div>
             ) : dataPlans.length ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
-                {dataPlans.map((plan) => {
-                  const selected = selectedPlan?.id === plan.id;
-                  return (
-                    <button
-                      key={plan.id}
-                      onClick={() => onPlanSelect(plan)}
-                      style={{
-                        border: `1.5px solid ${selected ? T.blue : T.border}`,
-                        borderRadius: 15,
-                        background: selected ? T.blueLight : T.card,
-                        padding: "12px 10px",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        minHeight: 86,
-                      }}
-                    >
-                      <p style={{ fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, margin: "0 0 4px" }}>
-                        {plan.sizeLabel}
-                      </p>
-                      <p style={{ fontFamily: T.font, fontSize: 11, color: T.textDim, margin: "0 0 9px" }}>{plan.validity}</p>
-                      <p style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 900, color: T.blue, margin: 0 }}>
-                        {formatNaira(getPriceForTier(plan, user?.tier || "user"))}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 12, scrollbarWidth: "none" }}>
+                  {dataTypes.map((type) => {
+                    const active = activeTypeTab.toUpperCase() === type.toUpperCase();
+                    const hasPlans = dataPlans.some(p => (p.dataType || "SME").toUpperCase() === type.toUpperCase());
+                    if (!hasPlans) return null;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setActiveTypeTab(type)}
+                        style={{
+                          flexShrink: 0,
+                          border: `1px solid ${active ? T.blue : T.borderStrong}`,
+                          borderRadius: 12,
+                          padding: "7px 14px",
+                          background: active ? T.blue : T.surface,
+                          color: active ? "#fff" : T.textDim,
+                          fontFamily: T.font,
+                          fontSize: 12,
+                          fontWeight: 900,
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {filteredPlans.length ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
+                    {filteredPlans.map((plan) => {
+                      const selected = selectedPlan?.id === plan.id;
+                      return (
+                        <button
+                          key={plan.id}
+                          onClick={() => onPlanSelect(plan)}
+                          style={{
+                            border: `1.5px solid ${selected ? T.blue : T.border}`,
+                            borderRadius: 15,
+                            background: selected ? T.blueLight : T.card,
+                            padding: "12px 10px",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            minHeight: 86,
+                          }}
+                        >
+                          <p style={{ fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, margin: "0 0 4px" }}>
+                            {plan.sizeLabel}
+                          </p>
+                          <p style={{ fontFamily: T.font, fontSize: 11, color: T.textDim, margin: "0 0 9px" }}>{plan.validity}</p>
+                          <p style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 900, color: T.blue, margin: 0 }}>
+                            {formatNaira(getPriceForTier(plan, user?.tier || "user"))}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ fontFamily: T.font, fontSize: 13, color: T.textMid, margin: 0 }}>
+                    No plans are available for this tab type.
+                  </p>
+                )}
+              </>
             ) : (
               <p style={{ fontFamily: T.font, fontSize: 13, color: T.textMid, margin: 0 }}>
                 No plans are available for this network right now.
@@ -4032,6 +4086,33 @@ export default function DashboardPage() {
         );
       })
       .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    (window as any).updateFcmToken = async (token: string) => {
+      if (!token) return;
+      try {
+        const res = await fetch("/api/auth/fcm-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          console.log("[FCM BRIDGE] Token registered successfully:", token);
+        } else {
+          console.warn("[FCM BRIDGE] Failed to register token:", data.error);
+        }
+      } catch (err) {
+        console.error("[FCM BRIDGE] Error registering token:", err);
+      }
+    };
+
+    return () => {
+      delete (window as any).updateFcmToken;
+    };
   }, []);
 
   const refreshUser = async () => {

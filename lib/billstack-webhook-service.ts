@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { evaluateDepositRewardInTx } from "@/lib/rewards";
 import { processBillstackWebhookWithAdapter } from "@/lib/billstack-webhook-core.mjs";
+import { sendPushNotification } from "@/lib/firebase";
 
 type RawPayload = Record<string, unknown>;
 
@@ -218,6 +219,13 @@ export async function processBillstackWebhook(payload: RawPayload) {
           phone: user.phone,
           depositAmount: amountNaira,
         });
+
+        // Trigger push notification asynchronously
+        sendPushNotification(
+          user.id,
+          "Wallet Funded Successfully 💰",
+          `Your wallet has been credited with ₦${amountNaira.toLocaleString()}. New balance: ₦${(updatedUser.balance / 100).toLocaleString()}.`
+        ).catch((err) => console.error("[FCM WEBHOOK NOTIFICATION ERROR]", err));
 
         return {
           transactionId: createdTx.id,

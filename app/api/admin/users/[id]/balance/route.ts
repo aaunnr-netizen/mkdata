@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enforceAdminMutationGuard, logAdminAction, requireAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/db";
+import { sendPushNotification } from "@/lib/firebase";
 import { z } from "zod";
 
 const balanceSchema = z.object({
@@ -87,6 +88,18 @@ export async function POST(
       amountNaira: amount,
       resultingBalanceKobo: updatedUser.balance,
     });
+
+    // Trigger push notification asynchronously
+    const resultingBalanceNaira = updatedUser.balance / 100;
+    const isCredit = action === "ADD";
+    const notificationTitle = isCredit ? "Account Credited 💰" : "Account Debited 💸";
+    const notificationBody = isCredit
+      ? `Your account has been credited with ₦${amount.toLocaleString()}. New balance: ₦${resultingBalanceNaira.toLocaleString()}.`
+      : `Your account has been debited with ₦${amount.toLocaleString()}. New balance: ₦${resultingBalanceNaira.toLocaleString()}.`;
+
+    sendPushNotification(id, notificationTitle, notificationBody).catch((err) =>
+      console.error("[FCM ADMIN BALANCE ADJUSTMENT NOTIFICATION ERROR]", err)
+    );
 
     return NextResponse.json(
       {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { purchaseAirtime } from "@/lib/alrahuz";
 import { findRecentDuplicateTransaction, normalizeProviderFailureMessage } from "@/lib/purchase-utils";
 import { getSessionUser } from "@/lib/auth";
+import { sendPushNotification } from "@/lib/firebase";
 import { z } from "zod";
 import bcryptjs from "bcryptjs";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
@@ -238,9 +239,17 @@ export async function POST(req: NextRequest) {
         data: {
           status: "SUCCESS",
           externalReference: apiResult.externalReference || undefined,
-          description: apiResult.message,
+          description: apiResult.message || "Airtime purchased successfully",
         },
       });
+
+      // Trigger push notification asynchronously
+      const remainingBalance = (user.balance - amountInKobo) / 100;
+      sendPushNotification(
+        user.id,
+        "Airtime Purchase Successful 💸",
+        `Your purchase of ₦${amount} airtime for ${recipientPhone} was successful. Charged: ₦${amount}. Balance: ₦${remainingBalance.toLocaleString()}.`
+      ).catch((err) => console.error("[FCM AIRTIME PURCHASE NOTIFICATION ERROR]", err));
 
       return NextResponse.json(
         {

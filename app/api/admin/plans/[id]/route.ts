@@ -19,6 +19,7 @@ const updatePlanSchema = z.object({
   apiCPlanId: z.number().int().positive().optional(),
   apiCNetworkId: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),
+  dataType: z.string().min(1).optional(),
 });
 
 export async function PATCH(

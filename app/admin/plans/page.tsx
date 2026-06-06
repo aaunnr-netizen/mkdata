@@ -37,6 +37,7 @@ interface Plan {
   apiCPlanId?: number | null;
   apiCNetworkId?: number | null;
   isActive: boolean;
+  dataType?: string;
 }
 
 const apiSourceLabels: Record<string, string> = {
@@ -65,6 +66,7 @@ export default function PlansPage() {
     apiBNetworkId: 1,
     apiCPlanId: 0,
     apiCNetworkId: 1,
+    dataType: "SME",
   });
 
   useEffect(() => {
@@ -100,6 +102,7 @@ export default function PlansPage() {
       apiBNetworkId: 1,
       apiCPlanId: 0,
       apiCNetworkId: 1,
+      dataType: "SME",
     });
   };
 
@@ -146,6 +149,7 @@ export default function PlansPage() {
       apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1),
       apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0),
       apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1),
+      dataType: plan.dataType || "SME",
     });
     setEditingId(plan.id);
     setOpenDialog(true);
@@ -237,6 +241,18 @@ export default function PlansPage() {
                 <Label>Agent Price (N)</Label>
                 <Input type="number" value={formData.agent_price} onChange={(e) => setFormData({ ...formData, agent_price: parseFloat(e.target.value) || 0 })} required />
               </div>
+              <div>
+                <Label>Plan Type (dataType)</Label>
+                <Select value={formData.dataType} onValueChange={(value) => setFormData({ ...formData, dataType: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SME">SME</SelectItem>
+                    <SelectItem value="SME2">SME2</SelectItem>
+                    <SelectItem value="GIFTING">Gifting</SelectItem>
+                    <SelectItem value="MTN CG">MTN CG</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>API Source</Label>
@@ -295,6 +311,7 @@ export default function PlansPage() {
                 <th className="px-4 py-3 text-left font-semibold">Validity</th>
                 <th className="px-4 py-3 text-left font-semibold">User Price</th>
                 <th className="px-4 py-3 text-left font-semibold">Agent Price</th>
+                <th className="px-4 py-3 text-left font-semibold">Type</th>
                 <th className="px-4 py-3 text-left font-semibold">API</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
                 <th className="px-4 py-3 text-left font-semibold">Actions</th>
@@ -309,6 +326,7 @@ export default function PlansPage() {
                   <td className="px-4 py-3">{plan.validity}</td>
                   <td className="px-4 py-3 font-semibold">N{plan.user_price}</td>
                   <td className="px-4 py-3 font-semibold">N{plan.agent_price}</td>
+                  <td className="px-4 py-3"><Badge variant="outline">{plan.dataType || "SME"}</Badge></td>
                   <td className="px-4 py-3"><Badge>{apiSourceLabels[plan.apiSource] || plan.apiSource}</Badge></td>
                   <td className="px-4 py-3">
                     <Badge className={plan.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>

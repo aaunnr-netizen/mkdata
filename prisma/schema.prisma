@@ -104,6 +104,7 @@ model User {
   transactions   Transaction[]
   userRewards    UserReward[]
   biometricCredentials BiometricCredential[]
+  fcmTokens          UserFcmToken[]
 
   @@index([phone])
   @@index([email])
@@ -202,6 +203,7 @@ model Plan {
   apiCPlanId          Int?
   apiCNetworkId       Int?
   isActive            Boolean    @default(true)
+  dataType            String     @default("SME")
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
@@ -346,4 +348,15 @@ model ServiceNotice {
   @@index([isActive, startsAt, endsAt])
   @@index([audience])
   @@map("service_notices")
+}
+
+model UserFcmToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_fcm_tokens")
 }

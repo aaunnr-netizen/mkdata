@@ -19,6 +19,7 @@ const planSchema = z
     apiBNetworkId: z.number().int().positive("Saiful network ID is required"),
     apiCPlanId: z.number().int().positive("Alrahuz plan ID is required"),
     apiCNetworkId: z.number().int().positive("Alrahuz network ID is required"),
+    dataType: z.string().min(1).default("SME"),
   })
   .refine((data) => data.agent_price <= data.user_price, {
     message: "Agent price cannot exceed user price",

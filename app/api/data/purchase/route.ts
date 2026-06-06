@@ -8,6 +8,7 @@ import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { getPlanPriceForUser } from "@/lib/pricing";
 import { checkAndAwardRewards } from "@/lib/rewards";
 import { getSessionUser } from "@/lib/auth";
+import { sendPushNotification } from "@/lib/firebase";
 import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
@@ -299,6 +300,14 @@ export async function POST(req: NextRequest) {
       });
 
       await checkAndAwardRewards(user.id);
+
+      // Trigger push notification asynchronously
+      const remainingBalance = (user.balance - txResult.walletDebit) / 100;
+      sendPushNotification(
+        user.id,
+        "Data Purchase Successful 📱",
+        `Your purchase of ${plan.sizeLabel} data for ${recipientPhone} was successful. Charged: ₦${planPrice.toLocaleString()}. Balance: ₦${remainingBalance.toLocaleString()}.`
+      ).catch((err) => console.error("[FCM DATA PURCHASE NOTIFICATION ERROR]", err));
 
       return NextResponse.json(
         {
