@@ -5,6 +5,7 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { buildUserCreateCompatData, getUserSelectCompat, withCompatibleUserFields } from "@/lib/user-compat";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
+import { provisionSignupBillstackAccount } from "@/lib/billstack-account";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,7 +58,18 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    const fundingAccountProvisioned = false;
+    let fundingAccountProvisioned = false;
+    try {
+      const provisioned = await provisionSignupBillstackAccount({
+        userId: user.id,
+        fullName: name,
+        phone,
+        email,
+      });
+      fundingAccountProvisioned = provisioned.success;
+    } catch (error) {
+      console.error("[SIGNUP VIRTUAL VA PROVISION ERROR]", error);
+    }
 
     const token = await signToken({
       userId: user.id,

@@ -2018,9 +2018,11 @@ function ProfileTab({
 
 function ModernProfileTab({
   user,
+  accounts,
   onLogout,
 }: {
   user: UserData;
+  accounts: BankAccountItem[];
   onLogout: () => void;
 }) {
   const [securityOpen, setSecurityOpen] = useState(false);
@@ -2209,17 +2211,25 @@ function ModernProfileTab({
           <p style={{ margin: "0 0 13px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
             Account details
           </p>
-          {[
-            ["Name", user.fullName],
-            ["Email", user.email || "nil"],
-            ["Phone", user.phone],
-            ["Date joined", user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : "-"],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: `1px solid ${T.border}` }}>
-              <span style={{ fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>{label}</span>
-              <span style={{ fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, textAlign: "right", minWidth: 0, overflowWrap: "anywhere" }}>{value}</span>
-            </div>
-          ))}
+          {(() => {
+            const primaryAccount = accounts.find((item) => item.isPrimary) || accounts[0] || null;
+            const accountDetails = [
+              ["Name", user.fullName],
+              ["Email", user.email || "nil"],
+              ["Phone", user.phone],
+              ["Date joined", user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : "-"],
+            ];
+            if (primaryAccount) {
+              accountDetails.push(["Bank Name", primaryAccount.bankName]);
+              accountDetails.push(["Account Number", primaryAccount.accountNumber]);
+            }
+            return accountDetails.map(([label, value]) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: `1px solid ${T.border}` }}>
+                <span style={{ fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid }}>{label}</span>
+                <span style={{ fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, textAlign: "right", minWidth: 0, overflowWrap: "anywhere" }}>{value}</span>
+              </div>
+            ));
+          })()}
         </div>
 
         <div style={{ border: `1px solid ${T.borderStrong}`, background: T.surface, borderRadius: 22, padding: 14, marginBottom: 16 }}>
@@ -4746,7 +4756,7 @@ export default function DashboardPage() {
           ) : activeTab === "agent" ? (
             <AgentTab />
           ) : (
-            <ModernProfileTab user={user} onLogout={handleLogout} />
+            <ModernProfileTab user={user} accounts={bankAccounts} onLogout={handleLogout} />
           )}
         </main>
 

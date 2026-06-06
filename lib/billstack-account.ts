@@ -3,7 +3,7 @@ import { createReservedVirtualAccount } from "@/lib/billstack-core.mjs";
 
 export type BillstackBank = "9PSB" | "SAFEHAVEN" | "PROVIDUS" | "BANKLY" | "PALMPAY";
 
-const SIGNUP_BANK_FALLBACK: BillstackBank[] = ["PALMPAY", "9PSB", "SAFEHAVEN"];
+const SIGNUP_BANK_FALLBACK: BillstackBank[] = ["PALMPAY", "9PSB", "SAFEHAVEN", "PROVIDUS"];
 
 function splitName(fullName: string) {
   const normalized = (fullName || "").trim().replace(/\s+/g, " ");
@@ -61,8 +61,8 @@ export async function createBillstackBankAccount(params: CreateAccountParams) {
     reference: merchantReference,
     email: emailForProvision(params.phone, params.email),
     phone: params.phone,
-    firstName: names.firstName,
-    lastName: names.lastName,
+    firstName: "MK DATA",
+    lastName: names.firstName,
     bank: params.bank,
   });
 
