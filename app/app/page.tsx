@@ -4050,6 +4050,11 @@ export default function DashboardPage() {
   const [purchasingExam, setPurchasingExam] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("app_unlocked") !== "true") {
+      router.push("/app/auth?lock=true");
+      return;
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
 
@@ -4114,6 +4119,58 @@ export default function DashboardPage() {
       delete (window as any).updateFcmToken;
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const currentHash = window.location.hash.replace("#", "");
+    if (activeTab !== currentHash) {
+      window.history.pushState({ tab: activeTab }, "", `#${activeTab}`);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.history.replaceState({ tab: "home" }, "", "#home");
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state && state.tab) {
+        setActiveTab(state.tab);
+      } else {
+        setActiveTab("home");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const checkLock = () => {
+      if (sessionStorage.getItem("app_unlocked") !== "true") {
+        router.push("/app/auth?lock=true");
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        sessionStorage.removeItem("app_unlocked");
+      } else if (document.visibilityState === "visible") {
+        checkLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [router]);
 
   const refreshUser = async () => {
     const cacheBuster = `_cb=${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

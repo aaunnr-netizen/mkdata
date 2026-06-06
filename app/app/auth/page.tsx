@@ -84,6 +84,19 @@ export default function AuthPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const isLocked = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lock") === "true";
+      if (isLocked) {
+        setHasCheckedAuth(true);
+        if (typeof window !== "undefined") {
+          const saved = localStorage.getItem("saved_phone");
+          if (saved) {
+            setSavedPhone(saved);
+            setPhone(saved);
+          }
+        }
+        return;
+      }
+
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
       try {
@@ -94,8 +107,11 @@ export default function AuthPage() {
           signal: controller.signal,
         });
         if (res.ok) {
-          router.push("/app");
-          return;
+          const unlocked = typeof window !== "undefined" && sessionStorage.getItem("app_unlocked") === "true";
+          if (unlocked) {
+            router.push("/app");
+            return;
+          }
         }
       } catch {}
       finally {
@@ -192,6 +208,7 @@ export default function AuthPage() {
 
         if (res.ok) {
           localStorage.setItem("saved_phone", detail.phone);
+          sessionStorage.setItem("app_unlocked", "true");
           toast.success("Fingerprint unlocked your account.");
           router.push("/app");
           return;
@@ -254,6 +271,7 @@ export default function AuthPage() {
       if (res.ok) {
         if (typeof window !== "undefined") {
           localStorage.setItem("saved_phone", phone);
+          sessionStorage.setItem("app_unlocked", "true");
         }
         await enrollBiometricCredential(phone);
         toast.success("You are signed in.");
@@ -318,6 +336,7 @@ export default function AuthPage() {
       if (res.ok) {
         if (typeof window !== "undefined") {
           localStorage.setItem("saved_phone", phone);
+          sessionStorage.setItem("app_unlocked", "true");
         }
         await enrollBiometricCredential(phone);
         toast.success("Your account is ready.");
