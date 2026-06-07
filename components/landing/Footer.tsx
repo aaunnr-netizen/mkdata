@@ -50,18 +50,16 @@ export function Footer() {
         <div className="border-t border-white/10 pt-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="inline-flex items-center gap-3 text-white">
+                <span className="text-sm font-black sm:text-base">Contact Developer</span>
+              </div>
               <a
-                href="https://www.anjalventures.com"
+                href="https://wa.me/2348034910470"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 text-white"
+                className="inline-flex items-center justify-center rounded-lg bg-[#00a040] px-5 py-3 text-sm font-black text-white transition-colors hover:bg-[#16b85a] sm:text-base"
               >
-                <span className="text-sm font-black sm:text-base">Built by Anjal Ventures</span>
-                <img
-                  src="https://anjalventures.com/logo.png"
-                  alt="Anjal Ventures"
-                  className="h-10 w-10 rounded-lg bg-white p-1 object-contain"
-                />
+                WhatsApp (Developer)
               </a>
               <a
                 href="https://wa.me/2349066120642"

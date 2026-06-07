@@ -1983,13 +1983,12 @@ function ProfileTab({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="https://anjalventures.com/logo.png" alt="Anjal Ventures" style={{ width: 28, height: 28, borderRadius: 8 }} />
             <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, fontWeight: 700, color: T.text }}>
-              Built by Anjal Ventures
+              Contact Developer
             </p>
           </div>
           <a
-            href="https://wa.me/2349066120642"
+            href="https://wa.me/2348034910470"
             target="_blank"
             rel="noreferrer"
             style={{
@@ -2292,11 +2291,32 @@ function ModernProfileTab({
 
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="https://anjalventures.com/logo.png" alt="Anjal Ventures" style={{ width: 30, height: 30, borderRadius: 8 }} />
             <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text }}>
-              Built by Anjal Ventures
+              Contact Developer
             </p>
           </div>
+          <a
+            href="https://wa.me/2348034910470"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              textDecoration: "none",
+              borderRadius: 10,
+              padding: "8px 10px",
+              background: "rgba(22,163,74,0.12)",
+              color: T.green,
+              fontFamily: T.font,
+              fontSize: 12,
+              fontWeight: 900,
+              cursor: "pointer",
+            }}
+          >
+            <MessageCircle size={14} />
+            WhatsApp
+          </a>
         </div>
       </motion.div>
 
@@ -2540,23 +2560,6 @@ function PurchaseScreen({
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <button
-        onClick={onBack}
-        style={{ border: "none", background: "transparent", color: T.blue, fontFamily: T.font, fontWeight: 900, cursor: "pointer", padding: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}
-      >
-        <ChevronLeft size={16} />
-        Home
-      </button>
-
-      <div style={{ marginBottom: 16 }}>
-        <p style={{ fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>
-          Buy
-        </p>
-        <h2 style={{ fontFamily: T.font, fontSize: 26, fontWeight: 900, color: T.text, margin: 0 }}>
-          {purchaseTitle}
-        </h2>
-      </div>
-
       {mode === "data" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {/* Phone & Network combined card */}
@@ -3334,6 +3337,7 @@ function TabBar({
 }) {
   const items = [
     { id: "home" as const, label: "Home", icon: Home },
+    { id: "transactions" as const, label: "Transactions", icon: Receipt },
     { id: "support" as const, label: "Support", icon: Headphones },
     { id: "profile" as const, label: "Profile", icon: User },
   ];
@@ -3351,7 +3355,7 @@ function TabBar({
           boxShadow: T.blueShadow,
           padding: 10,
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: "repeat(4, 1fr)",
           gap: 8,
         }}
       >
