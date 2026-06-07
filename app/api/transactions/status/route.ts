@@ -11,7 +11,7 @@ import { prisma } from "@/lib/db";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const reference = searchParams.get("ref");
+    const reference = searchParams.get("ref") || searchParams.get("reference");
 
     if (!reference) {
       return NextResponse.json(

@@ -15,8 +15,6 @@ const SIDEBAR_ITEMS = [
   { href: "/admin/pricing", label: "Pricing Tiers", icon: Database },
   { href: "/admin/transactions", label: "Transactions", icon: Receipt },
   { href: "/admin/agents", label: "Agent Apps", icon: UserCheck },
-  { href: "/admin/rewards", label: "Rewards", icon: Gift },
-  { href: "/admin/airtime-cash", label: "Airtime Cash", icon: Phone },
   { href: "/admin/notices", label: "Broadcasts", icon: Bell },
   { href: "/admin/push-notifications", label: "Push Notifications", icon: Send },
   { href: "/admin/webhooks", label: "Webhooks", icon: Webhook },
