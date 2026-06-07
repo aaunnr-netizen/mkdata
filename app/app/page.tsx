@@ -4717,6 +4717,7 @@ export default function DashboardPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const firstName = user.fullName.split(" ")[0] || "User";
   const purchaseScreenProps: PurchaseScreenProps = {
     mode: purchaseMode,
     user,
@@ -4776,61 +4777,85 @@ export default function DashboardPage() {
       <style>{fontStyle}</style>
 
       <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: showBottomNav ? 104 : 28 }}>
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 40,
-            background: "rgba(3,11,31,0.88)",
-            backdropFilter: "blur(18px)",
-            borderBottom: `1px solid ${T.borderStrong}`,
-          }}
-        >
+        {activeTab === "home" && (
           <div
             style={{
-              maxWidth: 390,
-              margin: "0 auto",
-              padding: "12px 16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              position: "sticky",
+              top: 0,
+              zIndex: 40,
+              background: "rgba(3,11,31,0.88)",
+              backdropFilter: "blur(18px)",
+              borderBottom: `1px solid ${T.borderStrong}`,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
-              <div>
-                <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue, margin: "0 0 4px", textTransform: "uppercase" }}>
-                  MK Data
-                </p>
-                <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text, margin: 0, maxWidth: 190, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {user.fullName}
-                </p>
-                <p style={{ display: "inline-flex", borderRadius: 999, padding: "3px 8px", background: user.tier === "agent" ? "rgba(0,160,64,0.12)" : T.blueLight, color: user.tier === "agent" ? T.green : T.blue, fontFamily: T.font, fontSize: 10, fontWeight: 900, margin: "5px 0 0" }}>
-                  {user.tier === "agent" ? "Agent" : "User"}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
+            <div
               style={{
-                border: "none",
-                borderRadius: 999,
-                padding: "10px 11px",
-                background: T.blueLight,
-                color: T.blue,
+                maxWidth: 390,
+                margin: "0 auto",
+                padding: "12px 16px",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                fontFamily: T.font,
-                fontWeight: 900,
-                cursor: "pointer",
+                justifyContent: "space-between",
               }}
             >
-              <LogOut size={14} />
-              <span style={{ display: "none" }}>Exit</span>
-            </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {/* User Initials Avatar */}
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
+                    background: user.tier === "agent" ? "linear-gradient(135deg, #17d96f 0%, #10b981 100%)" : "linear-gradient(135deg, #008fef 0%, #25b8ff 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 8px 20px rgba(0,143,239,0.15)",
+                    color: "#fff",
+                    fontFamily: T.font,
+                    fontSize: 14,
+                    fontWeight: 900,
+                  }}
+                >
+                  {initials}
+                </div>
+                <div>
+                  <p style={{ fontFamily: T.font, fontSize: 14, fontWeight: 900, color: T.text, margin: 0 }}>
+                    Hey, {firstName} 👋
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                    <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: T.green }} />
+                    <span style={{ fontFamily: T.font, fontSize: 10, fontWeight: 800, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {user.tier === "agent" ? "Agent Account" : "Standard Account"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                style={{
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "8px 12px",
+                  background: "rgba(225,29,72,0.1)",
+                  color: T.rose,
+                  fontFamily: T.font,
+                  fontSize: 11,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  transition: "background 0.2s",
+                }}
+              >
+                <LogOut size={13} />
+                Logout
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <main style={{ maxWidth: 390, margin: "0 auto", padding: "16px 16px 0" }}>
           <BroadcastBanner notice={broadcasts[0] || null} onDismiss={() => broadcasts[0] && dismissBroadcast(broadcasts[0].id)} />
