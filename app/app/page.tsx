@@ -4857,6 +4857,80 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {activeTab !== "home" && (
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 40,
+              background: "rgba(3,11,31,0.88)",
+              backdropFilter: "blur(18px)",
+              borderBottom: `1px solid ${T.borderStrong}`,
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 390,
+                margin: "0 auto",
+                padding: "12px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                minHeight: 38,
+                boxSizing: "border-box",
+              }}
+            >
+              {(["buy", "electricity", "cable", "exam", "accounts", "agent"] as AppTab[]).includes(activeTab) ? (
+                <button
+                  onClick={() => setActiveTab("home")}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: T.blue,
+                    padding: 0,
+                    margin: 0,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              ) : null}
+              <h1
+                style={{
+                  fontFamily: T.font,
+                  fontSize: 16,
+                  fontWeight: 900,
+                  color: T.text,
+                  margin: 0,
+                }}
+              >
+                {activeTab === "buy"
+                  ? (purchaseMode === "data" ? "Buy Data" : "Buy Airtime")
+                  : activeTab === "electricity"
+                  ? "Buy Electricity"
+                  : activeTab === "cable"
+                  ? "Cable TV"
+                  : activeTab === "exam"
+                  ? "Exam PINs"
+                  : activeTab === "transactions"
+                  ? "Transactions"
+                  : activeTab === "support"
+                  ? "Support"
+                  : activeTab === "profile"
+                  ? "Profile"
+                  : activeTab === "accounts"
+                  ? "Reserved Accounts"
+                  : activeTab === "agent"
+                  ? "Agent Application"
+                  : "MK Data"}
+              </h1>
+            </div>
+          </div>
+        )}
+
         <main style={{ maxWidth: 390, margin: "0 auto", padding: "16px 16px 0" }}>
           <BroadcastBanner notice={broadcasts[0] || null} onDismiss={() => broadcasts[0] && dismissBroadcast(broadcasts[0].id)} />
 
