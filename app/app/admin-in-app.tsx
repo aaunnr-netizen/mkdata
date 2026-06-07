@@ -148,6 +148,7 @@ type AdminPlan = {
   apiCPlanId?: number | null;
   apiCNetworkId?: number | null;
   isActive: boolean;
+  dataType?: string;
 };
 
 const apiSourceLabels: Record<AdminPlan["apiSource"], string> = {
@@ -864,6 +865,7 @@ const emptyPlan = {
   apiBNetworkId: 1,
   apiCPlanId: 0,
   apiCNetworkId: 1,
+  dataType: "SME",
 };
 
 function PlansAdminScreen({ onBack }: { onBack: () => void }) {
@@ -918,10 +920,13 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          <select value={form.dataType} onChange={(e) => setForm({ ...form, dataType: e.target.value })} style={inputStyle}>
+            {["SME", "SME2", "GIFTING", "MTN CG"].map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
           <input value={form.sizeLabel} onChange={(e) => setForm({ ...form, sizeLabel: e.target.value })} placeholder="1GB" style={inputStyle} />
           <input value={form.validity} onChange={(e) => setForm({ ...form, validity: e.target.value })} placeholder="30 Days" style={inputStyle} />
           <input value={form.user_price || ""} onChange={(e) => setForm({ ...form, user_price: Number(e.target.value) })} placeholder="User price" type="number" style={inputStyle} />
-          <input value={form.agent_price || ""} onChange={(e) => setForm({ ...form, agent_price: Number(e.target.value) })} placeholder="Agent price" type="number" style={inputStyle} />
+          <input value={form.agent_price || ""} onChange={(e) => setForm({ ...form, agent_price: Number(e.target.value) })} placeholder="Agent price" type="number" style={{ ...inputStyle, gridColumn: "1 / -1" }} />
         </div>
         {[
           { label: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
@@ -953,7 +958,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
                 <div>
                   <p style={{ margin: "0 0 4px", fontFamily: T.font, fontWeight: 900, color: T.text }}>{plan.name}</p>
-                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textMid }}>{plan.network} - {plan.sizeLabel} - {apiSourceLabels[plan.apiSource]}</p>
+                  <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, color: T.textMid }}>{plan.network} - {plan.sizeLabel} - {plan.dataType || "SME"} - {apiSourceLabels[plan.apiSource]}</p>
                 </div>
                 <StatusPill active={plan.isActive} />
               </div>
@@ -962,7 +967,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
                 <Field label="Agent" value={formatNaira(plan.agent_price)} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
-                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0), apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1), apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0), apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1), apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0), apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1) }); }} tone="plain">Edit</MiniButton>
+                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0), apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1), apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0), apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1), apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0), apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1), dataType: plan.dataType || "SME" }); }} tone="plain">Edit</MiniButton>
                 <MiniButton onClick={() => void toggle(plan)} tone="plain">{plan.isActive ? "Disable" : "Enable"}</MiniButton>
                 <MiniButton onClick={() => void remove(plan.id)} tone="rose">Delete</MiniButton>
               </div>

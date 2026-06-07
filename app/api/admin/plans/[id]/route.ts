@@ -12,12 +12,12 @@ const updatePlanSchema = z.object({
   user_price: z.number().min(50).optional(),
   agent_price: z.number().min(50).optional(),
   apiSource: z.enum(["API_A", "API_B", "API_C"]).optional(),
-  apiAPlanId: z.number().int().positive().optional(),
-  apiANetworkId: z.number().int().positive().optional(),
-  apiBPlanId: z.number().int().positive().optional(),
-  apiBNetworkId: z.number().int().positive().optional(),
-  apiCPlanId: z.number().int().positive().optional(),
-  apiCNetworkId: z.number().int().positive().optional(),
+  apiAPlanId: z.number().int().nonnegative().nullable().optional(),
+  apiANetworkId: z.number().int().nonnegative().nullable().optional(),
+  apiBPlanId: z.number().int().nonnegative().nullable().optional(),
+  apiBNetworkId: z.number().int().nonnegative().nullable().optional(),
+  apiCPlanId: z.number().int().nonnegative().nullable().optional(),
+  apiCNetworkId: z.number().int().nonnegative().nullable().optional(),
   isActive: z.boolean().optional(),
   dataType: z.string().min(1).optional(),
 });
@@ -56,7 +56,10 @@ export async function PATCH(
       );
     }
 
-    if (!activeIds.externalPlanId || !activeIds.externalNetworkId) {
+    if (
+      typeof activeIds.externalPlanId !== "number" ||
+      typeof activeIds.externalNetworkId !== "number"
+    ) {
       return NextResponse.json(
         { error: "Selected provider plan and network IDs are required" },
         { status: 400 }

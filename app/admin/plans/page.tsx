@@ -8,13 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// Native HTML selects used instead of Radix UI select components to avoid overlay issues
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -200,7 +194,7 @@ export default function PlansPage() {
               Add Plan
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingId ? "Edit Plan" : "Add New Plan"}</DialogTitle>
             </DialogHeader>
@@ -212,15 +206,16 @@ export default function PlansPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Network</Label>
-                  <Select value={formData.network} onValueChange={(value) => setFormData({ ...formData, network: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MTN">MTN</SelectItem>
-                      <SelectItem value="GLO">Glo</SelectItem>
-                      <SelectItem value="AIRTEL">Airtel</SelectItem>
-                      <SelectItem value="NINEMOBILE">9Mobile</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={formData.network}
+                    onChange={(e) => setFormData({ ...formData, network: e.target.value })}
+                    className="w-full border border-slate-200 rounded-md bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="MTN">MTN</option>
+                    <option value="GLO">Glo</option>
+                    <option value="AIRTEL">Airtel</option>
+                    <option value="NINEMOBILE">9Mobile</option>
+                  </select>
                 </div>
                 <div>
                   <Label>Size</Label>
@@ -243,27 +238,29 @@ export default function PlansPage() {
               </div>
               <div>
                 <Label>Plan Type (dataType)</Label>
-                <Select value={formData.dataType} onValueChange={(value) => setFormData({ ...formData, dataType: value })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SME">SME</SelectItem>
-                    <SelectItem value="SME2">SME2</SelectItem>
-                    <SelectItem value="GIFTING">Gifting</SelectItem>
-                    <SelectItem value="MTN CG">MTN CG</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={formData.dataType}
+                  onChange={(e) => setFormData({ ...formData, dataType: e.target.value })}
+                  className="w-full border border-slate-200 rounded-md bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="SME">SME</option>
+                  <option value="SME2">SME2</option>
+                  <option value="GIFTING">Gifting</option>
+                  <option value="MTN CG">MTN CG</option>
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>API Source</Label>
-                  <Select value={formData.apiSource} onValueChange={(value) => setFormData({ ...formData, apiSource: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="API_A">SMEPlug</SelectItem>
-                      <SelectItem value="API_B">Saiful</SelectItem>
-                      <SelectItem value="API_C">Alrahuz</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={formData.apiSource}
+                    onChange={(e) => setFormData({ ...formData, apiSource: e.target.value })}
+                    className="w-full border border-slate-200 rounded-md bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="API_A">SMEPlug</option>
+                    <option value="API_B">Saiful</option>
+                    <option value="API_C">Alrahuz</option>
+                  </select>
                 </div>
               </div>
               {[

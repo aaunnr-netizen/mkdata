@@ -13,12 +13,12 @@ const planSchema = z
     user_price: z.number().min(50, "Minimum user price is N50"),
     agent_price: z.number().min(50, "Minimum agent price is N50"),
     apiSource: z.enum(["API_A", "API_B", "API_C"]),
-    apiAPlanId: z.number().int().positive("SMEPlug plan ID is required"),
-    apiANetworkId: z.number().int().positive("SMEPlug network ID is required"),
-    apiBPlanId: z.number().int().positive("Saiful plan ID is required"),
-    apiBNetworkId: z.number().int().positive("Saiful network ID is required"),
-    apiCPlanId: z.number().int().positive("Alrahuz plan ID is required"),
-    apiCNetworkId: z.number().int().positive("Alrahuz network ID is required"),
+    apiAPlanId: z.number().int().nonnegative().nullable().optional(),
+    apiANetworkId: z.number().int().nonnegative().nullable().optional(),
+    apiBPlanId: z.number().int().nonnegative().nullable().optional(),
+    apiBNetworkId: z.number().int().nonnegative().nullable().optional(),
+    apiCPlanId: z.number().int().nonnegative().nullable().optional(),
+    apiCNetworkId: z.number().int().nonnegative().nullable().optional(),
     dataType: z.string().min(1).default("SME"),
   })
   .refine((data) => data.agent_price <= data.user_price, {
@@ -60,7 +60,10 @@ export async function POST(req: NextRequest) {
     const data = planSchema.parse(body);
     const activeIds = getExternalIdsForSource(data);
 
-    if (!activeIds.externalPlanId || !activeIds.externalNetworkId) {
+    if (
+      typeof activeIds.externalPlanId !== "number" ||
+      typeof activeIds.externalNetworkId !== "number"
+    ) {
       return NextResponse.json(
         { error: "Selected provider plan and network IDs are required" },
         { status: 400 }

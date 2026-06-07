@@ -158,7 +158,7 @@ export default function AdminLayout({
     <Providers>
       <div className="flex h-screen bg-slate-50">
         {/* Sidebar */}
-        <div className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 flex flex-col">
+        <div className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 flex flex-col overflow-hidden h-full">
           {/* Logo Section */}
           <div className="p-6 border-b border-slate-700">
             <div className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export default function AdminLayout({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
             {SIDEBAR_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname.startsWith(item.href);

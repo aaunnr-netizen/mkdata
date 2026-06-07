@@ -15,21 +15,21 @@ type DataPlanProviderIds = {
 export function getDataPlanProviderIds(plan: DataPlanProviderIds) {
   if (plan.apiSource === "API_A") {
     return {
-      planId: plan.apiAPlanId || plan.externalPlanId,
-      networkId: plan.apiANetworkId || plan.externalNetworkId,
+      planId: plan.apiAPlanId ?? plan.externalPlanId,
+      networkId: plan.apiANetworkId ?? plan.externalNetworkId,
     };
   }
 
   if (plan.apiSource === "API_B") {
     return {
-      planId: plan.apiBPlanId || plan.externalPlanId,
-      networkId: plan.apiBNetworkId || plan.externalNetworkId,
+      planId: plan.apiBPlanId ?? plan.externalPlanId,
+      networkId: plan.apiBNetworkId ?? plan.externalNetworkId,
     };
   }
 
   return {
-    planId: plan.apiCPlanId || plan.externalPlanId,
-    networkId: plan.apiCNetworkId || plan.externalNetworkId,
+    planId: plan.apiCPlanId ?? plan.externalPlanId,
+    networkId: plan.apiCNetworkId ?? plan.externalNetworkId,
   };
 }
 

@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Native select elements are used instead of Radix UI select components
 
 type UserRole = "USER" | "AGENT" | "ADMIN";
 type UserTier = "user" | "agent";
@@ -206,17 +206,16 @@ export default function UsersPage() {
             className="border-slate-700 bg-slate-950 pl-10 text-slate-100"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-36 border-slate-700 bg-slate-950 text-slate-100">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="border-slate-700 bg-slate-950 text-slate-100">
-            <SelectItem value="ALL">All Roles</SelectItem>
-            <SelectItem value="USER">User</SelectItem>
-            <SelectItem value="AGENT">Agent</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-          </SelectContent>
-        </Select>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="w-36 border border-slate-700 rounded-md bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="ALL">All Roles</option>
+          <option value="USER">User</option>
+          <option value="AGENT">Agent</option>
+          <option value="ADMIN">Admin</option>
+        </select>
       </div>
 
       <Card className="overflow-hidden border-slate-800 bg-slate-950">
@@ -296,41 +295,41 @@ export default function UsersPage() {
               <div className="grid gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 md:grid-cols-2">
                 <div>
                   <Label className="mb-2 block text-slate-300">Role</Label>
-                  <Select value={selectedUser.role} onValueChange={(role) => void handleUserAction(selectedUser.id, { role: role as UserRole })}>
-                    <SelectTrigger className="border-slate-700 bg-black text-slate-100"><SelectValue /></SelectTrigger>
-                    <SelectContent className="border-slate-700 bg-black text-slate-100">
-                      <SelectItem value="USER">User</SelectItem>
-                      <SelectItem value="AGENT">Agent</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={selectedUser.role}
+                    onChange={(e) => void handleUserAction(selectedUser.id, { role: e.target.value as UserRole })}
+                    className="w-full border border-slate-700 rounded-md bg-black px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="USER">User</option>
+                    <option value="AGENT">Agent</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
                 </div>
                 <div>
                   <Label className="mb-2 block text-slate-300">Tier</Label>
-                  <Select value={selectedUser.tier} onValueChange={(tier) => void handleUserAction(selectedUser.id, { tier: tier as UserTier })}>
-                    <SelectTrigger className="border-slate-700 bg-black text-slate-100"><SelectValue /></SelectTrigger>
-                    <SelectContent className="border-slate-700 bg-black text-slate-100">
-                      <SelectItem value="user">Standard User</SelectItem>
-                      <SelectItem value="agent">Agent</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={selectedUser.tier}
+                    onChange={(e) => void handleUserAction(selectedUser.id, { tier: e.target.value as UserTier })}
+                    className="w-full border border-slate-700 rounded-md bg-black px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="user">Standard User</option>
+                    <option value="agent">Agent</option>
+                  </select>
                 </div>
                 <div>
                   <Label className="mb-2 block text-slate-300">Agent Request</Label>
-                  <Select
+                  <select
                     value={selectedUser.agentRequestStatus}
-                    onValueChange={(status) =>
-                      void handleUserAction(selectedUser.id, { agentRequestStatus: status as AgentRequestStatus })
+                    onChange={(e) =>
+                      void handleUserAction(selectedUser.id, { agentRequestStatus: e.target.value as AgentRequestStatus })
                     }
+                    className="w-full border border-slate-700 rounded-md bg-black px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <SelectTrigger className="border-slate-700 bg-black text-slate-100"><SelectValue /></SelectTrigger>
-                    <SelectContent className="border-slate-700 bg-black text-slate-100">
-                      <SelectItem value="NONE">NONE</SelectItem>
-                      <SelectItem value="PENDING">PENDING</SelectItem>
-                      <SelectItem value="APPROVED">APPROVED</SelectItem>
-                      <SelectItem value="REJECTED">REJECTED</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="NONE">NONE</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="APPROVED">APPROVED</option>
+                    <option value="REJECTED">REJECTED</option>
+                  </select>
                 </div>
                 <div className="flex items-end gap-2">
                   {selectedUser.isBanned ? (
