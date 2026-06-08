@@ -4204,8 +4204,16 @@ export default function DashboardPage() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        sessionStorage.removeItem("app_unlocked");
+        sessionStorage.setItem("app_hidden_at", Date.now().toString());
       } else if (document.visibilityState === "visible") {
+        const hiddenAtStr = sessionStorage.getItem("app_hidden_at");
+        if (hiddenAtStr) {
+          const hiddenAt = parseInt(hiddenAtStr, 10);
+          if (Date.now() - hiddenAt > 60000) {
+            sessionStorage.removeItem("app_unlocked");
+          }
+          sessionStorage.removeItem("app_hidden_at");
+        }
         checkLock();
       }
     };
