@@ -220,8 +220,8 @@ export async function processBillstackWebhook(payload: RawPayload) {
           depositAmount: amountNaira,
         });
 
-        // Trigger push notification asynchronously
-        sendPushNotification(
+        // Trigger push notification synchronously so serverless environments don't kill it
+        await sendPushNotification(
           user.id,
           "Wallet Funded Successfully 💰",
           `Your wallet has been credited with ₦${amountNaira.toLocaleString()}. New balance: ₦${(updatedUser.balance / 100).toLocaleString()}.`
