@@ -1269,7 +1269,7 @@ function HomeTab({
                 textOverflow: "ellipsis",
               }}
             >
-              {showBalance ? formatNaira(user.balance / 100) : "******"}
+              {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(user.balance / 100) : "******"}
             </p>
           </div>
           <div style={{ display: "flex", flex: "0 0 auto", gap: 8 }}>
