@@ -65,12 +65,12 @@ export async function purchaseData(params: AmysubPurchaseParams): Promise<Amysub
     const responseData = response.data;
 
     // Check for success status (case-insensitive)
-    const status = String(responseData?.status ?? "").toLowerCase();
+    const status = String(responseData?.status ?? responseData?.Status ?? "").toLowerCase();
     if (responseData && (status === "success" || status === "successful")) {
       return {
         success: true,
         message: responseData.api_response || responseData.description || "Data purchase successful",
-        externalReference: String(responseData.reference || responseData.id || ""),
+        externalReference: String(responseData.reference || responseData.ident || responseData.id || ""),
       };
     } else {
       const errorMsg = responseData?.api_response || responseData?.description || "Data purchase failed";

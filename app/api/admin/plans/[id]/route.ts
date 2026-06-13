@@ -60,10 +60,12 @@ export async function PATCH(
 
     if (
       typeof activeIds.externalPlanId !== "number" ||
-      typeof activeIds.externalNetworkId !== "number"
+      typeof activeIds.externalNetworkId !== "number" ||
+      activeIds.externalPlanId <= 0 ||
+      activeIds.externalNetworkId <= 0
     ) {
       return NextResponse.json(
-        { error: "Selected provider plan and network IDs are required" },
+        { error: "Selected provider plan and network IDs must be valid numbers greater than 0" },
         { status: 400 }
       );
     }

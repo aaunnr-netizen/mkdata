@@ -934,19 +934,21 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
           <input value={form.agent_price || ""} onChange={(e) => setForm({ ...form, agent_price: Number(e.target.value) })} placeholder="Agent price" type="number" style={{ ...inputStyle, gridColumn: "1 / -1" }} />
         </div>
         {[
-          { label: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
-          { label: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
-          { label: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
-          { label: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
-        ].map((source) => (
-          <div key={source.label} style={{ border: `1px solid ${T.border}`, borderRadius: 16, padding: 10, background: T.card }}>
-            <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>{source.label} IDs</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <input value={(form as any)[source.plan] || ""} onChange={(e) => setForm({ ...form, [source.plan]: Number(e.target.value) })} placeholder={`${source.label} plan ID`} type="number" style={inputStyle} />
-              <input value={(form as any)[source.network] || ""} onChange={(e) => setForm({ ...form, [source.network]: Number(e.target.value) })} placeholder={`${source.label} network ID`} type="number" style={inputStyle} />
+          { id: "API_A", label: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
+          { id: "API_B", label: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
+          { id: "API_C", label: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+          { id: "API_D", label: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
+        ]
+          .filter((source) => form.apiSource === source.id)
+          .map((source) => (
+            <div key={source.label} style={{ border: `1px solid ${T.border}`, borderRadius: 16, padding: 10, background: T.card }}>
+              <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>{source.label} IDs</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <input value={(form as any)[source.plan] || ""} onChange={(e) => setForm({ ...form, [source.plan]: Number(e.target.value) || 0 })} placeholder={`${source.label} plan ID`} type="number" min="1" required style={inputStyle} />
+                <input value={(form as any)[source.network] || ""} onChange={(e) => setForm({ ...form, [source.network]: Number(e.target.value) || 0 })} placeholder={`${source.label} network ID`} type="number" min="1" required style={inputStyle} />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
         <MiniButton onClick={() => void save()}>{editingId ? "Update Plan" : "Create Plan"}</MiniButton>
         {editingId ? <MiniButton onClick={() => { setEditingId(""); setForm(emptyPlan); }} tone="plain">Cancel Edit</MiniButton> : null}
       </div>

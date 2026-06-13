@@ -274,25 +274,39 @@ export default function PlansPage() {
                 </div>
               </div>
               {[
-                { name: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
-                { name: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
-                { name: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
-                { name: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
-              ].map((source) => (
-                <div key={source.name} className="rounded-lg border border-slate-200 p-3">
-                  <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{source.name} IDs</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>{source.name} Plan ID</Label>
-                      <Input type="number" value={(formData as any)[source.plan]} onChange={(e) => setFormData({ ...formData, [source.plan]: parseInt(e.target.value, 10) || 0 })} required />
-                    </div>
-                    <div>
-                      <Label>{source.name} Network ID</Label>
-                      <Input type="number" value={(formData as any)[source.network]} onChange={(e) => setFormData({ ...formData, [source.network]: parseInt(e.target.value, 10) || 0 })} required />
+                { id: "API_A", name: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
+                { id: "API_B", name: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
+                { id: "API_C", name: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+                { id: "API_D", name: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
+              ]
+                .filter((source) => formData.apiSource === source.id)
+                .map((source) => (
+                  <div key={source.name} className="rounded-lg border border-slate-200 p-3">
+                    <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{source.name} IDs</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>{source.name} Plan ID</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={(formData as any)[source.plan] || ""}
+                          onChange={(e) => setFormData({ ...formData, [source.plan]: parseInt(e.target.value, 10) || 0 })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label>{source.name} Network ID</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={(formData as any)[source.network] || ""}
+                          onChange={(e) => setFormData({ ...formData, [source.network]: parseInt(e.target.value, 10) || 0 })}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
               <Button type="submit" className="w-full">
                 {editingId ? "Update" : "Create"} Plan
               </Button>
