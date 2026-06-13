@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import * as smeplug from "@/lib/smeplug";
 import * as saiful from "@/lib/saiful";
 import * as alrahuz from "@/lib/alrahuz";
+import * as amysub from "@/lib/amysub";
 import { normalizeProviderFailureMessage } from "@/lib/purchase-utils";
 import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { Transaction } from "@prisma/client";
@@ -41,6 +42,13 @@ export async function deliverGuestData(transaction: Transaction) {
         plan: providerIds.planId,
         mobileNumber: transaction.phone,
         network: plan.network,
+        networkId: providerIds.networkId,
+        reference: transaction.reference,
+      });
+    } else if (plan.apiSource === "API_D") {
+      result = await amysub.purchaseData({
+        plan: providerIds.planId,
+        mobileNumber: transaction.phone,
         networkId: providerIds.networkId,
         reference: transaction.reference,
       });

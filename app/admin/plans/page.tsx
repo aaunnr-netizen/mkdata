@@ -30,6 +30,8 @@ interface Plan {
   apiBNetworkId?: number | null;
   apiCPlanId?: number | null;
   apiCNetworkId?: number | null;
+  apiDPlanId?: number | null;
+  apiDNetworkId?: number | null;
   isActive: boolean;
   dataType?: string;
 }
@@ -38,6 +40,7 @@ const apiSourceLabels: Record<string, string> = {
   API_A: "SMEPlug",
   API_B: "Saiful",
   API_C: "Alrahuz",
+  API_D: "Amysub",
 };
 
 export default function PlansPage() {
@@ -60,6 +63,8 @@ export default function PlansPage() {
     apiBNetworkId: 1,
     apiCPlanId: 0,
     apiCNetworkId: 1,
+    apiDPlanId: 0,
+    apiDNetworkId: 1,
     dataType: "SME",
   });
 
@@ -96,6 +101,8 @@ export default function PlansPage() {
       apiBNetworkId: 1,
       apiCPlanId: 0,
       apiCNetworkId: 1,
+      apiDPlanId: 0,
+      apiDNetworkId: 1,
       dataType: "SME",
     });
   };
@@ -143,6 +150,8 @@ export default function PlansPage() {
       apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1),
       apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0),
       apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1),
+      apiDPlanId: plan.apiDPlanId || (plan.apiSource === "API_D" ? plan.externalPlanId : 0),
+      apiDNetworkId: plan.apiDNetworkId || (plan.apiSource === "API_D" ? plan.externalNetworkId : 1),
       dataType: plan.dataType || "SME",
     });
     setEditingId(plan.id);
@@ -260,6 +269,7 @@ export default function PlansPage() {
                     <option value="API_A">SMEPlug</option>
                     <option value="API_B">Saiful</option>
                     <option value="API_C">Alrahuz</option>
+                    <option value="API_D">Amysub</option>
                   </select>
                 </div>
               </div>
@@ -267,6 +277,7 @@ export default function PlansPage() {
                 { name: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
                 { name: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
                 { name: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+                { name: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
               ].map((source) => (
                 <div key={source.name} className="rounded-lg border border-slate-200 p-3">
                   <div className="mb-2 text-xs font-semibold uppercase text-slate-500">{source.name} IDs</div>

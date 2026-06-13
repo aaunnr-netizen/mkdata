@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { purchaseData as purchaseFromSmeplug } from "@/lib/smeplug";
 import { purchaseData as purchaseFromSaiful } from "@/lib/saiful";
 import { purchaseData as purchaseFromAlrahuz } from "@/lib/alrahuz";
+import { purchaseData as purchaseFromAmysub } from "@/lib/amysub";
 import { findRecentDuplicateTransaction, normalizeProviderFailureMessage, DATA_INSUFFICIENT_FUNDS_MESSAGE } from "@/lib/purchase-utils";
 import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { getPlanPriceForUser } from "@/lib/pricing";
@@ -258,12 +259,19 @@ export async function POST(req: NextRequest) {
                 networkId: providerIds.networkId,
                 reference,
               })
-            : await purchaseFromAlrahuz({
-                network: providerIds.networkId,
-                plan: providerIds.planId,
-                mobileNumber: recipientPhone,
-                reference,
-              });
+            : plan.apiSource === "API_D"
+              ? await purchaseFromAmysub({
+                  plan: providerIds.planId,
+                  mobileNumber: recipientPhone,
+                  networkId: providerIds.networkId,
+                  reference,
+                })
+              : await purchaseFromAlrahuz({
+                  network: providerIds.networkId,
+                  plan: providerIds.planId,
+                  mobileNumber: recipientPhone,
+                  reference,
+                });
 
       if (!apiResult.success) {
         const errorMessage = normalizeProviderFailureMessage(apiResult.message);

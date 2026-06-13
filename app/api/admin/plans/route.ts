@@ -12,13 +12,15 @@ const planSchema = z
     validity: z.string().min(1, "Validity is required"),
     user_price: z.number().min(50, "Minimum user price is N50"),
     agent_price: z.number().min(50, "Minimum agent price is N50"),
-    apiSource: z.enum(["API_A", "API_B", "API_C"]),
+    apiSource: z.enum(["API_A", "API_B", "API_C", "API_D"]),
     apiAPlanId: z.number().int().nonnegative().nullable().optional(),
     apiANetworkId: z.number().int().nonnegative().nullable().optional(),
     apiBPlanId: z.number().int().nonnegative().nullable().optional(),
     apiBNetworkId: z.number().int().nonnegative().nullable().optional(),
     apiCPlanId: z.number().int().nonnegative().nullable().optional(),
     apiCNetworkId: z.number().int().nonnegative().nullable().optional(),
+    apiDPlanId: z.number().int().nonnegative().nullable().optional(),
+    apiDNetworkId: z.number().int().nonnegative().nullable().optional(),
     dataType: z.string().min(1).default("SME"),
   })
   .refine((data) => data.agent_price <= data.user_price, {

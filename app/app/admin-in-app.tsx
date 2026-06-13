@@ -138,7 +138,7 @@ type AdminPlan = {
   validity: string;
   user_price: number;
   agent_price: number;
-  apiSource: "API_A" | "API_B" | "API_C";
+  apiSource: "API_A" | "API_B" | "API_C" | "API_D";
   externalPlanId: number;
   externalNetworkId: number;
   apiAPlanId?: number | null;
@@ -147,6 +147,8 @@ type AdminPlan = {
   apiBNetworkId?: number | null;
   apiCPlanId?: number | null;
   apiCNetworkId?: number | null;
+  apiDPlanId?: number | null;
+  apiDNetworkId?: number | null;
   isActive: boolean;
   dataType?: string;
 };
@@ -155,6 +157,7 @@ const apiSourceLabels: Record<AdminPlan["apiSource"], string> = {
   API_A: "SMEPlug",
   API_B: "Saiful",
   API_C: "Alrahuz",
+  API_D: "Amysub",
 };
 
 type ElectricityProvider = {
@@ -865,6 +868,8 @@ const emptyPlan = {
   apiBNetworkId: 1,
   apiCPlanId: 0,
   apiCNetworkId: 1,
+  apiDPlanId: 0,
+  apiDNetworkId: 1,
   dataType: "SME",
 };
 
@@ -932,6 +937,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
           { label: "SMEPlug", plan: "apiAPlanId", network: "apiANetworkId" },
           { label: "Saiful", plan: "apiBPlanId", network: "apiBNetworkId" },
           { label: "Alrahuz", plan: "apiCPlanId", network: "apiCNetworkId" },
+          { label: "Amysub", plan: "apiDPlanId", network: "apiDNetworkId" },
         ].map((source) => (
           <div key={source.label} style={{ border: `1px solid ${T.border}`, borderRadius: 16, padding: 10, background: T.card }}>
             <p style={{ margin: "0 0 8px", fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>{source.label} IDs</p>
@@ -967,7 +973,7 @@ function PlansAdminScreen({ onBack }: { onBack: () => void }) {
                 <Field label="Agent" value={formatNaira(plan.agent_price)} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
-                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0), apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1), apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0), apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1), apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0), apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1), dataType: plan.dataType || "SME" }); }} tone="plain">Edit</MiniButton>
+                <MiniButton onClick={() => { setEditingId(plan.id); setForm({ name: plan.name, network: plan.network, sizeLabel: plan.sizeLabel, validity: plan.validity, user_price: plan.user_price, agent_price: plan.agent_price, apiSource: plan.apiSource, apiAPlanId: plan.apiAPlanId || (plan.apiSource === "API_A" ? plan.externalPlanId : 0), apiANetworkId: plan.apiANetworkId || (plan.apiSource === "API_A" ? plan.externalNetworkId : 1), apiBPlanId: plan.apiBPlanId || (plan.apiSource === "API_B" ? plan.externalPlanId : 0), apiBNetworkId: plan.apiBNetworkId || (plan.apiSource === "API_B" ? plan.externalNetworkId : 1), apiCPlanId: plan.apiCPlanId || (plan.apiSource === "API_C" ? plan.externalPlanId : 0), apiCNetworkId: plan.apiCNetworkId || (plan.apiSource === "API_C" ? plan.externalNetworkId : 1), apiDPlanId: plan.apiDPlanId || (plan.apiSource === "API_D" ? plan.externalPlanId : 0), apiDNetworkId: plan.apiDNetworkId || (plan.apiSource === "API_D" ? plan.externalNetworkId : 1), dataType: plan.dataType || "SME" }); }} tone="plain">Edit</MiniButton>
                 <MiniButton onClick={() => void toggle(plan)} tone="plain">{plan.isActive ? "Disable" : "Enable"}</MiniButton>
                 <MiniButton onClick={() => void remove(plan.id)} tone="rose">Delete</MiniButton>
               </div>

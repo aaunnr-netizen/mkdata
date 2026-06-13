@@ -48,6 +48,7 @@ enum ApiSource {
   API_A
   API_B
   API_C
+  API_D
 }
 
 enum RewardType {
@@ -202,6 +203,8 @@ model Plan {
   apiBNetworkId       Int?
   apiCPlanId          Int?
   apiCNetworkId       Int?
+  apiDPlanId          Int?
+  apiDNetworkId       Int?
   isActive            Boolean    @default(true)
   dataType            String     @default("SME")
   createdAt           DateTime   @default(now())
@@ -359,4 +362,12 @@ model UserFcmToken {
 
   @@index([userId])
   @@map("user_fcm_tokens")
+}
+
+model AirtimeCashConfig {
+  id         String   @id @default("default")
+  feePercent Int      @default(10)
+  updatedAt  DateTime @updatedAt
+
+  @@map("airtime_cash_config")
 }
