@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
 import { InAppAdminShell } from "./admin-in-app";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/safe-storage";
 
 const fontStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
@@ -2087,9 +2088,7 @@ function ModernProfileTab({
       }
 
       await Promise.resolve(enrollWithBridge(user.phone, payload.token));
-      if (typeof window !== "undefined") {
-        localStorage.setItem("saved_phone", user.phone);
-      }
+      safeLocalStorage.setItem("saved_phone", user.phone);
       toast.success("Fingerprint login is now enabled on this phone.");
     } catch {
       toast.error("Fingerprint enrollment could not be completed right now.");
@@ -4094,8 +4093,8 @@ export default function DashboardPage() {
   const [purchasingExam, setPurchasingExam] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("app_unlocked") !== "true") {
-      router.push("/app/auth?lock=true");
+    if (safeSessionStorage.getItem("app_unlocked") !== "true") {
+      window.location.replace("/app/auth?lock=true");
       return;
     }
 
@@ -4110,9 +4109,9 @@ export default function DashboardPage() {
           setUser(payload.data);
           return;
         }
-        router.push("/app/auth");
+        window.location.replace("/app/auth");
       })
-      .catch(() => router.push("/app/auth"))
+      .catch(() => window.location.replace("/app/auth"))
       .finally(() => {
         clearTimeout(timeout);
         setLoading(false);
@@ -4129,7 +4128,7 @@ export default function DashboardPage() {
       .then((response) => response.json())
       .then((payload) => {
         if (!Array.isArray(payload?.data)) return;
-        const dismissed = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("dismissed_notices") || "[]") : [];
+        const dismissed = JSON.parse(safeLocalStorage.getItem("dismissed_notices") || "[]");
         setBroadcasts(
           payload.data.filter((notice: BroadcastNotice) => !dismissed.includes(notice.id)).slice(0, 3)
         );
@@ -4197,22 +4196,22 @@ export default function DashboardPage() {
     if (typeof window === "undefined") return;
 
     const checkLock = () => {
-      if (sessionStorage.getItem("app_unlocked") !== "true") {
-        router.push("/app/auth?lock=true");
+      if (safeSessionStorage.getItem("app_unlocked") !== "true") {
+        window.location.replace("/app/auth?lock=true");
       }
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        sessionStorage.setItem("app_hidden_at", Date.now().toString());
+        safeSessionStorage.setItem("app_hidden_at", Date.now().toString());
       } else if (document.visibilityState === "visible") {
-        const hiddenAtStr = sessionStorage.getItem("app_hidden_at");
+        const hiddenAtStr = safeSessionStorage.getItem("app_hidden_at");
         if (hiddenAtStr) {
           const hiddenAt = parseInt(hiddenAtStr, 10);
           if (Date.now() - hiddenAt > 60000) {
-            sessionStorage.removeItem("app_unlocked");
+            safeSessionStorage.removeItem("app_unlocked");
           }
-          sessionStorage.removeItem("app_hidden_at");
+          safeSessionStorage.removeItem("app_hidden_at");
         }
         checkLock();
       }
@@ -4275,10 +4274,8 @@ export default function DashboardPage() {
 
   const dismissBroadcast = (id: string) => {
     setBroadcasts((current) => current.filter((item) => item.id !== id));
-    if (typeof window !== "undefined") {
-      const dismissed = JSON.parse(localStorage.getItem("dismissed_notices") || "[]");
-      localStorage.setItem("dismissed_notices", JSON.stringify([...new Set([...dismissed, id])]));
-    }
+    const dismissed = JSON.parse(safeLocalStorage.getItem("dismissed_notices") || "[]");
+    safeLocalStorage.setItem("dismissed_notices", JSON.stringify([...new Set([...dismissed, id])]));
   };
 
   const handleCopyAccount = async () => {
@@ -4308,10 +4305,8 @@ export default function DashboardPage() {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
-      if (typeof window !== "undefined") {
-        localStorage.clear();
-        sessionStorage.clear();
-      }
+      safeLocalStorage.clear();
+      safeSessionStorage.clear();
       window.location.href = "/app/auth";
     }
   };

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/safe-storage";
 
 type AuthMode = "login" | "signup";
 
@@ -87,12 +88,10 @@ export default function AuthPage() {
       const isLocked = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lock") === "true";
       if (isLocked) {
         setHasCheckedAuth(true);
-        if (typeof window !== "undefined") {
-          const saved = localStorage.getItem("saved_phone");
-          if (saved) {
-            setSavedPhone(saved);
-            setPhone(saved);
-          }
+        const saved = safeLocalStorage.getItem("saved_phone");
+        if (saved) {
+          setSavedPhone(saved);
+          setPhone(saved);
         }
         return;
       }
@@ -107,9 +106,9 @@ export default function AuthPage() {
           signal: controller.signal,
         });
         if (res.ok) {
-          const unlocked = typeof window !== "undefined" && sessionStorage.getItem("app_unlocked") === "true";
+          const unlocked = safeSessionStorage.getItem("app_unlocked") === "true";
           if (unlocked) {
-            router.push("/app");
+            window.location.replace("/app");
             return;
           }
         }
@@ -118,12 +117,10 @@ export default function AuthPage() {
         clearTimeout(timeout);
       }
 
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("saved_phone");
-        if (saved) {
-          setSavedPhone(saved);
-          setPhone(saved);
-        }
+      const saved = safeLocalStorage.getItem("saved_phone");
+      if (saved) {
+        setSavedPhone(saved);
+        setPhone(saved);
       }
       setHasCheckedAuth(true);
     };
@@ -207,10 +204,10 @@ export default function AuthPage() {
         });
 
         if (res.ok) {
-          localStorage.setItem("saved_phone", detail.phone);
-          sessionStorage.setItem("app_unlocked", "true");
+          safeLocalStorage.setItem("saved_phone", detail.phone);
+          safeSessionStorage.setItem("app_unlocked", "true");
           toast.success("Fingerprint unlocked your account.");
-          router.push("/app");
+          window.location.replace("/app");
           return;
         }
 
@@ -269,13 +266,11 @@ export default function AuthPage() {
       });
 
       if (res.ok) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("saved_phone", phone);
-          sessionStorage.setItem("app_unlocked", "true");
-        }
+        safeLocalStorage.setItem("saved_phone", phone);
+        safeSessionStorage.setItem("app_unlocked", "true");
         await enrollBiometricCredential(phone);
         toast.success("You are signed in.");
-        router.push("/app");
+        window.location.replace("/app");
       } else {
         const data = await res.json();
         toast.error(getFriendlyMessage(data.error, "We could not sign you in right now."));
@@ -334,13 +329,11 @@ export default function AuthPage() {
       }
 
       if (res.ok) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("saved_phone", phone);
-          sessionStorage.setItem("app_unlocked", "true");
-        }
+        safeLocalStorage.setItem("saved_phone", phone);
+        safeSessionStorage.setItem("app_unlocked", "true");
         await enrollBiometricCredential(phone);
         toast.success("Your account is ready.");
-        router.push("/app");
+        window.location.replace("/app");
       } else {
         const data = await res.json();
         toast.error(getFriendlyMessage(data.error, "We could not create your account right now."));
