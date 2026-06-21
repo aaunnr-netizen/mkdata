@@ -200,10 +200,17 @@ async function postToAlrahuz(
 }
 
 export async function purchaseData(params: AlrahuzDataParams): Promise<AlrahuzResult> {
+  let network = params.network;
+  if (params.network === 2) {
+    network = 3;
+  } else if (params.network === 3) {
+    network = 2;
+  }
+
   return postToAlrahuz(
     "/api/data/",
     {
-      network: params.network,
+      network,
       mobile_number: formatLocalPhone(params.mobileNumber),
       plan: params.plan,
       Ported_number: true,
