@@ -17,20 +17,24 @@ export function CTABanner() {
           Join thousands of Nigerians who trust MK DATA for fast, affordable mobile data.
         </p>
 
-        <div className="flex flex-col justify-center gap-4 sm:flex-row">
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/app"
-            className="rounded-lg bg-[#008fef] px-8 py-3 font-black text-white transition-colors hover:bg-[#159cff]"
+            className="rounded-lg bg-[#008fef] px-8 py-3.5 font-black text-white transition-colors hover:bg-[#159cff]"
           >
-            Open App
+            OPEN APP
           </Link>
           <a
-            href="https://play.google.com/store/apps/details?id=com.mkdata"
+            href="https://play.google.com/store/apps/details?id=com.mkdata.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-lg border border-white/35 px-8 py-3 font-black text-white transition-colors hover:bg-white/10"
+            className="inline-block transition-transform duration-200 hover:scale-105"
           >
-            Get on Store
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              alt="Get it on Google Play"
+              className="h-20 sm:h-24 w-auto drop-shadow-lg"
+            />
           </a>
         </div>
       </div>

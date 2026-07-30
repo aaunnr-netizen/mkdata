@@ -41,16 +41,23 @@ export function HeroSection() {
           </a>
         </div>
 
-        <div className="mb-12 flex flex-col items-center gap-2">
-          <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[#526079]">
-            <ShieldCheck className="h-4 w-4 text-[#00a040]" />
-            Available on
+        <div className="mb-12 flex flex-col items-center gap-3">
+          <p className="inline-flex items-center gap-2 text-sm sm:text-base font-black uppercase tracking-wider text-[#06133a]">
+            <ShieldCheck className="h-5 w-5 text-[#00a040]" />
+            Get MK DATA App on Google Play
           </p>
-          <img
-            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-            alt="Get it on Google Play"
-            className="h-12"
-          />
+          <a
+            href="https://play.google.com/store/apps/details?id=com.mkdata.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block transition-transform duration-200 hover:scale-105"
+          >
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              alt="Get it on Google Play"
+              className="h-20 sm:h-24 w-auto drop-shadow-md"
+            />
+          </a>
         </div>
 
         <div className="grid gap-4 border-y border-[#d7e8ff] py-8 sm:grid-cols-3">
