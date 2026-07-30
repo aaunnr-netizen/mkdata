@@ -95,6 +95,9 @@ model User {
   balance            Int                @default(0) // in KOBO
   rewardBalance      Int                @default(0) // in KOBO, only spendable on data
   agentRequestStatus AgentRequestStatus @default(NONE)
+  kycStatus          String             @default("NONE") // "NONE", "PENDING", "APPROVED", "REJECTED"
+  kycDetails         String?
+  kycSubmittedAt     DateTime?
   isBanned           Boolean            @default(false)
   isActive           Boolean            @default(true)
   joinedAt           DateTime           @default(now())

@@ -48,27 +48,40 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="inline-flex items-center gap-3 text-white">
-                <span className="text-sm font-black sm:text-base">Contact Developer</span>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-white/60">Contact Developer</span>
+                <a
+                  href="https://wa.me/2348034910470"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-black text-[#25b8ff] transition-colors hover:underline"
+                >
+                  WhatsApp Developer (+234 803 491 0470)
+                </a>
               </div>
-              <a
-                href="https://wa.me/2348034910470"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-lg bg-[#00a040] px-5 py-3 text-sm font-black text-white transition-colors hover:bg-[#16b85a] sm:text-base"
-              >
-                WhatsApp (Developer)
-              </a>
-              <a
-                href="https://wa.me/2349066120642"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-lg bg-[#00a040] px-5 py-3 text-sm font-black text-white transition-colors hover:bg-[#16b85a] sm:text-base"
-              >
-                Chat on WhatsApp
-              </a>
+
+              <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-white/60">Contact MK DATA</span>
+                <div className="flex flex-wrap items-center gap-4">
+                  <a
+                    href="https://wa.me/2349066120642"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-black text-[#17d96f] transition-colors hover:underline"
+                  >
+                    WhatsApp Support
+                  </a>
+                  <span className="text-white/30">•</span>
+                  <a
+                    href="tel:+2349066120642"
+                    className="inline-flex items-center gap-2 text-sm font-black text-white transition-colors hover:text-[#25b8ff] hover:underline"
+                  >
+                    Call +234 906 612 0642
+                  </a>
+                </div>
+              </div>
             </div>
 
             <p className="text-xs text-white/54 sm:text-sm">Copyright {currentYear} MK DATA. All rights reserved.</p>

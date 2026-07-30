@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 type DbCapabilities = {
   userRewardBalance: boolean;
   userAgentRequestStatus: boolean;
+  userKycStatus: boolean;
   serviceNotices: boolean;
 };
 
@@ -31,6 +32,7 @@ async function loadCapabilities(): Promise<DbCapabilities> {
   return {
     userRewardBalance: userColumnSet.has("rewardBalance"),
     userAgentRequestStatus: userColumnSet.has("agentRequestStatus"),
+    userKycStatus: userColumnSet.has("kycStatus"),
     serviceNotices: tableSet.has("service_notices"),
   };
 }

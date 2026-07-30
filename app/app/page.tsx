@@ -99,6 +99,8 @@ interface UserData {
   isActive?: boolean;
   joinedAt?: string;
   agentRequestStatus?: "NONE" | "PENDING" | "APPROVED" | "REJECTED";
+  kycStatus?: "NONE" | "PENDING" | "APPROVED" | "REJECTED";
+  kycSubmittedAt?: string | null;
 }
 
 interface BankAccountItem {
@@ -991,6 +993,130 @@ function SecurityModal({
       >
         {loading ? "Updating PIN..." : "Update PIN"}
       </motion.button>
+    </BottomSheet>
+  );
+}
+
+function KycVerificationModal({
+  open,
+  onClose,
+  user,
+  onSubmitted,
+}: {
+  open: boolean;
+  onClose: () => void;
+  user: UserData | null;
+  onSubmitted: () => void;
+}) {
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [ninOrId, setNinOrId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user?.fullName) setFullName(user.fullName);
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !ninOrId) {
+      toast.error("Please enter your full name and NIN/ID number.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/user/kyc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, ninOrId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("KYC details submitted! Awaiting Admin review.");
+        onSubmitted();
+        onClose();
+      } else {
+        toast.error(data.error || "Failed to submit KYC");
+      }
+    } catch {
+      toast.error("Error submitting KYC details");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const isPending = user?.kycStatus === "PENDING";
+
+  return (
+    <BottomSheet open={open} onClose={onClose} title="Security & Admin KYC Verification" accentColor={T.amber}>
+      <div style={{ padding: "8px 0" }}>
+        {isPending ? (
+          <div style={{ background: "rgba(250,204,21,0.12)", border: `1px solid ${T.amber}`, borderRadius: 16, padding: 16, textAlign: "center" }}>
+            <ShieldCheck size={36} color={T.amber} style={{ margin: "0 auto 10px" }} />
+            <h4 style={{ margin: "0 0 6px", fontFamily: T.font, fontSize: 16, fontWeight: 800, color: T.text }}>
+              KYC Submission Under Review
+            </h4>
+            <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, color: T.textMid, lineHeight: 1.5 }}>
+              Your KYC submission has been received and is currently under Admin review on <strong style={{ color: T.amber }}>/admin</strong>.
+              Once approved, all transaction rate limit guards will be lifted.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: "rgba(251,113,133,0.12)", border: `1px solid ${T.rose}`, borderRadius: 14, padding: 12 }}>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, fontWeight: 700, color: T.text, lineHeight: 1.4 }}>
+                🔒 <strong>Account Verification Required:</strong> Security limit triggered (3 purchases in 2 minutes). Please provide your NIN/National ID for Admin approval to unlock your account.
+              </p>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid, marginBottom: 6 }}>
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontFamily: T.font, fontSize: 14, color: T.text }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 800, color: T.textMid, marginBottom: 6 }}>
+                NIN or Government ID Number
+              </label>
+              <input
+                type="text"
+                value={ninOrId}
+                onChange={(e) => setNinOrId(e.target.value)}
+                placeholder="e.g., 12345678901"
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontFamily: T.font, fontSize: 14, color: T.text }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: 14,
+                background: T.blue,
+                color: T.blueDark,
+                fontFamily: T.font,
+                fontSize: 14,
+                fontWeight: 900,
+                border: "none",
+                cursor: "pointer",
+                marginTop: 6,
+              }}
+            >
+              {submitting ? "Submitting..." : "Submit KYC for Admin Approval"}
+            </button>
+          </form>
+        )}
+      </div>
     </BottomSheet>
   );
 }
@@ -2275,15 +2401,16 @@ function ModernProfileTab({
 
         <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: 15, marginBottom: 12 }}>
           <p style={{ margin: "0 0 10px", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, textTransform: "uppercase" }}>
-            Customer Care
+            Contact MK DATA
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <a href="tel:09066120642" style={{ color: T.blue, fontFamily: T.font, fontWeight: 900, textDecoration: "none", borderRadius: 999, background: T.blueLight, padding: "9px 12px" }}>
-              09066120642
+            <a href="tel:+2349066120642" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: T.blue, fontFamily: T.font, fontSize: 12, fontWeight: 900, textDecoration: "none", borderRadius: 999, background: T.blueLight, padding: "9px 12px" }}>
+              <Phone size={14} />
+              Call +234 906 612 0642
             </a>
-            <a href="https://wa.me/2349066120642" target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", borderRadius: 999, padding: "9px 12px", background: "rgba(0,160,64,0.12)", color: T.green, fontFamily: T.font, fontWeight: 900 }}>
+            <a href="https://wa.me/2349066120642" target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none", borderRadius: 999, padding: "9px 12px", background: "rgba(0,160,64,0.12)", color: T.green, fontFamily: T.font, fontSize: 12, fontWeight: 900 }}>
               <MessageCircle size={14} />
-              WhatsApp
+              WhatsApp Support
             </a>
           </div>
         </div>
@@ -2314,7 +2441,7 @@ function ModernProfileTab({
             }}
           >
             <MessageCircle size={14} />
-            WhatsApp
+            WhatsApp Developer
           </a>
         </div>
       </motion.div>
@@ -4059,6 +4186,7 @@ export default function DashboardPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [pin, setPin] = useState("");
   const [purchasingData, setPurchasingData] = useState(false);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
   const [plansLoading, setPlansLoading] = useState(false);
   const dataPlanCache = useRef<Record<string, DataPlan[]>>({});
 
@@ -4395,6 +4523,12 @@ export default function DashboardPage() {
       }
 
       if (!response.ok || !result.success) {
+        if (result?.requiresKyc) {
+          toast.error(result.error || "App locked. Admin KYC approval required.");
+          setKycModalOpen(true);
+          await refreshUser();
+          return;
+        }
         toast.error(getFriendlyMessage(result.error, "We could not complete that data purchase right now."));
         return;
       }
@@ -5057,6 +5191,12 @@ export default function DashboardPage() {
       <PurchaseSuccessScreen
         state={successState}
         onClose={() => setSuccessState({ open: false, title: "", description: "", reference: undefined })}
+      />
+      <KycVerificationModal
+        open={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        user={user}
+        onSubmitted={refreshUser}
       />
     </>
   );

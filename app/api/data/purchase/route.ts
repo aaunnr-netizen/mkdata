@@ -13,7 +13,8 @@ import { sendPushNotification } from "@/lib/firebase";
 import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
-import { getUserSelectCompat, withCompatibleUserFields } from "@/lib/user-compat";
+import { getUserSelectCompat, withCompatibleUserFields, normalizeUserCompat } from "@/lib/user-compat";
+import { checkPurchaseGuards } from "@/lib/purchase-guards";
 
 const purchaseSchema = z.object({
   planId: z.string().min(1, "Plan ID is required"),
@@ -80,6 +81,14 @@ export async function POST(req: NextRequest) {
     if (!isPinValid) {
       return NextResponse.json({ success: false, error: "Invalid PIN" }, { status: 401 });
     }
+
+    const normalizedUser = normalizeUserCompat(user);
+    const guardError = await checkPurchaseGuards({
+      userId: user.id,
+      recipientPhone,
+      kycStatus: normalizedUser.kycStatus,
+    });
+    if (guardError) return guardError;
 
     const plan = await prisma.plan.findUnique({
       where: { id: planId },

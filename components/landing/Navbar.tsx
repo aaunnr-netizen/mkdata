@@ -51,49 +51,16 @@ export function Navbar() {
             </Link>
           </div>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="-mr-2 flex items-center justify-center rounded-xl border border-[#d7e8ff] bg-white p-2 md:hidden"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? (
-              <X className="h-5 w-5 text-[#07143d]" />
-            ) : (
-              <Menu className="h-5 w-5 text-[#07143d]" />
-            )}
-          </button>
-        </div>
-
-        {isOpen && (
-          <div className="border-t border-[#d7e8ff] bg-white md:hidden">
-            <div className="flex flex-col space-y-1 py-3">
-              {[
-                { label: "Features", href: "#features" },
-                { label: "Pricing", href: "#pricing" },
-                { label: "How it works", href: "#howitworks" },
-                { label: "FAQ", href: "#faq" }
-              ].map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-[#526079] transition-colors duration-200 hover:bg-[#f0f7ff] hover:text-[#008fef]"
-                  onClick={closeMenu}
-                >
-                  {link.label}
-                </a>
-              ))}
-              <div className="mt-2 border-t border-[#d7e8ff] pt-3">
-                <Link
-                  href="/app"
-                  className="block w-full rounded-xl bg-[#008fef] px-4 py-3 text-center text-sm font-black text-white"
-                  onClick={closeMenu}
-                >
-                  Open App
-                </Link>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 md:hidden">
+            <Link
+              href="/app"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#008fef] px-4 py-2 text-xs font-black text-white shadow-md transition-colors duration-200 hover:bg-[#0060d0]"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              OPEN APP
+            </Link>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );

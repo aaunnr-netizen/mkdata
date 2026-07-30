@@ -19,25 +19,41 @@ export function HeroSection() {
           <span className="text-[#008fef]">No waiting. No delays.</span>
         </h1>
 
-        <p className="mx-auto mb-10 max-w-3xl text-base leading-relaxed text-[#526079] sm:text-lg">
+        <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-[#526079] sm:text-lg">
           Buy mobile data for MTN, Glo, Airtel & 9Mobile at the best prices.
           Delivered in seconds with zero hassle.
         </p>
 
-        <div className="mx-auto mb-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            ["/mtn.jpg", "MTN"],
-            ["/glo.jpg", "Glo"],
-            ["/airtel.jpg", "Airtel"],
-            ["/9mobile.jpg", "9Mobile"],
-          ].map(([src, name]) => (
-            <div key={name} className="flex items-center justify-center rounded-lg border border-[#d7e8ff] bg-white/85 px-4 py-3 shadow-sm">
-              <img src={src} alt={name} className="h-8 max-w-20 object-contain" />
-            </div>
-          ))}
+        <div className="mb-8 flex flex-col justify-center gap-4 sm:flex-row">
+          <Link
+            href="/app"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#008fef] px-8 py-3.5 font-black text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition-colors duration-200 hover:bg-[#0060d0]"
+          >
+            <Zap className="h-4 w-4" />
+            OPEN APP
+          </Link>
+          <a
+            href="#features"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#b9d9ff] bg-white px-8 py-3.5 font-black text-[#06133a] transition-colors duration-200 hover:bg-[#f0f7ff]"
+          >
+            Learn More
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
 
-        <div className="mb-12 grid gap-4 border-y border-[#d7e8ff] py-8 sm:grid-cols-3">
+        <div className="mb-12 flex flex-col items-center gap-2">
+          <p className="inline-flex items-center gap-1.5 text-xs font-bold text-[#526079]">
+            <ShieldCheck className="h-4 w-4 text-[#00a040]" />
+            Available on
+          </p>
+          <img
+            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+            alt="Get it on Google Play"
+            className="h-12"
+          />
+        </div>
+
+        <div className="grid gap-4 border-y border-[#d7e8ff] py-8 sm:grid-cols-3">
           <div className="flex flex-col items-center">
             <div className="text-2xl font-black text-[#06133a] sm:text-3xl">50K+</div>
             <div className="text-sm font-semibold text-[#526079]">Happy Customers</div>
@@ -50,35 +66,6 @@ export function HeroSection() {
             <div className="text-2xl font-black text-[#06133a] sm:text-3xl">4.9 star</div>
             <div className="text-sm font-semibold text-[#526079]">Rated on Stores</div>
           </div>
-        </div>
-
-        <div className="mb-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <Link
-            href="/app"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#008fef] px-8 py-3 font-black text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition-colors duration-200 hover:bg-[#0060d0]"
-          >
-            <Zap className="h-4 w-4" />
-            Get Started
-          </Link>
-          <a
-            href="#features"
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#b9d9ff] bg-white px-8 py-3 font-black text-[#06133a] transition-colors duration-200 hover:bg-[#f0f7ff]"
-          >
-            Learn More
-            <ArrowRight className="h-4 w-4" />
-          </a>
-        </div>
-
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <p className="inline-flex items-center gap-2 text-xs font-bold text-[#526079]">
-            <ShieldCheck className="h-4 w-4 text-[#00a040]" />
-            Available on
-          </p>
-          <img
-            src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-            alt="Get it on Google Play"
-            className="h-12"
-          />
         </div>
       </div>
     </section>
