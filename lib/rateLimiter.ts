@@ -48,7 +48,6 @@ export function getClientIp(request: Request): string {
   );
 }
 
-// Rate limit configurations (in window milliseconds and max attempts)
 export const RATE_LIMITS = {
   login: { maxAttempts: 5, windowMs: 5 * 60 * 1000 }, // 5 attempts per 5 minutes
   dataPurchase: { maxAttempts: 10, windowMs: 60 * 1000 }, // 10 attempts per minute
@@ -56,6 +55,7 @@ export const RATE_LIMITS = {
   agentApply: { maxAttempts: 6, windowMs: 10 * 60 * 1000 }, // 6 attempts in 10 minutes
   adminMutation: { maxAttempts: 80, windowMs: 60 * 1000 }, // 80 admin writes per minute per IP
   webhook: { maxAttempts: 300, windowMs: 60 * 1000 }, // generous webhook allowance
+  publicApi: { maxAttempts: 60, windowMs: 60 * 1000 }, // 60 query/validation calls per minute
 };
 
 /**

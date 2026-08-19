@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { purchaseAirtime } from "@/lib/alrahuz";
-import { findRecentDuplicateTransaction, normalizeProviderFailureMessage } from "@/lib/purchase-utils";
+import {
+  findRecentDuplicateTransaction,
+  normalizeProviderFailureMessage,
+  acquirePurchaseLock,
+  buildPurchaseLockKey,
+  IDEMPOTENCY_WINDOW_MINUTES,
+} from "@/lib/purchase-utils";
 import { getSessionUser } from "@/lib/auth";
 import { sendPushNotification } from "@/lib/firebase";
 import { z } from "zod";
@@ -23,12 +29,6 @@ const networkIds: Record<string, number> = {
   "9mobile": 3,
   airtel: 4,
 };
-
-const IDEMPOTENCY_WINDOW_MINUTES = 5;
-
-async function acquirePurchaseLock(tx: any, lockKey: string) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     }
 
     const reference = `AIRTIME-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const lockKey = `airtime:${user.id}:${recipientPhone}:${amount}:${network}`;
+    const lockKey = buildPurchaseLockKey("airtime", user.id, `${recipientPhone}:${network}`, amount);
 
     const txResult = await prisma.$transaction(async (tx) => {
       await acquirePurchaseLock(tx, lockKey);

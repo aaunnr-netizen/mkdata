@@ -172,16 +172,46 @@ async function seedCableCatalog() {
   }
 }
 
+const examProducts = [
+  ["WAEC", "WAEC Result Checker", 3800, 5],
+  ["NECO", "NECO Token", 1800, 5],
+  ["NABTEB", "NABTEB Pin", 1800, 5],
+  ["JAMB", "JAMB UTME / DE Pin", 2500, 5],
+] as const;
+
+async function seedExamProducts() {
+  for (const [examName, displayName, price, maxQuantity] of examProducts) {
+    await prisma.examProduct.upsert({
+      where: { examName },
+      update: {
+        displayName,
+        price,
+        maxQuantity,
+        isActive: true,
+      },
+      create: {
+        examName,
+        displayName,
+        price,
+        maxQuantity,
+        isActive: true,
+      },
+    });
+  }
+}
+
 async function main() {
   const admin = await recreateAdminUser();
   await seedElectricityProviders();
   await seedCableCatalog();
+  await seedExamProducts();
 
-  const [adminCount, electricityCount, cableProviderCount, cablePlanCount] = await Promise.all([
+  const [adminCount, electricityCount, cableProviderCount, cablePlanCount, examCount] = await Promise.all([
     prisma.user.count({ where: { phone: adminPhone } }),
     prisma.electricityProvider.count({ where: { isActive: true } }),
     prisma.cableProvider.count({ where: { isActive: true } }),
     prisma.cablePlan.count({ where: { isActive: true } }),
+    prisma.examProduct.count({ where: { isActive: true } }),
   ]);
 
   console.log(
@@ -197,6 +227,7 @@ async function main() {
         electricityProviders: electricityCount,
         cableProviders: cableProviderCount,
         cablePlans: cablePlanCount,
+        examProducts: examCount,
       },
       null,
       2

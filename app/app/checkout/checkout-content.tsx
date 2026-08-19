@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast, Toaster } from "sonner";
+import { getFriendlyMessage } from "@/lib/user-feedback";
 
 interface DataPlan {
   id: string;
@@ -38,10 +39,10 @@ export default function CheckoutContent() {
           const data = await res.json();
           setPlans(data.plans || []);
         } else {
-          toast.error("Failed to load data plans");
+          toast.error("Ahh, sorry, data plans could not load right now. Please try again shortly.");
         }
       } catch (error) {
-        toast.error("Error loading plans");
+        toast.error("Ahh, sorry, data plans could not load right now. Please try again shortly.");
       } finally {
         setIsLoading(false);
       }
@@ -52,7 +53,7 @@ export default function CheckoutContent() {
 
   const handlePurchase = async () => {
     if (!selectedPlan || !phone) {
-      toast.error("Please select a plan");
+      toast.error("Ahh, sorry, please select a plan before continuing.");
       return;
     }
 
@@ -78,10 +79,10 @@ export default function CheckoutContent() {
           router.push(`/transaction-status?reference=${data.reference}`);
         }, 1000);
       } else {
-        toast.error(data.error || "Purchase failed");
+        toast.error(getFriendlyMessage(data.error, "We could not complete that purchase right now."));
       }
     } catch (error) {
-      toast.error("Network error during purchase");
+      toast.error("Ahh, sorry, the connection is unstable right now. Please try again shortly.");
     } finally {
       setIsProcessing(false);
     }

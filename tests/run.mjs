@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { createReservedVirtualAccount, md5Hex, verifyBillstackSignature } from "../lib/billstack-core.mjs";
 import { processBillstackWebhookWithAdapter } from "../lib/billstack-webhook-core.mjs";
+import { testFriendlyUserFeedback } from "./user-feedback.test.mjs";
+import { testAlrahuzServices } from "./alrahuz-services.test.mjs";
+import { testAtomicLocksAndGuards } from "./atomic-locks.test.mjs";
 
 async function testCreateReservedVirtualAccount() {
   let seenHeaders = null;
@@ -104,6 +107,9 @@ async function main() {
   const tests = [
     ["BillStack create account client", testCreateReservedVirtualAccount],
     ["BillStack webhook signature + idempotency", testWebhookSignatureAndIdempotency],
+    ["Friendly user feedback message mapping", testFriendlyUserFeedback],
+    ["Alrahuz services validation, mapping and queries", testAlrahuzServices],
+    ["Atomic locks, anti-race guards and KYC bypass", testAtomicLocksAndGuards],
   ];
 
   let passed = 0;

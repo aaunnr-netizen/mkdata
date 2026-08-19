@@ -68,9 +68,9 @@ export default function SettingsPage() {
 
       // Redirect
       router.push("/app");
-      toast.success("Logged out successfully");
+      toast.success("You have been signed out.");
     } catch (error) {
-      toast.error("Logout failed");
+      toast.error("Ahh, sorry, logout could not be completed right now.");
     }
   };
 

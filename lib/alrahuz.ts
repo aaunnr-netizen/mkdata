@@ -1,6 +1,6 @@
 import axios from "axios";
 
-type AlrahuzResult = {
+export type AlrahuzResult = {
   success: boolean;
   message: string;
   externalReference?: string;
@@ -8,21 +8,30 @@ type AlrahuzResult = {
   raw?: unknown;
 };
 
-type AlrahuzDataParams = {
+export type AlrahuzValidationResult = {
+  success: boolean;
+  valid: boolean;
+  customerName?: string;
+  address?: string;
+  message: string;
+  raw?: unknown;
+};
+
+export type AlrahuzDataParams = {
   network: number;
   plan: number;
   mobileNumber: string;
   reference: string;
 };
 
-type AlrahuzAirtimeParams = {
+export type AlrahuzAirtimeParams = {
   network: number;
   amount: number;
   mobileNumber: string;
   reference: string;
 };
 
-type AlrahuzElectricityParams = {
+export type AlrahuzElectricityParams = {
   discoName: number;
   amount: number;
   meterNumber: string;
@@ -30,18 +39,31 @@ type AlrahuzElectricityParams = {
   reference: string;
 };
 
-type AlrahuzCableParams = {
+export type AlrahuzCableParams = {
   cablename: number;
   cableplan: number;
   smartCardNumber: string;
   reference: string;
 };
 
-type AlrahuzExamParams = {
+export type AlrahuzExamParams = {
   examName: string;
   quantity: number;
   reference: string;
 };
+
+export type AlrahuzValidateIucParams = {
+  smartCardNumber: string;
+  cablename: number | string;
+};
+
+export type AlrahuzValidateMeterParams = {
+  meterNumber: string;
+  disconame: number | string;
+  meterType?: 1 | 2 | "prepaid" | "postpaid" | string;
+};
+
+const DEFAULT_ALRAHUZ_TOKEN = "66f2e5c39ac8640f13cd888f161385b12f7e5e92";
 
 function getBaseUrl() {
   return (process.env.ALRAHUZ_BASE_URL || "https://alrahuzdata.com.ng").replace(/\/$/, "");
@@ -50,12 +72,8 @@ function getBaseUrl() {
 function getToken(kind: "default" | "epin" = "default") {
   const token =
     kind === "epin"
-      ? process.env.ALRAHUZ_EPIN_API_TOKEN || process.env.ALRAHUZ_API_TOKEN
-      : process.env.ALRAHUZ_API_TOKEN;
-
-  if (!token) {
-    throw new Error(kind === "epin" ? "ALRAHUZ_EPIN_API_TOKEN is not configured" : "ALRAHUZ_API_TOKEN is not configured");
-  }
+      ? process.env.ALRAHUZ_EPIN_API_TOKEN || process.env.ALRAHUZ_API_TOKEN || DEFAULT_ALRAHUZ_TOKEN
+      : process.env.ALRAHUZ_API_TOKEN || DEFAULT_ALRAHUZ_TOKEN;
 
   return token;
 }
@@ -72,6 +90,7 @@ function getMessage(data: any, fallback: string) {
     data?.Message ||
     data?.detail ||
     data?.description ||
+    data?.error ||
     data?.data?.message ||
     data?.data?.detail ||
     data?.data?.description ||
@@ -120,8 +139,81 @@ function isFailurePayload(data: any) {
     status === "failed" ||
     status === "failure" ||
     status === "error" ||
-    status === "cancelled"
+    status === "cancelled" ||
+    data?.invalid === true
   );
+}
+
+function extractCustomerName(data: any): string | undefined {
+  const name =
+    data?.name ||
+    data?.Name ||
+    data?.Customer_Name ||
+    data?.customer_name ||
+    data?.customerName ||
+    data?.Customer_Number ||
+    data?.customer_number ||
+    data?.data?.name ||
+    data?.data?.Name ||
+    data?.data?.Customer_Name ||
+    data?.data?.customer_name ||
+    data?.data?.customerName;
+
+  if (typeof name === "string" && name.trim().length > 0 && !isFailurePayload({ status: name })) {
+    return name.trim();
+  }
+  return undefined;
+}
+
+function extractAddress(data: any): string | undefined {
+  const address =
+    data?.address ||
+    data?.Address ||
+    data?.customer_address ||
+    data?.customerAddress ||
+    data?.data?.address ||
+    data?.data?.Address;
+
+  if (typeof address === "string" && address.trim().length > 0) {
+    return address.trim();
+  }
+  return undefined;
+}
+
+async function getFromAlrahuz(
+  path: string,
+  params?: Record<string, unknown>,
+  options?: {
+    tokenKind?: "default" | "epin";
+    fallbackMessage?: string;
+  }
+): Promise<{ status: number; data: any }> {
+  const url = `${getBaseUrl()}${path}`;
+  console.log("[ALRAHUZ GET REQUEST]", {
+    url,
+    params,
+    tokenKind: options?.tokenKind || "default",
+    timestamp: new Date().toISOString(),
+  });
+
+  const response = await axios.get(url, {
+    params,
+    headers: {
+      Authorization: `Token ${getToken(options?.tokenKind)}`,
+      "Content-Type": "application/json",
+    },
+    timeout: 30000,
+    validateStatus: (status) => status >= 200 && status < 500,
+  });
+
+  console.log("[ALRAHUZ GET RESPONSE]", {
+    url,
+    status: response.status,
+    data: response.data,
+    timestamp: new Date().toISOString(),
+  });
+
+  return { status: response.status, data: response.data };
 }
 
 async function postToAlrahuz(
@@ -283,4 +375,171 @@ export async function purchaseExamPin(params: AlrahuzExamParams): Promise<Alrahu
       successMessage: "Exam checker PIN purchase successful",
     }
   );
+}
+
+export async function validateIUC(params: AlrahuzValidateIucParams): Promise<AlrahuzValidationResult> {
+  try {
+    const { status, data } = await getFromAlrahuz("/api/validateiuc", {
+      smart_card_number: params.smartCardNumber,
+      cablename: params.cablename,
+    });
+
+    if (status >= 400 || isFailurePayload(data)) {
+      return {
+        success: false,
+        valid: false,
+        message: getMessage(data, "Could not validate smart card number"),
+        raw: data,
+      };
+    }
+
+    const customerName = extractCustomerName(data);
+    const valid = Boolean(customerName || (!data?.invalid && status === 200));
+
+    return {
+      success: true,
+      valid,
+      customerName,
+      message: customerName ? `Verified: ${customerName}` : "Smart card verified",
+      raw: data,
+    };
+  } catch (error: any) {
+    console.error("[ALRAHUZ VALIDATE IUC ERROR]", error);
+    return {
+      success: false,
+      valid: false,
+      message: error.response?.data?.message || error.message || "Smart card validation failed",
+    };
+  }
+}
+
+export async function validateMeter(params: AlrahuzValidateMeterParams): Promise<AlrahuzValidationResult> {
+  try {
+    const mtype =
+      params.meterType === 1 || params.meterType === "prepaid"
+        ? "prepaid"
+        : params.meterType === 2 || params.meterType === "postpaid"
+        ? "postpaid"
+        : params.meterType || "prepaid";
+
+    const { status, data } = await getFromAlrahuz("/api/validatemeter", {
+      meternumber: params.meterNumber,
+      disconame: params.disconame,
+      mtype,
+    });
+
+    if (status >= 400 || isFailurePayload(data)) {
+      return {
+        success: false,
+        valid: false,
+        message: getMessage(data, "Could not validate meter number"),
+        raw: data,
+      };
+    }
+
+    const customerName = extractCustomerName(data);
+    const address = extractAddress(data);
+    const valid = Boolean(customerName || address || (!data?.invalid && status === 200));
+
+    return {
+      success: true,
+      valid,
+      customerName,
+      address,
+      message: customerName ? `Verified: ${customerName}` : "Meter number verified",
+      raw: data,
+    };
+  } catch (error: any) {
+    console.error("[ALRAHUZ VALIDATE METER ERROR]", error);
+    return {
+      success: false,
+      valid: false,
+      message: error.response?.data?.message || error.message || "Meter validation failed",
+    };
+  }
+}
+
+export async function queryCableSub(id: string | number): Promise<AlrahuzResult> {
+  try {
+    const { status, data } = await getFromAlrahuz(`/api/cablesub/${id}`);
+    if (status >= 400 || isFailurePayload(data)) {
+      return {
+        success: false,
+        message: getMessage(data, `Cable query failed with status ${status}`),
+        externalReference: getExternalReference(data, String(id)),
+        raw: data,
+      };
+    }
+
+    return {
+      success: true,
+      message: getMessage(data, "Cable subscription queried successfully"),
+      externalReference: getExternalReference(data, String(id)),
+      raw: data,
+    };
+  } catch (error: any) {
+    console.error("[ALRAHUZ QUERY CABLE ERROR]", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || "Could not query cable subscription",
+    };
+  }
+}
+
+export async function queryElectricityBill(id: string | number): Promise<AlrahuzResult> {
+  try {
+    const { status, data } = await getFromAlrahuz(`/api/billpayment/${id}`);
+    if (status >= 400 || isFailurePayload(data)) {
+      return {
+        success: false,
+        message: getMessage(data, `Electricity query failed with status ${status}`),
+        externalReference: getExternalReference(data, String(id)),
+        raw: data,
+      };
+    }
+
+    const pin = getPin(data);
+    return {
+      success: true,
+      message: pin ? `Token: ${pin}` : getMessage(data, "Electricity bill queried successfully"),
+      externalReference: getExternalReference(data, String(id)),
+      pin,
+      raw: data,
+    };
+  } catch (error: any) {
+    console.error("[ALRAHUZ QUERY ELECTRICITY ERROR]", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || "Could not query electricity bill",
+    };
+  }
+}
+
+export async function queryExamPin(id: string | number): Promise<AlrahuzResult> {
+  try {
+    const { status, data } = await getFromAlrahuz(`/api/epin/${id}`, undefined, { tokenKind: "epin" });
+    if (status >= 400 || isFailurePayload(data)) {
+      return {
+        success: false,
+        message: getMessage(data, `Exam pin query failed with status ${status}`),
+        externalReference: getExternalReference(data, String(id)),
+        raw: data,
+      };
+    }
+
+    const pin = getPin(data);
+    return {
+      success: true,
+      message: pin ? `PIN: ${pin}` : getMessage(data, "Exam pin queried successfully"),
+      externalReference: getExternalReference(data, String(id)),
+      pin,
+      raw: data,
+    };
+  } catch (error: any) {
+    console.error("[ALRAHUZ QUERY EXAM PIN ERROR]", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || "Could not query exam pin",
+    };
+  }
 }

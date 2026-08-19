@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { getFriendlyMessage } from "@/lib/user-feedback";
 
 export default function ChangePinPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function ChangePinPage() {
   const handleVerifyCurrentPin = async () => {
     const pinValue = currentPin.join("");
     if (pinValue.length !== 6) {
-      setError("Please enter a 6-digit PIN");
+      setError("Ahh, sorry, please enter a 6-digit PIN.");
       return;
     }
 
@@ -69,7 +70,7 @@ export default function ChangePinPage() {
         setStep(2);
         toast.success("PIN verified");
       } else {
-        setError("Current PIN is incorrect");
+        setError("Ahh, sorry, that PIN does not look right. Please check it and try again.");
         // Shake animation
         document.getElementById("pin-inputs")?.classList.add("shake");
         setTimeout(() => {
@@ -77,7 +78,7 @@ export default function ChangePinPage() {
         }, 500);
       }
     } catch (error) {
-      setError("Network error");
+      setError("Ahh, sorry, the connection is unstable right now. Please try again shortly.");
     } finally {
       setIsLoading(false);
     }
@@ -88,17 +89,17 @@ export default function ChangePinPage() {
     const confirmPinValue = confirmPin.join("");
 
     if (newPinValue.length !== 6) {
-      setError("Please enter a 6-digit new PIN");
+      setError("Ahh, sorry, please enter a 6-digit new PIN.");
       return;
     }
 
     if (confirmPinValue.length !== 6) {
-      setError("Please confirm your new PIN");
+      setError("Ahh, sorry, please confirm your new PIN.");
       return;
     }
 
     if (newPinValue !== confirmPinValue) {
-      setError("New PIN and confirmation do not match");
+      setError("Ahh, sorry, new PIN and confirmation do not match.");
       return;
     }
 
@@ -124,10 +125,10 @@ export default function ChangePinPage() {
           router.back();
         }, 1000);
       } else {
-        setError(data.error || "Failed to change PIN");
+        setError(getFriendlyMessage(data?.error, "We could not change your PIN right now."));
       }
     } catch (error) {
-      setError("Network error");
+      setError("Ahh, sorry, the connection is unstable right now. Please try again shortly.");
     } finally {
       setIsLoading(false);
     }

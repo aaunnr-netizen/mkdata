@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+
 const TECHNICAL_PATTERNS = [
   "api response",
   "api error",
@@ -38,7 +40,7 @@ const TECHNICAL_PATTERNS = [
   "undefined",
 ];
 
-export function getFriendlyMessage(input?: string | null, fallback = "Something went wrong. Please try again in a moment.") {
+function getFriendlyMessage(input, fallback = "Something went wrong. Please try again in a moment.") {
   const message = String(input || "").trim();
   const normalized = message.toLowerCase();
 
@@ -131,3 +133,53 @@ export function getFriendlyMessage(input?: string | null, fallback = "Something 
     : `Ahh, sorry, ${message.charAt(0).toLowerCase()}${message.slice(1)}`;
 }
 
+export async function testFriendlyUserFeedback() {
+  // Test raw provider / API errors
+  assert.equal(
+    getFriendlyMessage("API response failed with insufficient vendor balance"),
+    "Ahh, sorry, your wallet balance is too low for this request right now."
+  );
+
+  assert.equal(
+    getFriendlyMessage("API C request failed with status 500"),
+    "Ahh, sorry, we could not complete that right now. Please try again in a moment."
+  );
+
+  assert.equal(
+    getFriendlyMessage("API Error: 502"),
+    "Ahh, sorry, we could not complete that right now. Please try again in a moment."
+  );
+
+  assert.equal(
+    getFriendlyMessage("AxiosError: timeout of 30000ms exceeded"),
+    "Ahh, sorry, we could not complete that right now. Please try again in a moment."
+  );
+
+  assert.equal(
+    getFriendlyMessage("Billstack request failed with status 400"),
+    "Ahh, sorry, we could not complete that right now. Please try again in a moment."
+  );
+
+  // Test PIN and credentials
+  assert.equal(
+    getFriendlyMessage("Current PIN is incorrect"),
+    "Ahh, sorry, that PIN does not look right. Please check it and try again."
+  );
+
+  assert.equal(
+    getFriendlyMessage("Invalid credentials"),
+    "Ahh, sorry, that phone number or PIN does not look right. Please check and try again."
+  );
+
+  // Test Plan availability
+  assert.equal(
+    getFriendlyMessage("plan not available now, choose other plans!"),
+    "Ahh, sorry, that plan is not available right now. Please choose another one."
+  );
+
+  // Test fallback
+  assert.equal(
+    getFriendlyMessage("", "We could not complete your order."),
+    "Ahh, sorry, we could not complete your order."
+  );
+}

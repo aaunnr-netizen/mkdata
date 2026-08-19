@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { ChevronLeft, AlertCircle, Zap, CreditCard, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getFriendlyMessage } from '@/lib/user-feedback';
 
 interface Transaction {
   id: string;
@@ -44,7 +45,7 @@ export default function TransactionsPage() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load transactions';
-      setError(message);
+      setError(getFriendlyMessage(message, 'Transactions could not load right now. Please try again shortly.'));
       console.error('[TRANSACTIONS PAGE] Error:', message);
     } finally {
       setLoading(false);

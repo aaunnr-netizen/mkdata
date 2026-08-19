@@ -905,12 +905,12 @@ function SecurityModal({
 
   const submit = async () => {
     if (currentPin.length !== 6 || newPin.length !== 6 || confirmPin.length !== 6) {
-      toast.error("Each PIN entry must be 6 digits.");
+      toast.error("Ahh, sorry, each PIN entry must be 6 digits.");
       return;
     }
 
     if (newPin !== confirmPin) {
-      toast.error("Your new PIN entries do not match yet.");
+      toast.error("Ahh, sorry, your new PIN entries do not match yet.");
       return;
     }
 
@@ -934,7 +934,7 @@ function SecurityModal({
       setConfirmPin("");
       onClose();
     } catch {
-      toast.error("We could not change your PIN right now.");
+      toast.error("Ahh, sorry, we could not change your PIN right now.");
     } finally {
       setLoading(false);
     }
@@ -1019,7 +1019,7 @@ function KycVerificationModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !ninOrId) {
-      toast.error("Please enter your full name and NIN/ID number.");
+      toast.error("Ahh, sorry, please enter your full name and NIN/ID number.");
       return;
     }
 
@@ -1036,10 +1036,10 @@ function KycVerificationModal({
         onSubmitted();
         onClose();
       } else {
-        toast.error(data.error || "Failed to submit KYC");
+        toast.error(getFriendlyMessage(data?.error, "KYC details could not be submitted right now."));
       }
     } catch {
-      toast.error("Error submitting KYC details");
+      toast.error("Ahh, sorry, KYC details could not be submitted right now.");
     } finally {
       setSubmitting(false);
     }
@@ -2189,7 +2189,7 @@ function ModernProfileTab({
           : null;
 
     if (!enrollWithBridge) {
-      toast.error("Fingerprint setup is only available inside the Android app.");
+      toast.error("Ahh, sorry, fingerprint setup is only available inside the Android app.");
       return;
     }
 
@@ -2197,7 +2197,7 @@ function ModernProfileTab({
     try {
       const available = await bridgeIsAvailable();
       if (!available) {
-        toast.error("Fingerprint is not available or enrolled on this phone.");
+        toast.error("Ahh, sorry, fingerprint is not available or enrolled on this phone.");
         return;
       }
 
@@ -2217,7 +2217,7 @@ function ModernProfileTab({
       safeLocalStorage.setItem("saved_phone", user.phone);
       toast.success("Fingerprint login is now enabled on this phone.");
     } catch {
-      toast.error("Fingerprint enrollment could not be completed right now.");
+      toast.error("Ahh, sorry, fingerprint enrollment could not be completed right now.");
     } finally {
       setEnrollingBiometric(false);
     }
@@ -3177,11 +3177,15 @@ function ElectricityPurchaseTab({
   pin,
   loading,
   purchasing,
+  validating,
+  customerName,
+  customerAddress,
   onProviderSelect,
   onAmountChange,
   onMeterNumberChange,
   onMeterTypeChange,
   onPinChange,
+  onValidateMeter,
   onPurchase,
   onBack,
 }: {
@@ -3193,11 +3197,15 @@ function ElectricityPurchaseTab({
   pin: string;
   loading: boolean;
   purchasing: boolean;
+  validating?: boolean;
+  customerName?: string;
+  customerAddress?: string;
   onProviderSelect: (id: string) => void;
   onAmountChange: (value: string) => void;
   onMeterNumberChange: (value: string) => void;
   onMeterTypeChange: (value: "prepaid" | "postpaid") => void;
   onPinChange: (value: string) => void;
+  onValidateMeter?: () => void;
   onPurchase: () => void;
   onBack: () => void;
 }) {
@@ -3241,7 +3249,20 @@ function ElectricityPurchaseTab({
               </button>
             ))}
           </div>
-          <input value={meterNumber} onChange={(event) => onMeterNumberChange(event.target.value.replace(/\D/g, ""))} placeholder="Meter number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box", marginBottom: 12 }} />
+          <div style={{ position: "relative", marginBottom: customerName ? 6 : 12 }}>
+            <input value={meterNumber} onChange={(event) => onMeterNumberChange(event.target.value.replace(/\D/g, ""))} placeholder="Meter number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${customerName ? T.green : T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
+            {onValidateMeter && selectedProviderId && meterNumber.length >= 6 && !customerName && (
+              <button onClick={onValidateMeter} disabled={validating} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: T.amber, color: "#fff", padding: "6px 12px", borderRadius: 10, fontFamily: T.font, fontSize: 12, fontWeight: 900, cursor: validating ? "not-allowed" : "pointer" }}>
+                {validating ? "Verifying..." : "Verify"}
+              </button>
+            )}
+          </div>
+          {customerName && (
+            <div style={{ background: "rgba(22, 163, 74, 0.12)", border: `1px solid ${T.green}`, borderRadius: 12, padding: "8px 12px", marginBottom: 12 }}>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.green }}>✓ {customerName}</p>
+              {customerAddress && <p style={{ margin: "2px 0 0", fontFamily: T.font, fontSize: 11, color: T.textMid }}>{customerAddress}</p>}
+            </div>
+          )}
           <input value={amount} onChange={(event) => onAmountChange(event.target.value.replace(/\D/g, ""))} placeholder={selectedProvider ? `${selectedProvider.minAmount} - ${selectedProvider.maxAmount}` : "Amount"} style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
         </div>
 
@@ -3250,7 +3271,9 @@ function ElectricityPurchaseTab({
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
             <div>
               <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>{selectedProvider?.name || "Select disco"}</p>
-              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>{meterType} meter - {meterNumber || "meter number"}</p>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>
+                {customerName ? `${customerName} • ` : ""}{meterType} meter - {meterNumber || "meter number"}
+              </p>
             </div>
             <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.amber }}>{amount ? formatNaira(Number(amount)) : "Amount"}</p>
           </div>
@@ -3272,10 +3295,13 @@ function CablePurchaseTab({
   pin,
   loading,
   purchasing,
+  validating,
+  customerName,
   onProviderSelect,
   onPlanSelect,
   onSmartCardChange,
   onPinChange,
+  onValidateSmartCard,
   onPurchase,
   onBack,
 }: {
@@ -3286,10 +3312,13 @@ function CablePurchaseTab({
   pin: string;
   loading: boolean;
   purchasing: boolean;
+  validating?: boolean;
+  customerName?: string;
   onProviderSelect: (id: string) => void;
   onPlanSelect: (id: string) => void;
   onSmartCardChange: (value: string) => void;
   onPinChange: (value: string) => void;
+  onValidateSmartCard?: () => void;
   onPurchase: () => void;
   onBack: () => void;
 }) {
@@ -3344,7 +3373,19 @@ function CablePurchaseTab({
 
         <div style={{ border: `1px solid ${T.borderStrong}`, background: T.card, borderRadius: 20, padding: 15 }}>
           <label style={{ display: "block", fontFamily: T.font, fontSize: 12, fontWeight: 900, color: T.textDim, marginBottom: 8, textTransform: "uppercase" }}>Smart card number</label>
-          <input value={smartCardNumber} onChange={(event) => onSmartCardChange(event.target.value.replace(/\D/g, ""))} placeholder="Smart card / IUC number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
+          <div style={{ position: "relative", marginBottom: customerName ? 6 : 0 }}>
+            <input value={smartCardNumber} onChange={(event) => onSmartCardChange(event.target.value.replace(/\D/g, ""))} placeholder="Smart card / IUC number" style={{ width: "100%", padding: "14px", borderRadius: 14, border: `1px solid ${customerName ? T.green : T.borderStrong}`, background: T.surface, fontFamily: T.mono, boxSizing: "border-box" }} />
+            {onValidateSmartCard && selectedProviderId && smartCardNumber.length >= 6 && !customerName && (
+              <button onClick={onValidateSmartCard} disabled={validating} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", border: "none", background: T.blue, color: "#fff", padding: "6px 12px", borderRadius: 10, fontFamily: T.font, fontSize: 12, fontWeight: 900, cursor: validating ? "not-allowed" : "pointer" }}>
+                {validating ? "Verifying..." : "Verify"}
+              </button>
+            )}
+          </div>
+          {customerName && (
+            <div style={{ background: "rgba(22, 163, 74, 0.12)", border: `1px solid ${T.green}`, borderRadius: 12, padding: "8px 12px", marginTop: 8 }}>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.green }}>✓ {customerName}</p>
+            </div>
+          )}
         </div>
 
         <div style={{ border: `1px solid ${selectedPlan ? T.blue : T.borderStrong}`, background: selectedPlan ? T.blueLight : T.card, borderRadius: 20, padding: 15 }}>
@@ -3352,7 +3393,9 @@ function CablePurchaseTab({
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
             <div>
               <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text }}>{provider?.name || "Provider"} {selectedPlan?.name || ""}</p>
-              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>{smartCardNumber || "smart card number"}</p>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 12, color: T.textMid }}>
+                {customerName ? `${customerName} • ` : ""}{smartCardNumber || "smart card number"}
+              </p>
             </div>
             <p style={{ margin: 0, fontFamily: T.mono, fontWeight: 900, color: T.blue }}>{selectedPlan ? formatNaira(selectedPlan.price) : "Plan"}</p>
           </div>
@@ -4189,6 +4232,7 @@ export default function DashboardPage() {
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [plansLoading, setPlansLoading] = useState(false);
   const dataPlanCache = useRef<Record<string, DataPlan[]>>({});
+  const isSubmittingPurchaseRef = useRef(false);
 
   const [airtimeNetwork, setAirtimeNetwork] = useState<string | null>("mtn");
   const [airtimeAmount, setAirtimeAmount] = useState<number | null>(null);
@@ -4204,6 +4248,9 @@ export default function DashboardPage() {
   const [electricityPin, setElectricityPin] = useState("");
   const [electricityLoading, setElectricityLoading] = useState(false);
   const [purchasingElectricity, setPurchasingElectricity] = useState(false);
+  const [validatingElectricityMeter, setValidatingElectricityMeter] = useState(false);
+  const [electricityCustomerName, setElectricityCustomerName] = useState("");
+  const [electricityCustomerAddress, setElectricityCustomerAddress] = useState("");
 
   const [cableProducts, setCableProducts] = useState<CableProviderProduct[]>([]);
   const [cableProviderId, setCableProviderId] = useState("");
@@ -4212,6 +4259,8 @@ export default function DashboardPage() {
   const [cablePin, setCablePin] = useState("");
   const [cableLoading, setCableLoading] = useState(false);
   const [purchasingCable, setPurchasingCable] = useState(false);
+  const [validatingSmartCard, setValidatingSmartCard] = useState(false);
+  const [smartCardCustomerName, setSmartCardCustomerName] = useState("");
 
   const [examProducts, setExamProducts] = useState<ExamProduct[]>([]);
   const [examProductId, setExamProductId] = useState("");
@@ -4489,11 +4538,13 @@ export default function DashboardPage() {
   };
 
   const handleDataPurchase = async () => {
+    if (isSubmittingPurchaseRef.current) return;
     if (!selectedPlan || phoneNumber.length !== 11 || pin.length !== 6 || !user) {
       toast.error("Ahh, sorry, please complete the phone number and PIN before continuing.");
       return;
     }
 
+    isSubmittingPurchaseRef.current = true;
     setPurchasingData(true);
     try {
       const payload = {
@@ -4523,12 +4574,6 @@ export default function DashboardPage() {
       }
 
       if (!response.ok || !result.success) {
-        if (result?.requiresKyc) {
-          toast.error(result.error || "App locked. Admin KYC approval required.");
-          setKycModalOpen(true);
-          await refreshUser();
-          return;
-        }
         toast.error(getFriendlyMessage(result.error, "We could not complete that data purchase right now."));
         return;
       }
@@ -4549,15 +4594,18 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, we could not complete that data purchase right now.");
     } finally {
       setPurchasingData(false);
+      isSubmittingPurchaseRef.current = false;
     }
   };
 
   const handleAirtimePurchase = async () => {
+    if (isSubmittingPurchaseRef.current) return;
     if (!airtimeNetwork || !airtimeAmount || airtimePhone.length !== 11 || airtimePin.length !== 6 || !user) {
       toast.error("Ahh, sorry, please complete the phone number and PIN before continuing.");
       return;
     }
 
+    isSubmittingPurchaseRef.current = true;
     setPurchasingAirtime(true);
     try {
       const payload = {
@@ -4608,6 +4656,7 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, we could not complete that airtime purchase right now.");
     } finally {
       setPurchasingAirtime(false);
+      isSubmittingPurchaseRef.current = false;
     }
   };
 
@@ -4683,12 +4732,15 @@ export default function DashboardPage() {
   const openElectricity = () => {
     setActiveTab("electricity");
     setElectricityPin("");
+    setElectricityCustomerName("");
+    setElectricityCustomerAddress("");
     if (!electricityProviders.length) void loadElectricityProviders();
   };
 
   const openCable = () => {
     setActiveTab("cable");
     setCablePin("");
+    setSmartCardCustomerName("");
     if (!cableProducts.length) void loadCableProducts();
   };
 
@@ -4700,8 +4752,72 @@ export default function DashboardPage() {
 
   const handleCableProviderSelect = (providerId: string) => {
     setCableProviderId(providerId);
+    setSmartCardCustomerName("");
     const provider = cableProducts.find((item) => item.id === providerId);
     setCablePlanId(provider?.plans?.[0]?.id || "");
+  };
+
+  const handleValidateElectricityMeter = async () => {
+    if (!electricityProviderId || meterNumber.length < 5) {
+      toast.error("Ahh, sorry, please select provider and enter meter number first.");
+      return;
+    }
+    setValidatingElectricityMeter(true);
+    try {
+      const res = await fetch("/api/electricity/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meterNumber,
+          providerId: electricityProviderId,
+          meterType,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setElectricityCustomerName("");
+        setElectricityCustomerAddress("");
+        toast.error(getFriendlyMessage(data?.error, "Could not verify meter number. Please check and try again."));
+        return;
+      }
+      setElectricityCustomerName(data.customerName || "Verified Meter");
+      setElectricityCustomerAddress(data.address || "");
+      toast.success(data.customerName ? `Verified: ${data.customerName}` : "Meter verified successfully!");
+    } catch {
+      toast.error("Ahh, sorry, we could not verify that meter right now.");
+    } finally {
+      setValidatingElectricityMeter(false);
+    }
+  };
+
+  const handleValidateSmartCard = async () => {
+    if (!cableProviderId || smartCardNumber.length < 5) {
+      toast.error("Ahh, sorry, please select provider and enter smart card number first.");
+      return;
+    }
+    setValidatingSmartCard(true);
+    try {
+      const res = await fetch("/api/cable/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          smartCardNumber,
+          providerId: cableProviderId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSmartCardCustomerName("");
+        toast.error(getFriendlyMessage(data?.error, "Could not verify smart card number. Please check and try again."));
+        return;
+      }
+      setSmartCardCustomerName(data.customerName || "Verified Smart Card");
+      toast.success(data.customerName ? `Verified: ${data.customerName}` : "Smart card verified successfully!");
+    } catch {
+      toast.error("Ahh, sorry, we could not verify that smart card right now.");
+    } finally {
+      setValidatingSmartCard(false);
+    }
   };
 
   const handleExamProductSelect = (productId: string) => {
@@ -4711,11 +4827,13 @@ export default function DashboardPage() {
   };
 
   const handleElectricityPurchase = async () => {
+    if (isSubmittingPurchaseRef.current) return;
     if (!electricityProviderId || meterNumber.length < 5 || !Number(electricityAmount) || electricityPin.length !== 6 || !user) {
       toast.error("Ahh, sorry, please complete provider, meter number, amount, and PIN.");
       return;
     }
 
+    isSubmittingPurchaseRef.current = true;
     setPurchasingElectricity(true);
     try {
       const { cancelled, response, result } = await submitPurchaseRequest(
@@ -4752,15 +4870,18 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, we could not complete that electricity purchase right now.");
     } finally {
       setPurchasingElectricity(false);
+      isSubmittingPurchaseRef.current = false;
     }
   };
 
   const handleCablePurchase = async () => {
+    if (isSubmittingPurchaseRef.current) return;
     if (!cablePlanId || smartCardNumber.length < 5 || cablePin.length !== 6 || !user) {
       toast.error("Ahh, sorry, please complete cable plan, smart card number, and PIN.");
       return;
     }
 
+    isSubmittingPurchaseRef.current = true;
     setPurchasingCable(true);
     try {
       const { cancelled, response, result } = await submitPurchaseRequest(
@@ -4794,15 +4915,18 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, we could not complete that cable subscription right now.");
     } finally {
       setPurchasingCable(false);
+      isSubmittingPurchaseRef.current = false;
     }
   };
 
   const handleExamPurchase = async () => {
+    if (isSubmittingPurchaseRef.current) return;
     if (!examProductId || examQuantity < 1 || examPin.length !== 6 || !user) {
       toast.error("Ahh, sorry, please select exam product, quantity, and PIN.");
       return;
     }
 
+    isSubmittingPurchaseRef.current = true;
     setPurchasingExam(true);
     try {
       const { cancelled, response, result } = await submitPurchaseRequest(
@@ -4835,6 +4959,7 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, we could not complete that exam checker purchase right now.");
     } finally {
       setPurchasingExam(false);
+      isSubmittingPurchaseRef.current = false;
     }
   };
 
@@ -5131,11 +5256,27 @@ export default function DashboardPage() {
               pin={electricityPin}
               loading={electricityLoading}
               purchasing={purchasingElectricity}
-              onProviderSelect={setElectricityProviderId}
+              validating={validatingElectricityMeter}
+              customerName={electricityCustomerName}
+              customerAddress={electricityCustomerAddress}
+              onProviderSelect={(id) => {
+                setElectricityProviderId(id);
+                setElectricityCustomerName("");
+                setElectricityCustomerAddress("");
+              }}
               onAmountChange={setElectricityAmount}
-              onMeterNumberChange={setMeterNumber}
-              onMeterTypeChange={setMeterType}
+              onMeterNumberChange={(val) => {
+                setMeterNumber(val);
+                setElectricityCustomerName("");
+                setElectricityCustomerAddress("");
+              }}
+              onMeterTypeChange={(type) => {
+                setMeterType(type);
+                setElectricityCustomerName("");
+                setElectricityCustomerAddress("");
+              }}
               onPinChange={setElectricityPin}
+              onValidateMeter={handleValidateElectricityMeter}
               onPurchase={handleElectricityPurchase}
               onBack={() => setActiveTab("home")}
             />
@@ -5148,10 +5289,19 @@ export default function DashboardPage() {
               pin={cablePin}
               loading={cableLoading}
               purchasing={purchasingCable}
-              onProviderSelect={handleCableProviderSelect}
+              validating={validatingSmartCard}
+              customerName={smartCardCustomerName}
+              onProviderSelect={(id) => {
+                handleCableProviderSelect(id);
+                setSmartCardCustomerName("");
+              }}
               onPlanSelect={setCablePlanId}
-              onSmartCardChange={setSmartCardNumber}
+              onSmartCardChange={(val) => {
+                setSmartCardNumber(val);
+                setSmartCardCustomerName("");
+              }}
               onPinChange={setCablePin}
+              onValidateSmartCard={handleValidateSmartCard}
               onPurchase={handleCablePurchase}
               onBack={() => setActiveTab("home")}
             />

@@ -4,7 +4,14 @@ import { purchaseData as purchaseFromSmeplug } from "@/lib/smeplug";
 import { purchaseData as purchaseFromSaiful } from "@/lib/saiful";
 import { purchaseData as purchaseFromAlrahuz } from "@/lib/alrahuz";
 import { purchaseData as purchaseFromAmysub } from "@/lib/amysub";
-import { findRecentDuplicateTransaction, normalizeProviderFailureMessage, DATA_INSUFFICIENT_FUNDS_MESSAGE } from "@/lib/purchase-utils";
+import {
+  findRecentDuplicateTransaction,
+  normalizeProviderFailureMessage,
+  DATA_INSUFFICIENT_FUNDS_MESSAGE,
+  acquirePurchaseLock,
+  buildPurchaseLockKey,
+  IDEMPOTENCY_WINDOW_MINUTES,
+} from "@/lib/purchase-utils";
 import { getDataPlanProviderIds } from "@/lib/data-plan-provider-ids";
 import { getPlanPriceForUser } from "@/lib/pricing";
 import { checkAndAwardRewards } from "@/lib/rewards";
@@ -14,7 +21,6 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
 import { getUserSelectCompat, withCompatibleUserFields, normalizeUserCompat } from "@/lib/user-compat";
-import { checkPurchaseGuards } from "@/lib/purchase-guards";
 
 const purchaseSchema = z.object({
   planId: z.string().min(1, "Plan ID is required"),
@@ -23,12 +29,6 @@ const purchaseSchema = z.object({
   pin: z.string().regex(/^\d{6}$/, "Invalid PIN"),
   confirmDuplicate: z.boolean().optional(),
 });
-
-const IDEMPOTENCY_WINDOW_MINUTES = 5;
-
-async function acquirePurchaseLock(tx: any, lockKey: string) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -82,14 +82,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid PIN" }, { status: 401 });
     }
 
-    const normalizedUser = normalizeUserCompat(user);
-    const guardError = await checkPurchaseGuards({
-      userId: user.id,
-      recipientPhone,
-      kycStatus: normalizedUser.kycStatus,
-    });
-    if (guardError) return guardError;
-
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
     });
@@ -131,7 +123,7 @@ export async function POST(req: NextRequest) {
     }
 
     const reference = `DATA-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const lockKey = `data:${user.id}:${planId}:${recipientPhone}:${planPrice}`;
+    const lockKey = buildPurchaseLockKey("data", user.id, `${planId}:${recipientPhone}`, planPrice);
     const txResult = await prisma.$transaction(async (tx) => {
       await acquirePurchaseLock(tx, lockKey);
 

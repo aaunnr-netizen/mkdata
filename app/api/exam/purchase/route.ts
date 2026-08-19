@@ -3,7 +3,13 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
-import { findRecentDuplicateTransaction, normalizeProviderFailureMessage } from "@/lib/purchase-utils";
+import {
+  findRecentDuplicateTransaction,
+  normalizeProviderFailureMessage,
+  acquirePurchaseLock,
+  buildPurchaseLockKey,
+  IDEMPOTENCY_WINDOW_MINUTES,
+} from "@/lib/purchase-utils";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
 import { purchaseExamPin } from "@/lib/alrahuz";
 
@@ -14,12 +20,6 @@ const purchaseSchema = z.object({
   pin: z.string().regex(/^\d{6}$/, "Invalid PIN"),
   confirmDuplicate: z.boolean().optional(),
 });
-
-const IDEMPOTENCY_WINDOW_MINUTES = 5;
-
-async function acquirePurchaseLock(tx: any, lockKey: string) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const reference = `EXAM-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    const lockKey = `exam:${user.id}:${productId}:${quantity}:${amount}`;
+    const lockKey = buildPurchaseLockKey("exam", user.id, `${productId}:${quantity}`, amount);
 
     const txResult = await prisma.$transaction(async (tx) => {
       await acquirePurchaseLock(tx, lockKey);

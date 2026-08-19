@@ -248,11 +248,11 @@ export default function AuthPage() {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!phone || phone.length !== 11) {
-      toast.error("Enter your 11-digit phone number to continue.");
+      toast.error("Ahh, sorry, enter your 11-digit phone number to continue.");
       return;
     }
     if (pin.length !== 6) {
-      toast.error("Enter your 6-digit PIN to sign in.");
+      toast.error("Ahh, sorry, enter your 6-digit PIN to sign in.");
       return;
     }
 
@@ -276,7 +276,7 @@ export default function AuthPage() {
         toast.error(getFriendlyMessage(data.error, "We could not sign you in right now."));
       }
     } catch {
-      toast.error("Connection is unstable right now. Please try again shortly.");
+      toast.error("Ahh, sorry, the connection is unstable right now. Please try again shortly.");
     } finally {
       setLoading(false);
     }
@@ -285,23 +285,23 @@ export default function AuthPage() {
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || name.length < 2) {
-      toast.error("Enter your full name to continue.");
+      toast.error("Ahh, sorry, enter your full name to continue.");
       return;
     }
     if (!phone || phone.length !== 11) {
-      toast.error("Enter your 11-digit phone number to continue.");
+      toast.error("Ahh, sorry, enter your 11-digit phone number to continue.");
       return;
     }
     if (pin.length !== 6) {
-      toast.error("Choose a 6-digit PIN for your account.");
+      toast.error("Ahh, sorry, choose a 6-digit PIN for your account.");
       return;
     }
     if (pin !== confirmPin) {
-      toast.error("Those PIN entries do not match yet.");
+      toast.error("Ahh, sorry, those PIN entries do not match yet.");
       return;
     }
     if (!acceptTerms) {
-      toast.error("Accept the terms to continue.");
+      toast.error("Ahh, sorry, please accept the terms to continue.");
       return;
     }
 
@@ -322,7 +322,7 @@ export default function AuthPage() {
       });
 
       if (res.status === 409) {
-        toast.error("That phone number already has an account. Please sign in instead.");
+        toast.error("Ahh, sorry, that phone number already has an account. Please sign in instead.");
         setMode("login");
         setPhone(phone);
         return;
@@ -339,7 +339,7 @@ export default function AuthPage() {
         toast.error(getFriendlyMessage(data.error, "We could not create your account right now."));
       }
     } catch {
-      toast.error("Connection is unstable right now. Please try again shortly.");
+      toast.error("Ahh, sorry, the connection is unstable right now. Please try again shortly.");
     } finally {
       setLoading(false);
     }
