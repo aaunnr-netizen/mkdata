@@ -145,6 +145,8 @@ function isFailurePayload(data: any) {
 }
 
 function extractCustomerName(data: any): string | undefined {
+  if (data?.invalid === true) return undefined;
+
   const name =
     data?.name ||
     data?.Name ||
@@ -160,7 +162,9 @@ function extractCustomerName(data: any): string | undefined {
     data?.data?.customerName;
 
   if (typeof name === "string" && name.trim().length > 0 && !isFailurePayload({ status: name })) {
-    return name.trim();
+    const trimmed = name.trim();
+    if (/invalid/i.test(trimmed)) return undefined;
+    return trimmed;
   }
   return undefined;
 }
