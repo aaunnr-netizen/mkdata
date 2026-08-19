@@ -63,8 +63,6 @@ export type AlrahuzValidateMeterParams = {
   meterType?: 1 | 2 | "prepaid" | "postpaid" | string;
 };
 
-const DEFAULT_ALRAHUZ_TOKEN = "66f2e5c39ac8640f13cd888f161385b12f7e5e92";
-
 function getBaseUrl() {
   return (process.env.ALRAHUZ_BASE_URL || "https://alrahuzdata.com.ng").replace(/\/$/, "");
 }
@@ -72,8 +70,16 @@ function getBaseUrl() {
 function getToken(kind: "default" | "epin" = "default") {
   const token =
     kind === "epin"
-      ? process.env.ALRAHUZ_EPIN_API_TOKEN || process.env.ALRAHUZ_API_TOKEN || DEFAULT_ALRAHUZ_TOKEN
-      : process.env.ALRAHUZ_API_TOKEN || DEFAULT_ALRAHUZ_TOKEN;
+      ? process.env.ALRAHUZ_EPIN_API_TOKEN || process.env.ALRAHUZ_API_TOKEN
+      : process.env.ALRAHUZ_API_TOKEN;
+
+  if (!token) {
+    throw new Error(
+      `Alrahuz API token not configured. Please set ${
+        kind === "epin" ? "ALRAHUZ_EPIN_API_TOKEN or ALRAHUZ_API_TOKEN" : "ALRAHUZ_API_TOKEN"
+      } in your environment variables.`
+    );
+  }
 
   return token;
 }
