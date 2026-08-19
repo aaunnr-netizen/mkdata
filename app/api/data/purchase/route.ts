@@ -30,6 +30,8 @@ const purchaseSchema = z.object({
   confirmDuplicate: z.boolean().optional(),
 });
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const originError = rejectCrossSiteMutation(req, { requireOrigin: true });
@@ -275,6 +277,32 @@ export async function POST(req: NextRequest) {
                 });
 
       if (!apiResult.success) {
+        // If it was an indeterminate timeout or network drop, the provider may still fulfill the order in the background.
+        // DO NOT refund immediately. Keep transaction PENDING to be reconciled by webhook or status check.
+        if ("isTimeout" in apiResult && (apiResult as any).isTimeout) {
+          await prisma.transaction.updateMany({
+            where: { reference },
+            data: {
+              status: "PENDING",
+              description: `Processing with provider (${plan.sizeLabel} -> ${recipientPhone})`,
+            },
+          });
+
+          return NextResponse.json(
+            {
+              success: true,
+              status: "PROCESSING",
+              message:
+                "Your data purchase is processing with the network provider. Please allow a moment for delivery. If delivery fails, your wallet will be refunded automatically.",
+              reference,
+              amountCharged: planPrice,
+              walletUsed: txResult.walletDebit / 100,
+              rewardUsed: txResult.rewardDebit / 100,
+            },
+            { status: 200 }
+          );
+        }
+
         const errorMessage = normalizeProviderFailureMessage(apiResult.message);
 
         await prisma.$transaction(async (tx) => {
@@ -329,8 +357,37 @@ export async function POST(req: NextRequest) {
         },
         { status: 200 }
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("[DATA PURCHASE API ERROR]", error);
+
+      const isTimeout =
+        error.code === "ECONNABORTED" ||
+        error.message?.includes("timeout") ||
+        error.name === "AbortError";
+
+      if (isTimeout) {
+        await prisma.transaction.updateMany({
+          where: { reference },
+          data: {
+            status: "PENDING",
+            description: `Processing with provider (timeout waiting for initial response)`,
+          },
+        });
+
+        return NextResponse.json(
+          {
+            success: true,
+            status: "PROCESSING",
+            message:
+              "Your data purchase is processing with the network provider. Please check your balance shortly.",
+            reference,
+            amountCharged: planPrice,
+            walletUsed: txResult.walletDebit / 100,
+            rewardUsed: txResult.rewardDebit / 100,
+          },
+          { status: 200 }
+        );
+      }
 
       await prisma.$transaction(async (tx) => {
         await tx.user.update({

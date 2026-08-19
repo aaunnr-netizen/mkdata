@@ -30,6 +30,8 @@ const networkIds: Record<string, number> = {
   airtel: 4,
 };
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const originError = rejectCrossSiteMutation(req, { requireOrigin: true });

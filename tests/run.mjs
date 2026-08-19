@@ -5,6 +5,7 @@ import { testFriendlyUserFeedback } from "./user-feedback.test.mjs";
 import { testAlrahuzServices } from "./alrahuz-services.test.mjs";
 import { testAtomicLocksAndGuards } from "./atomic-locks.test.mjs";
 import { testServicesCatalogAndSeed } from "./services-crud.test.mjs";
+import { testSmeplugWebhookAndTimeoutSafety } from "./smeplug-webhook.test.mjs";
 
 async function testCreateReservedVirtualAccount() {
   let seenHeaders = null;
@@ -112,6 +113,7 @@ async function main() {
     ["Alrahuz services validation, mapping and queries", testAlrahuzServices],
     ["Atomic locks, anti-race guards and KYC bypass", testAtomicLocksAndGuards],
     ["Alrahuz services catalog definitions and seeding", testServicesCatalogAndSeed],
+    ["SMEPlug webhook reconciliation and timeout safety", testSmeplugWebhookAndTimeoutSafety],
   ];
 
   let passed = 0;

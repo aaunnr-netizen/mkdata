@@ -7,10 +7,11 @@ interface SmeplugPurchaseParams {
   reference: string;
 }
 
-interface SmeplugResponse {
+export interface SmeplugResponse {
   success: boolean;
   message: string;
   externalReference?: string;
+  isTimeout?: boolean;
 }
 
 interface SmeplugAirtimeParams {
@@ -47,19 +48,16 @@ function formatSmeplugPhone(phone: string) {
 }
 
 export async function purchaseData(params: SmeplugPurchaseParams): Promise<SmeplugResponse> {
+  const { externalNetworkId, externalPlanId, phone, reference } = params;
   try {
-    const { externalNetworkId, externalPlanId, phone, reference } = params;
-
     const { baseUrl, apiKey } = getSmeplugConfig();
-
-    // Phone format: Keep as 09xxxxxxx (Nigerian local format)
-    // Smeplug expects local format, not international
     const formattedPhone = formatSmeplugPhone(phone);
 
     const requestBody = {
       network_id: externalNetworkId,
       plan_id: externalPlanId,
       phone: formattedPhone,
+      customer_reference: reference,
     };
 
     console.log("[SMEPLUG REQUEST]", {
@@ -77,7 +75,7 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        timeout: 30000,
+        timeout: 20000, // 20-second timeout guard to prevent lambda abrupt kills
       }
     );
 
@@ -90,19 +88,25 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
 
     // SMEPlug returns status as boolean (true/false)
     if (response.data && response.data.status === true && response.data.data) {
-      const returnData = {
+      const returnData: SmeplugResponse = {
         success: true,
         message: response.data.data.msg || "Data purchase successful",
         externalReference: response.data.data.reference,
+        isTimeout: false,
       };
       console.log("[SMEPLUG SUCCESS]", returnData);
       return returnData;
     } else {
-      const errorMsg = response.data?.data?.msg || response.data?.msg || response.data?.message || "Data purchase failed";
-      console.log("[SMEPLUG FAILED]", { message: errorMsg, response: response.data });
+      const errorMsg =
+        response.data?.data?.msg ||
+        response.data?.msg ||
+        response.data?.message ||
+        "Data purchase failed";
+      console.log("[SMEPLUG REJECTED]", { message: errorMsg, response: response.data });
       return {
         success: false,
         message: errorMsg,
+        isTimeout: false,
       };
     }
   } catch (error: any) {
@@ -111,43 +115,47 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
       response: error.response?.data,
       status: error.response?.status,
       timestamp: new Date().toISOString(),
+      reference,
     });
 
     if (error.response) {
-      // API returned an error response
-      const errorMessage = error.response.data?.msg || error.response.data?.message || `API Error: ${error.response.status}`;
-      console.error("[SMEPLUG API DETAILS]", {
-        errorMessage,
-        apiResponse: error.response.data,
-      });
+      const is504 = error.response.status === 504 || error.response.status === 502;
+      const errorMessage =
+        error.response.data?.msg ||
+        error.response.data?.message ||
+        `API Error: ${error.response.status}`;
+
       return {
         success: false,
         message: errorMessage,
+        isTimeout: is504,
       };
-    } else if (error.code === "ECONNABORTED") {
-      // Timeout
+    } else if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
       return {
         success: false,
-        message: "Request timeout - please try again",
+        message: "Request timeout - order is processing with provider",
+        isTimeout: true,
       };
     } else {
-      // Network or other error
+      // Network disconnect / connection reset
       return {
         success: false,
-        message: "Network error - please try again",
+        message: "Network connection issue - order status is pending verification",
+        isTimeout: true,
       };
     }
   }
 }
 
 export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<SmeplugResponse> {
+  const { networkId, amount, phone, reference } = params;
   try {
-    const { networkId, amount, phone, reference } = params;
     const { baseUrl, apiKey } = getSmeplugConfig();
     const requestBody = {
       network_id: networkId,
       amount,
       phone: formatSmeplugPhone(phone),
+      customer_reference: reference,
     };
 
     console.log("[SMEPLUG AIRTIME REQUEST]", {
@@ -165,7 +173,7 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        timeout: 30000,
+        timeout: 20000,
       }
     );
 
@@ -181,6 +189,7 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
         success: true,
         message: response.data.data.msg || "Airtime purchase successful",
         externalReference: response.data.data.reference || reference,
+        isTimeout: false,
       };
     }
 
@@ -191,16 +200,18 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
         response.data?.msg ||
         response.data?.message ||
         "Airtime purchase failed",
+      isTimeout: false,
     };
   } catch (error: any) {
     console.error("[SMEPLUG AIRTIME ERROR]", {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
-      reference: params.reference,
+      reference,
     });
 
     if (error.response) {
+      const is504 = error.response.status === 504 || error.response.status === 502;
       return {
         success: false,
         message:
@@ -208,19 +219,22 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
           error.response.data?.msg ||
           error.response.data?.message ||
           `API Error: ${error.response.status}`,
+        isTimeout: is504,
       };
     }
 
-    if (error.code === "ECONNABORTED") {
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
       return {
         success: false,
-        message: "Request timeout - please try again",
+        message: "Request timeout - order is processing with provider",
+        isTimeout: true,
       };
     }
 
     return {
       success: false,
-      message: "Network error - please try again",
+      message: "Network error - order status is pending verification",
+      isTimeout: true,
     };
   }
 }
