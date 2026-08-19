@@ -4,6 +4,7 @@ import { processBillstackWebhookWithAdapter } from "../lib/billstack-webhook-cor
 import { testFriendlyUserFeedback } from "./user-feedback.test.mjs";
 import { testAlrahuzServices } from "./alrahuz-services.test.mjs";
 import { testAtomicLocksAndGuards } from "./atomic-locks.test.mjs";
+import { testServicesCatalogAndSeed } from "./services-crud.test.mjs";
 
 async function testCreateReservedVirtualAccount() {
   let seenHeaders = null;
@@ -110,6 +111,7 @@ async function main() {
     ["Friendly user feedback message mapping", testFriendlyUserFeedback],
     ["Alrahuz services validation, mapping and queries", testAlrahuzServices],
     ["Atomic locks, anti-race guards and KYC bypass", testAtomicLocksAndGuards],
+    ["Alrahuz services catalog definitions and seeding", testServicesCatalogAndSeed],
   ];
 
   let passed = 0;
