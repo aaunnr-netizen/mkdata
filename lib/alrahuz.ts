@@ -81,6 +81,11 @@ function getToken(kind: "default" | "epin" = "default") {
     );
   }
 
+  return token.trim();
+}
+
+function getAuthHeader(kind: "default" | "epin" = "default") {
+  const token = getToken(kind);
   return token;
 }
 
@@ -209,7 +214,7 @@ async function getFromAlrahuz(
   const response = await axios.get(url, {
     params,
     headers: {
-      Authorization: `Token ${getToken(options?.tokenKind)}`,
+      Authorization: getAuthHeader(options?.tokenKind),
       "Content-Type": "application/json",
     },
     timeout: 30000,
@@ -247,7 +252,7 @@ async function postToAlrahuz(
 
     const response = await axios.post(url, body, {
       headers: {
-        Authorization: `Token ${getToken(options.tokenKind)}`,
+        Authorization: getAuthHeader(options.tokenKind),
         "Content-Type": "application/json",
       },
       timeout: 30000,
