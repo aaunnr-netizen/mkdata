@@ -84,9 +84,12 @@ function getToken(kind: "default" | "epin" = "default") {
   return token.trim();
 }
 
-function getAuthHeader(kind: "default" | "epin" = "default") {
+export function getAuthHeader(kind: "default" | "epin" = "default"): string {
   const token = getToken(kind);
-  return token;
+  if (/^(Token|Bearer)\s+/i.test(token)) {
+    return token;
+  }
+  return `Token ${token}`;
 }
 
 function formatLocalPhone(phone: string) {

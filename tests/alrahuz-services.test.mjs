@@ -8,6 +8,30 @@ export async function testAlrahuzServices() {
   assert.equal(DEFAULT_ALRAHUZ_TOKEN, "66f2e5c39ac8640f13cd888f161385b12f7e5e92");
   assert.equal(DEFAULT_ALRAHUZ_BASE_URL, "https://alrahuzdata.com.ng");
 
+  // Test 1b: Authorization header normalization
+  function formatAuthHeader(token) {
+    if (/^(Token|Bearer)\s+/i.test(token)) {
+      return token;
+    }
+    return `Token ${token}`;
+  }
+
+  assert.equal(
+    formatAuthHeader("66f2e5c39ac8640f13cd888f161385b12f7e5e92"),
+    "Token 66f2e5c39ac8640f13cd888f161385b12f7e5e92",
+    "Should prepend 'Token ' to raw hex tokens"
+  );
+  assert.equal(
+    formatAuthHeader("Token 66f2e5c39ac8640f13cd888f161385b12f7e5e92"),
+    "Token 66f2e5c39ac8640f13cd888f161385b12f7e5e92",
+    "Should preserve already prefixed Token headers"
+  );
+  assert.equal(
+    formatAuthHeader("Bearer some_jwt_token_here"),
+    "Bearer some_jwt_token_here",
+    "Should preserve Bearer headers"
+  );
+
   // Test 2: Customer Name Extraction
   function extractCustomerName(data) {
     const name =
