@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { enforceRateLimit, rejectCrossSiteMutation } from "@/lib/security";
-import { BillstackBank, createBillstackBankAccount, listUserBankAccounts } from "@/lib/billstack-account";
+import { BillstackBank, createBillstackBankAccount, listUserBankAccounts, provisionSignupBillstackAccount } from "@/lib/billstack-account";
 
 const requestSchema = z.object({
   bank: z.enum(["9PSB", "SAFEHAVEN", "PROVIDUS", "BANKLY", "PALMPAY"]).optional(),
@@ -21,20 +21,66 @@ export async function GET(req: NextRequest) {
     const accounts = await listUserBankAccounts(sessionUser.userId);
     const primary = accounts.find((item) => item.isPrimary) || accounts[0];
 
-    if (!primary) {
-      return NextResponse.json({ success: false, error: "Reserved account not found" }, { status: 404 });
+    if (primary) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          accountNumber: primary.accountNumber,
+          bankName: primary.bankName,
+          bankCode: primary.bankCode,
+          merchantReference: primary.merchantReference,
+          createdAt: primary.createdAt,
+        },
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        accountNumber: primary.accountNumber,
-        bankName: primary.bankName,
-        bankCode: primary.bankCode,
-        merchantReference: primary.merchantReference,
-        createdAt: primary.createdAt,
-      },
+    // Check legacy virtual_accounts table in database
+    const legacyAccount = await prisma.virtualAccount.findUnique({
+      where: { userId: sessionUser.userId },
     });
+
+    if (legacyAccount) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          accountNumber: legacyAccount.accountNumber,
+          bankName: legacyAccount.bankName,
+          bankCode: "LEGACY",
+          merchantReference: legacyAccount.orderRef,
+          createdAt: legacyAccount.createdAt,
+        },
+      });
+    }
+
+    // Auto-provision on the fly so the user has an immediate funding account
+    const user = await prisma.user.findUnique({
+      where: { id: sessionUser.userId },
+      select: { id: true, fullName: true, phone: true, email: true },
+    });
+
+    if (user) {
+      const provisioned = await provisionSignupBillstackAccount({
+        userId: user.id,
+        fullName: user.fullName,
+        phone: user.phone,
+        email: user.email,
+      });
+
+      if (provisioned.success && provisioned.account) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            accountNumber: provisioned.account.accountNumber,
+            bankName: provisioned.account.bankName,
+            bankCode: provisioned.account.bankCode,
+            merchantReference: provisioned.account.merchantReference,
+            createdAt: provisioned.account.createdAt,
+          },
+        });
+      }
+    }
+
+    return NextResponse.json({ success: false, error: "Reserved account not found" }, { status: 404 });
   } catch (error) {
     console.error("[BILLSTACK RESERVED ACCOUNT GET ERROR]", error);
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Webhook,
   Send,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   Save,
   Radio,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
@@ -68,16 +70,21 @@ export default function DeveloperWebhooksPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/developer/webhooks");
-      const data = await res.json();
+      if (!res.ok) {
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
       if (data.success && data.endpoint) {
         setEndpoint(data.endpoint);
         setUrl(data.endpoint.url);
         if (Array.isArray(data.endpoint.events) && data.endpoint.events.length > 0) {
           setSelectedEvents(data.endpoint.events);
         }
+      } else {
+        setEndpoint(null);
       }
     } catch {
-      toast.error("Could not load webhook configuration.");
+      // Endpoint simply not created yet - keep clean state
     } finally {
       setLoading(false);
     }
@@ -87,12 +94,14 @@ export default function DeveloperWebhooksPage() {
     setLoadingDeliveries(true);
     try {
       const res = await fetch("/api/developer/webhooks/deliveries?limit=20");
-      const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setDeliveries(data.data);
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.success && Array.isArray(data.data)) {
+          setDeliveries(data.data);
+        }
       }
     } catch {
-      toast.error("Could not load webhook delivery logs.");
+      // Silent fallback
     } finally {
       setLoadingDeliveries(false);
     }
@@ -196,24 +205,34 @@ export default function DeveloperWebhooksPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSendTestWebhook}
-          disabled={testing || !endpoint?.url}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#008fef] text-white text-xs font-bold shadow-sm hover:bg-[#0060d0] active:scale-95 transition-all disabled:opacity-50"
-        >
-          {testing ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Dispatching Test...
-            </>
-          ) : (
-            <>
-              <Send className="h-3.5 w-3.5" />
-              Send Test Webhook
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/docs#webhooks"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-xs font-bold text-[#06133a] hover:bg-[#eaf4ff] transition-colors"
+          >
+            <BookOpen className="h-3.5 w-3.5 text-[#008fef]" />
+            Docs & HMAC
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleSendTestWebhook}
+            disabled={testing || !endpoint?.url}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#008fef] text-white text-xs font-bold shadow-sm hover:bg-[#0060d0] active:scale-95 transition-all disabled:opacity-50"
+          >
+            {testing ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Dispatching Test...
+              </>
+            ) : (
+              <>
+                <Send className="h-3.5 w-3.5" />
+                Send Test Webhook
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Main Configuration Form */}

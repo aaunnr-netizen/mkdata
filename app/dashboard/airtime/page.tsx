@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { PinConfirmationModal } from "@/components/dashboard/PinConfirmationModal";
 import { TransactionReceiptModal, TransactionDetail } from "@/components/dashboard/TransactionReceiptModal";
-import { PhoneCall, Phone, ShieldCheck, ArrowRight, Loader2, Sparkles, Percent } from "lucide-react";
+import { PhoneCall, Phone, ShieldCheck, ArrowRight, Loader2, Sparkles, Percent, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
+import { detectNigerianNetwork } from "@/lib/nigerian-networks";
 
 const NETWORKS = [
   { id: "mtn", name: "MTN", color: "bg-[#ffcc00] text-black", discount: 2 },
@@ -19,10 +20,11 @@ const PRESETS = [100, 200, 500, 1000, 2000, 5000];
 
 export default function DashboardAirtimePage() {
   const { user, refreshUser } = useDashboard();
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState("mtn");
+  const [autoDetectedNetwork, setAutoDetectedNetwork] = useState<string | null>(null);
   const [amount, setAmount] = useState<number>(500);
   const [customAmountStr, setCustomAmountStr] = useState("500");
-  const [recipientPhone, setRecipientPhone] = useState("");
 
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -45,18 +47,31 @@ export default function DashboardAirtimePage() {
     setAmount(parsed);
   };
 
+  const handlePhoneChange = (val: string) => {
+    const clean = val.replace(/\D/g, "").slice(0, 11);
+    setRecipientPhone(clean);
+
+    const detected = detectNigerianNetwork(clean);
+    if (detected) {
+      setAutoDetectedNetwork(detected);
+      setSelectedNetwork(detected);
+    } else {
+      setAutoDetectedNetwork(null);
+    }
+  };
+
   const handleInitiate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!recipientPhone.trim() || !/^0[0-9]{10}$/.test(recipientPhone.trim())) {
+      toast.error("Please enter a valid 11-digit phone number.");
+      return;
+    }
     if (amount < 50) {
       toast.error("Minimum airtime amount is ₦50.");
       return;
     }
     if (amount > 50000) {
       toast.error("Maximum airtime amount is ₦50,000.");
-      return;
-    }
-    if (!recipientPhone.trim() || !/^0[0-9]{10}$/.test(recipientPhone.trim())) {
-      toast.error("Please enter a valid 11-digit phone number.");
       return;
     }
     if (Number(user?.balance || 0) < amountToPay) {
@@ -132,12 +147,49 @@ export default function DashboardAirtimePage() {
       </div>
 
       <form onSubmit={handleInitiate} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Step 1: Network Selection */}
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          {/* Step 1: Recipient Phone */}
           <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-              1. Select Network
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
+                1. Recipient Phone Number
+              </label>
+              {autoDetectedNetwork && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f0f7ff] border border-[#cfe2fb] text-[10px] font-bold text-[#008fef]">
+                  <Smartphone className="h-3 w-3" />
+                  Auto-detected: {autoDetectedNetwork.toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7fa5d8]">
+                <Phone className="h-4 w-4" />
+              </div>
+              <input
+                type="tel"
+                required
+                value={recipientPhone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="08012345678"
+                maxLength={11}
+                className="w-full pl-10 pr-4 py-2.5 text-sm font-mono rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-[#06133a] placeholder:text-[#9db7dc] outline-none transition focus:border-[#008fef] focus:bg-white focus:ring-2 focus:ring-[#008fef]/15"
+              />
+            </div>
+            <p className="text-[11px] text-[#526079]">
+              Network is automatically recognized from the phone prefix. You can customize the network below if ported.
+            </p>
+          </div>
+
+          {/* Step 2: Network Selection */}
+          <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
+                2. Confirm Mobile Network
+              </label>
+              <span className="text-[11px] font-bold text-[#008fef] uppercase tracking-wider">
+                {selectedNetwork.toUpperCase()}
+              </span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {NETWORKS.map((net) => {
                 const isSelected = selectedNetwork === net.id;
@@ -162,10 +214,10 @@ export default function DashboardAirtimePage() {
             </div>
           </div>
 
-          {/* Step 2: Amount Selection */}
+          {/* Step 3: Amount Selection */}
           <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-4">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-              2. Airtime Amount
+              3. Select Airtime Amount
             </label>
 
             {/* Presets */}
@@ -204,27 +256,6 @@ export default function DashboardAirtimePage() {
                   className="w-full pl-8 pr-4 py-2.5 text-sm font-bold rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-[#06133a] placeholder:text-[#9db7dc] outline-none transition focus:border-[#008fef] focus:bg-white focus:ring-2 focus:ring-[#008fef]/15"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Step 3: Recipient Phone */}
-          <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-              3. Recipient Phone Number
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7fa5d8]">
-                <Phone className="h-4 w-4" />
-              </div>
-              <input
-                type="tel"
-                required
-                value={recipientPhone}
-                onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
-                placeholder="08012345678"
-                maxLength={11}
-                className="w-full pl-10 pr-4 py-2.5 text-sm font-mono rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-[#06133a] placeholder:text-[#9db7dc] outline-none transition focus:border-[#008fef] focus:bg-white focus:ring-2 focus:ring-[#008fef]/15"
-              />
             </div>
           </div>
         </div>

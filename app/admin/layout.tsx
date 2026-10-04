@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Providers } from "@/components/providers";
-import { Loader2, BarChart3, Users, Database, LogOut, Bell, Gift, Receipt, UserCheck, Webhook, Phone, Send, ShieldCheck } from "lucide-react";
+import { Loader2, BarChart3, Users, Database, LogOut, Bell, Gift, Receipt, UserCheck, Webhook, Phone, Send, ShieldCheck, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
 const SIDEBAR_ITEMS = [
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/developers", label: "Developers & API", icon: Terminal },
   { href: "/admin/kyc", label: "KYC Verification", icon: ShieldCheck },
   { href: "/admin/plans", label: "Data Plans", icon: Database },
   { href: "/admin/services", label: "Services", icon: Phone },

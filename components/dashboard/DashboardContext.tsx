@@ -82,11 +82,25 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("/api/payments/reserved-account", { cache: "no-store" });
       const data = await res.json();
-      if (res.ok && data.success && data.data) {
+      if (res.ok && data.success && data.data?.accountNumber) {
         setReservedAccount({
           accountNumber: data.data.accountNumber,
           bankName: data.data.bankName,
           bankCode: data.data.bankCode,
+          accountName: user?.fullName || "MK DATA Customer",
+        });
+        return;
+      }
+
+      // Fallback to /api/payments/accounts
+      const fallbackRes = await fetch("/api/payments/accounts", { cache: "no-store" });
+      const fallbackData = await fallbackRes.json();
+      if (fallbackRes.ok && fallbackData.success && Array.isArray(fallbackData.data) && fallbackData.data.length > 0) {
+        const primary = fallbackData.data.find((a: any) => a.isPrimary) || fallbackData.data[0];
+        setReservedAccount({
+          accountNumber: primary.accountNumber,
+          bankName: primary.bankName,
+          bankCode: primary.bankCode,
           accountName: user?.fullName || "MK DATA Customer",
         });
       }
@@ -102,10 +116,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUser]);
 
   useEffect(() => {
-    if (user && isFundingOpen && !reservedAccount) {
+    if (user && !reservedAccount) {
       fetchReservedAccount();
     }
-  }, [user, isFundingOpen, reservedAccount, fetchReservedAccount]);
+  }, [user, reservedAccount, fetchReservedAccount]);
 
   const handleLogout = async () => {
     try {

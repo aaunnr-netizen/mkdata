@@ -72,15 +72,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Account restricted" }, { status: 403 });
   }
 
+  // Auto-approve user and grant wholesale agent pricing tier instantly
   if (user.apiAccessStatus !== "APPROVED") {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Your API access request is pending approval or has not been requested yet.",
-        apiAccessStatus: user.apiAccessStatus,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        apiAccessStatus: "APPROVED",
+        tier: "agent",
       },
-      { status: 403 }
-    );
+    });
   }
 
   const { rawKey, keyPrefix, keyHash } = generateApiKey();

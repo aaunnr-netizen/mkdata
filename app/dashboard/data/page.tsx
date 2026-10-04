@@ -4,9 +4,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useDashboard } from "@/components/dashboard/DashboardContext";
 import { PinConfirmationModal } from "@/components/dashboard/PinConfirmationModal";
 import { TransactionReceiptModal, TransactionDetail } from "@/components/dashboard/TransactionReceiptModal";
-import { Wifi, Phone, ShieldCheck, ArrowRight, Loader2, Sparkles, Check, AlertCircle } from "lucide-react";
+import { Wifi, Phone, ShieldCheck, ArrowRight, Loader2, Sparkles, Check, AlertCircle, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
+import { detectNigerianNetwork } from "@/lib/nigerian-networks";
 
 interface PlanItem {
   id: string;
@@ -28,12 +29,13 @@ const NETWORKS = [
 
 export default function DashboardDataPage() {
   const { user, refreshUser } = useDashboard();
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState("mtn");
+  const [autoDetectedNetwork, setAutoDetectedNetwork] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [selectedPlanId, setSelectedPlanId] = useState("");
-  const [recipientPhone, setRecipientPhone] = useState("");
 
   // Modal states
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -82,14 +84,28 @@ export default function DashboardDataPage() {
     return selectedPlan.price;
   }, [selectedPlan, user?.tier]);
 
+  const handlePhoneChange = (val: string) => {
+    const clean = val.replace(/\D/g, "").slice(0, 11);
+    setRecipientPhone(clean);
+
+    const detected = detectNigerianNetwork(clean);
+    if (detected) {
+      setAutoDetectedNetwork(detected);
+      setSelectedNetwork(detected);
+      setSelectedCategory("ALL");
+    } else {
+      setAutoDetectedNetwork(null);
+    }
+  };
+
   const handleInitiatePurchase = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPlan) {
-      toast.error("Please select a data bundle.");
-      return;
-    }
     if (!recipientPhone.trim() || !/^0[0-9]{10}$/.test(recipientPhone.trim())) {
       toast.error("Please enter a valid 11-digit phone number starting with 0.");
+      return;
+    }
+    if (!selectedPlan) {
+      toast.error("Please select a data bundle.");
       return;
     }
     if (Number(user?.balance || 0) < activePrice) {
@@ -167,12 +183,49 @@ export default function DashboardDataPage() {
 
       {/* Main Order Form */}
       <form onSubmit={handleInitiatePurchase} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Step 1: Network Selection */}
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          {/* Step 1: Recipient Phone Number */}
           <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-              1. Select Mobile Network
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
+                1. Recipient Phone Number
+              </label>
+              {autoDetectedNetwork && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f0f7ff] border border-[#cfe2fb] text-[10px] font-bold text-[#008fef]">
+                  <Smartphone className="h-3 w-3" />
+                  Auto-detected: {autoDetectedNetwork.toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7fa5d8]">
+                <Phone className="h-4 w-4" />
+              </div>
+              <input
+                type="tel"
+                required
+                value={recipientPhone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="08012345678"
+                maxLength={11}
+                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-[#06133a] placeholder:text-[#9db7dc] outline-none transition focus:border-[#008fef] focus:bg-white focus:ring-2 focus:ring-[#008fef]/15 font-mono"
+              />
+            </div>
+            <p className="text-[11px] text-[#526079]">
+              Network is automatically recognized from the phone prefix. You can customize the network below if ported.
+            </p>
+          </div>
+
+          {/* Step 2: Network Selection */}
+          <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
+                2. Confirm Mobile Network
+              </label>
+              <span className="text-[11px] font-bold text-[#008fef] uppercase tracking-wider">
+                {selectedNetwork.toUpperCase()}
+              </span>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {NETWORKS.map((net) => {
                 const isSelected = selectedNetwork === net.id;
@@ -200,11 +253,11 @@ export default function DashboardDataPage() {
             </div>
           </div>
 
-          {/* Step 2: Bundle Category & Plan Selection */}
+          {/* Step 3: Bundle Category & Plan Selection */}
           <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-                2. Select Data Bundle
+                3. Select Data Bundle
               </label>
               {categories.length > 1 && (
                 <div className="flex items-center gap-1">
@@ -290,30 +343,6 @@ export default function DashboardDataPage() {
                 })}
               </div>
             )}
-          </div>
-
-          {/* Step 3: Recipient Phone Number */}
-          <div className="p-6 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#06133a]">
-              3. Recipient Phone Number
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7fa5d8]">
-                <Phone className="h-4 w-4" />
-              </div>
-              <input
-                type="tel"
-                required
-                value={recipientPhone}
-                onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
-                placeholder="08012345678"
-                maxLength={11}
-                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-[#06133a] placeholder:text-[#9db7dc] outline-none transition focus:border-[#008fef] focus:bg-white focus:ring-2 focus:ring-[#008fef]/15 font-mono"
-              />
-            </div>
-            <p className="text-[11px] text-[#526079]">
-              Ensure the recipient number is registered on {selectedNetwork.toUpperCase()} to avoid failed delivery.
-            </p>
           </div>
         </div>
 

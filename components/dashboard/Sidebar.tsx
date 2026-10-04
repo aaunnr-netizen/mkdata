@@ -57,7 +57,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
       items: [
         { label: "API Keys", href: "/dashboard/developer/keys", icon: KeyRound },
         { label: "Webhooks", href: "/dashboard/developer/webhooks", icon: Webhook },
-        { label: "API Documentation", href: "/dashboard/docs", icon: BookOpen },
+        { label: "API Documentation", href: "/docs", icon: BookOpen },
       ],
     },
   ];

@@ -19,117 +19,141 @@ const webhookSchema = z.object({
  * GET current webhook configuration
  */
 export async function GET(req: NextRequest) {
-  const session = await getSessionUser(req);
-  if (!session) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const session = await getSessionUser(req);
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-  const endpoint = await prisma.developerWebhookEndpoint.findUnique({
-    where: { userId: session.userId },
-  });
+    const endpoint = await prisma.developerWebhookEndpoint.findUnique({
+      where: { userId: session.userId },
+    });
 
-  if (!endpoint) {
+    if (!endpoint) {
+      return NextResponse.json({
+        success: true,
+        endpoint: null,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      endpoint: null,
+      endpoint: {
+        id: endpoint.id,
+        url: endpoint.url,
+        secret: endpoint.secret,
+        isActive: endpoint.isActive,
+        events: endpoint.events,
+        failureCount: endpoint.failureCount,
+        updatedAt: endpoint.updatedAt,
+      },
     });
+  } catch (error) {
+    console.error("[DEVELOPER WEBHOOK GET ERROR]", error);
+    return NextResponse.json(
+      { success: false, error: "Could not retrieve webhook configuration", endpoint: null },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    success: true,
-    endpoint: {
-      id: endpoint.id,
-      url: endpoint.url,
-      secret: endpoint.secret,
-      isActive: endpoint.isActive,
-      events: endpoint.events,
-      failureCount: endpoint.failureCount,
-      updatedAt: endpoint.updatedAt,
-    },
-  });
 }
 
 /**
  * POST configure / update webhook endpoint
  */
 export async function POST(req: NextRequest) {
-  const session = await getSessionUser(req);
-  if (!session) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-
-  let body: any;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
-  }
+    const session = await getSessionUser(req);
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-  const parsed = webhookSchema.safeParse(body);
-  if (!parsed.success) {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const parsed = webhookSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message || "Validation error" },
+        { status: 400 }
+      );
+    }
+
+    const { url, events, regenerateSecret } = parsed.data;
+
+    const existing = await prisma.developerWebhookEndpoint.findUnique({
+      where: { userId: session.userId },
+    });
+
+    const secret =
+      !existing || regenerateSecret ? generateWebhookSecret() : existing.secret;
+
+    const endpoint = await prisma.developerWebhookEndpoint.upsert({
+      where: { userId: session.userId },
+      update: {
+        url,
+        events,
+        isActive: true,
+        failureCount: 0,
+        ...(regenerateSecret ? { secret } : {}),
+        updatedAt: new Date(),
+      },
+      create: {
+        userId: session.userId,
+        url,
+        secret,
+        events,
+        isActive: true,
+        failureCount: 0,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      endpoint: {
+        id: endpoint.id,
+        url: endpoint.url,
+        secret: endpoint.secret,
+        isActive: endpoint.isActive,
+        events: endpoint.events,
+      },
+      message: "Webhook endpoint saved successfully.",
+    });
+  } catch (error) {
+    console.error("[DEVELOPER WEBHOOK POST ERROR]", error);
     return NextResponse.json(
-      { success: false, error: parsed.error.issues[0]?.message || "Validation error" },
-      { status: 400 }
+      { success: false, error: "Failed to save webhook configuration" },
+      { status: 500 }
     );
   }
-
-  const { url, events, regenerateSecret } = parsed.data;
-
-  const existing = await prisma.developerWebhookEndpoint.findUnique({
-    where: { userId: session.userId },
-  });
-
-  const secret =
-    !existing || regenerateSecret ? generateWebhookSecret() : existing.secret;
-
-  const endpoint = await prisma.developerWebhookEndpoint.upsert({
-    where: { userId: session.userId },
-    update: {
-      url,
-      events,
-      isActive: true,
-      failureCount: 0,
-      ...(regenerateSecret ? { secret } : {}),
-      updatedAt: new Date(),
-    },
-    create: {
-      userId: session.userId,
-      url,
-      secret,
-      events,
-      isActive: true,
-      failureCount: 0,
-    },
-  });
-
-  return NextResponse.json({
-    success: true,
-    endpoint: {
-      id: endpoint.id,
-      url: endpoint.url,
-      secret: endpoint.secret,
-      isActive: endpoint.isActive,
-      events: endpoint.events,
-    },
-    message: "Webhook endpoint saved successfully.",
-  });
 }
 
 /**
  * DELETE disable / remove webhook endpoint
  */
 export async function DELETE(req: NextRequest) {
-  const session = await getSessionUser(req);
-  if (!session) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSessionUser(req);
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    await prisma.developerWebhookEndpoint.deleteMany({
+      where: { userId: session.userId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Webhook endpoint deleted successfully.",
+    });
+  } catch (error) {
+    console.error("[DEVELOPER WEBHOOK DELETE ERROR]", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete webhook configuration" },
+      { status: 500 }
+    );
   }
-
-  await prisma.developerWebhookEndpoint.deleteMany({
-    where: { userId: session.userId },
-  });
-
-  return NextResponse.json({
-    success: true,
-    message: "Webhook endpoint deleted successfully.",
-  });
 }

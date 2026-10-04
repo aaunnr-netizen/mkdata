@@ -156,6 +156,28 @@ export default function DeveloperKeysPage() {
     }
   };
 
+  const handleInstantGenerateKey = async () => {
+    setRegenerating(true);
+    try {
+      const res = await fetch("/api/developer/key", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to generate API key.");
+      }
+
+      setRevealedKey(data.apiKey);
+      setShowKey(true);
+      setAccessStatus("APPROVED");
+      toast.success("Developer API access activated! Wholesale agent pricing is now live.");
+      await refreshUser();
+      await fetchKeyData();
+    } catch (err: any) {
+      toast.error(getFriendlyMessage(err.message));
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const displayedKeyString = revealedKey
     ? (showKey ? revealedKey : revealedKey.replace(/./g, "•"))
     : (keyInfo
@@ -179,7 +201,7 @@ export default function DeveloperKeysPage() {
         </div>
 
         <Link
-          href="/dashboard/docs"
+          href="/docs"
           className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-xs font-bold text-[#06133a] hover:bg-[#eaf4ff] transition-colors"
         >
           <BookOpen className="h-3.5 w-3.5 text-[#008fef]" />
@@ -192,8 +214,8 @@ export default function DeveloperKeysPage() {
           <Loader2 className="h-6 w-6 animate-spin text-[#008fef]" />
           <span>Loading developer status...</span>
         </div>
-      ) : accessStatus === "NONE" || accessStatus === "REJECTED" ? (
-        /* State 1: Request Access */
+      ) : !keyInfo ? (
+        /* Instant Activation State */
         <div className="p-8 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs text-center space-y-6">
           <div className="h-16 w-16 mx-auto rounded-2xl bg-[#f0f7ff] border border-[#cfe2fb] flex items-center justify-center text-[#008fef]">
             <KeyRound className="h-8 w-8" />
@@ -201,10 +223,10 @@ export default function DeveloperKeysPage() {
 
           <div className="max-w-md mx-auto space-y-2">
             <h3 className="text-base font-black text-[#06133a]">
-              Enable Developer API Access
+              Activate Instant Developer API Access
             </h3>
             <p className="text-xs text-[#526079] leading-relaxed">
-              Integrate MK DATA into your web apps, mobile applications, bot systems, or VTU portals. Enjoy automated wholesale agent pricing, 99.9% uptime, and real-time webhooks.
+              Integrate MK DATA into your web apps, mobile applications, bot systems, or VTU portals. Enjoy instant 1-click live keys, automated wholesale agent pricing, and real-time webhooks.
             </p>
           </div>
 
@@ -228,40 +250,20 @@ export default function DeveloperKeysPage() {
             <div className="p-4 rounded-xl bg-[#f8fbff] border border-[#eaf2ff] space-y-1">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#06133a]">
                 <ShieldCheck className="h-4 w-4 text-[#059669]" />
-                <span>Safe Idempotency</span>
+                <span>Instant Generation</span>
               </div>
-              <p className="text-[11px] text-[#526079]">Double-charge protection via 24-hour request deduplication.</p>
+              <p className="text-[11px] text-[#526079]">Zero waiting time. Generate your key and start building immediately.</p>
             </div>
           </div>
 
           <button
-            onClick={() => setRequestModalOpen(true)}
+            onClick={handleInstantGenerateKey}
+            disabled={regenerating}
             className="px-6 py-3 rounded-xl bg-[#008fef] text-white text-xs font-bold shadow-sm hover:bg-[#0060d0] active:scale-95 transition-all inline-flex items-center gap-2"
           >
-            Request API Access
-            <ArrowRight className="h-4 w-4" />
+            {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            Generate Production API Key Now
           </button>
-        </div>
-      ) : accessStatus === "PENDING" ? (
-        /* State 2: Request Pending */
-        <div className="p-8 rounded-2xl bg-white border border-[#d7e8ff] shadow-xs text-center space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-2xl bg-[#fffbeb] border border-[#fde68a] flex items-center justify-center text-[#d97706]">
-            <Clock className="h-8 w-8" />
-          </div>
-
-          <div className="max-w-md mx-auto space-y-2">
-            <h3 className="text-base font-black text-[#06133a]">
-              API Access Request Under Review
-            </h3>
-            <p className="text-xs text-[#526079] leading-relaxed">
-              Your developer application has been submitted and is currently being reviewed by our administrative team. Once approved, your live <code className="font-mono text-[#008fef]">mk...</code> API key will automatically become active here.
-            </p>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fffbeb] border border-[#fde68a] text-xs font-bold text-[#d97706]">
-            <Clock className="h-3.5 w-3.5" />
-            Status: Pending Approval
-          </div>
         </div>
       ) : (
         /* State 3: Approved & Live Key Management */

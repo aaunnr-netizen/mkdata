@@ -118,7 +118,7 @@ export default function DashboardHomePage() {
             Deposit Funds
           </button>
           <Link
-            href="/dashboard/docs"
+            href="/docs"
             className="px-4 py-2 rounded-xl border border-[#cfe2fb] bg-[#f8fbff] text-xs font-bold text-[#06133a] hover:bg-[#eaf4ff] transition-all flex items-center gap-1.5"
           >
             View API Docs
@@ -128,7 +128,7 @@ export default function DashboardHomePage() {
       </div>
 
       {/* Top Cards: Reserved Bank Account & Balance Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* Dedicated Bank Account Funding Card */}
         <div className="lg:col-span-2 rounded-2xl bg-[linear-gradient(135deg,#008fef_0%,#005bb5_100%)] p-6 text-white shadow-md relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
