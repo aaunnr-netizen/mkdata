@@ -41,23 +41,33 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/app"
-              className="inline-flex items-center gap-2 rounded-full bg-[#008fef] px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(0,143,239,0.24)] transition-colors duration-200 hover:bg-[#0060d0]"
+              href="/dashboard/login"
+              className="px-4 py-2 text-sm font-bold text-[#07143d] transition-colors duration-200 hover:text-[#008fef]"
             >
-              <Smartphone className="h-4 w-4" />
-              Open App
+              Log In
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-full bg-[#008fef] px-5 py-2.5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(0,143,239,0.24)] transition-colors duration-200 hover:bg-[#0060d0]"
+            >
+              Get Started
             </Link>
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
             <Link
-              href="/app"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#008fef] px-4 py-2 text-xs font-black text-white shadow-md transition-colors duration-200 hover:bg-[#0060d0]"
+              href="/dashboard/login"
+              className="px-3 py-1.5 text-xs font-bold text-[#07143d]"
             >
-              <Smartphone className="h-3.5 w-3.5" />
-              OPEN APP
+              Log In
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#008fef] px-3.5 py-2 text-xs font-bold text-white shadow-md transition-colors duration-200 hover:bg-[#0060d0]"
+            >
+              Get Started
             </Link>
           </div>
         </div>

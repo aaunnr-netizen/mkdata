@@ -1,7 +1,9 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ==============================================================================
+# MK DATA — Git Ignore Specification
+# ==============================================================================
 
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,32 +12,44 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# Next.js Build Outputs & Caches
+.next/
+out/
+build/
+dist/
 
-# next.js
-/.next/
-/out/
+# Environment Variables & Local Overrides (Strictly Keep .env.example)
+.env
+.env*.local
+.env.production
+.env.staging
+!.env.example
 
-# production
-/build
-
-# misc
-.DS_Store
+# Security Credentials, Private Keys & Keystores
 *.pem
+*.key
+*.jks
+*.keystore
+key.properties
+*firebase-adminsdk*.json
 
-# debug
+# Logs & Diagnostics
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Testing & Coverage
+coverage/
+.nyc_output/
 
-# vercel
-.vercel
+# System Artifacts & OS Metadata
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# typescript
+# TypeScript & Vercel
 *.tsbuildinfo
 next-env.d.ts
+.vercel/

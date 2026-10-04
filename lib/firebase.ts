@@ -1,4 +1,6 @@
 import * as admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
 import { prisma } from "@/lib/db";
 
 let fcmInitialized = false;
@@ -12,13 +14,36 @@ function initFirebase() {
       return true;
     }
 
+    let serviceAccount: admin.ServiceAccount | null = null;
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!serviceAccountJson) {
-      console.warn("[FIREBASE] FIREBASE_SERVICE_ACCOUNT_JSON is not configured in env variables. Push notifications are disabled.");
+    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+
+    if (serviceAccountJson) {
+      try {
+        serviceAccount = JSON.parse(serviceAccountJson);
+      } catch {
+        console.error("[FIREBASE] Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON string.");
+      }
+    } else if (serviceAccountPath) {
+      const resolvedPath = path.isAbsolute(serviceAccountPath)
+        ? serviceAccountPath
+        : path.resolve(process.cwd(), serviceAccountPath);
+
+      if (fs.existsSync(resolvedPath)) {
+        const fileContent = fs.readFileSync(resolvedPath, "utf-8");
+        serviceAccount = JSON.parse(fileContent);
+      } else {
+        console.warn(`[FIREBASE] Service account file not found at: ${resolvedPath}`);
+      }
+    }
+
+    if (!serviceAccount) {
+      console.warn(
+        "[FIREBASE] Neither FIREBASE_SERVICE_ACCOUNT_JSON nor valid FIREBASE_SERVICE_ACCOUNT_PATH is configured. Push notifications are disabled."
+      );
       return false;
     }
 
-    const serviceAccount = JSON.parse(serviceAccountJson);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });

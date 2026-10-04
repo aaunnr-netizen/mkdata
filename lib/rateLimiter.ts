@@ -20,6 +20,16 @@ export function checkRateLimit(
   windowMs: number
 ): boolean {
   const now = Date.now();
+
+  // Lazy cleanup if map exceeds threshold to prevent memory growth without background timers
+  if (limiters.size > 1000) {
+    for (const [k, v] of limiters.entries()) {
+      if (now > v.resetTime) {
+        limiters.delete(k);
+      }
+    }
+  }
+
   const entry = limiters.get(key);
 
   if (!entry || now > entry.resetTime) {
@@ -56,11 +66,11 @@ export const RATE_LIMITS = {
   adminMutation: { maxAttempts: 80, windowMs: 60 * 1000 }, // 80 admin writes per minute per IP
   webhook: { maxAttempts: 300, windowMs: 60 * 1000 }, // generous webhook allowance
   publicApi: { maxAttempts: 60, windowMs: 60 * 1000 }, // 60 query/validation calls per minute
+  developerApi: { maxAttempts: 120, windowMs: 60 * 1000 }, // 120 requests per minute for developer API
 };
 
 /**
- * Cleanup old entries (runs in background)
- * Can be called periodically to prevent memory bloat
+ * Cleanup old entries (invoked lazily or manually, never via persistent interval)
  */
 export function cleanupOldEntries(): void {
   const now = Date.now();
@@ -71,5 +81,3 @@ export function cleanupOldEntries(): void {
   }
 }
 
-// Cleanup every 5 minutes
-setInterval(cleanupOldEntries, 5 * 60 * 1000);

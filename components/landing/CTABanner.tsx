@@ -19,10 +19,10 @@ export function CTABanner() {
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/app"
-            className="rounded-lg bg-[#008fef] px-8 py-3.5 font-black text-white transition-colors hover:bg-[#159cff]"
+            href="/dashboard"
+            className="rounded-xl bg-[#008fef] px-8 py-3.5 font-bold text-white transition-all hover:bg-[#159cff] shadow-lg"
           >
-            OPEN APP
+            Get Started on Desktop
           </Link>
           <a
             href="https://play.google.com/store/apps/details?id=com.mkdata.app"

@@ -98,6 +98,7 @@ model User {
   kycStatus          String             @default("NONE") // "NONE", "PENDING", "APPROVED", "REJECTED"
   kycDetails         String?
   kycSubmittedAt     DateTime?
+  apiAccessStatus    String             @default("NONE") // "NONE", "PENDING", "APPROVED", "REJECTED"
   isBanned           Boolean            @default(false)
   isActive           Boolean            @default(true)
   joinedAt           DateTime           @default(now())
@@ -109,10 +110,14 @@ model User {
   userRewards    UserReward[]
   biometricCredentials BiometricCredential[]
   fcmTokens          UserFcmToken[]
+  apiKey             ApiKey?
+  webhookEndpoint    DeveloperWebhookEndpoint?
+  idempotencyKeys    ApiIdempotencyKey[]
 
   @@index([phone])
   @@index([email])
   @@index([tier])
+  @@index([apiAccessStatus])
   @@map("users")
 }
 
@@ -374,3 +379,79 @@ model AirtimeCashConfig {
 
   @@map("airtime_cash_config")
 }
+
+// ============================================================================
+// DEVELOPER API MODELS
+// ============================================================================
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String    @default("Primary Key")
+  keyPrefix     String    // e.g. "mk4f2b1a9e"
+  keyHash       String    @unique // SHA-256 hex hash of plaintext key
+  status        String    @default("ACTIVE") // "ACTIVE", "REVOKED", "SUSPENDED"
+  requestReason String?
+  lastUsedAt    DateTime?
+  approvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([keyHash])
+  @@index([userId, status])
+  @@map("api_keys")
+}
+
+model ApiIdempotencyKey {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key                  String
+  endpoint             String
+  requestHash          String
+  responseStatus       Int
+  responseBody         Json
+  transactionReference String?
+  createdAt            DateTime  @default(now())
+  expiresAt            DateTime
+
+  @@unique([userId, endpoint, key])
+  @@index([expiresAt])
+  @@map("api_idempotency_keys")
+}
+
+model DeveloperWebhookEndpoint {
+  id           String                     @id @default(cuid())
+  userId       String                     @unique
+  user         User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url          String
+  secret       String                     // HMAC SHA-256 secret (whsec_...)
+  isActive     Boolean                    @default(true)
+  events       String[]                   @default(["data.success", "data.failed", "airtime.success", "airtime.failed"])
+  failureCount Int                        @default(0)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  deliveries   DeveloperWebhookDelivery[]
+
+  @@map("developer_webhook_endpoints")
+}
+
+model DeveloperWebhookDelivery {
+  id           String                   @id @default(cuid())
+  endpointId   String
+  endpoint     DeveloperWebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  userId       String
+  event        String                   // e.g. "data.success"
+  payload      Json
+  responseCode Int?
+  responseBody String?
+  status       String                   @default("PENDING") // SUCCESS, FAILED, PENDING
+  attempts     Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+
+  @@index([endpointId, status])
+  @@index([userId, createdAt])
+  @@map("developer_webhook_deliveries")
+}
+

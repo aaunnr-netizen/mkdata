@@ -26,19 +26,19 @@ export function HeroSection() {
 
         <div className="mb-8 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
-            href="/app"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#008fef] px-8 py-3.5 font-black text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition-colors duration-200 hover:bg-[#0060d0]"
+            href="/dashboard"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#008fef] px-8 py-3.5 font-bold text-white shadow-[0_16px_34px_rgba(0,143,239,0.28)] transition-all duration-200 hover:bg-[#0060d0]"
           >
             <Zap className="h-4 w-4" />
-            OPEN APP
+            Get Started
           </Link>
-          <a
-            href="#features"
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#b9d9ff] bg-white px-8 py-3.5 font-black text-[#06133a] transition-colors duration-200 hover:bg-[#f0f7ff]"
+          <Link
+            href="/dashboard/login"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#b9d9ff] bg-white px-8 py-3.5 font-bold text-[#06133a] transition-all duration-200 hover:bg-[#f0f7ff]"
           >
-            Learn More
+            Log In
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
         </div>
 
         <div className="mb-12 flex flex-col items-center gap-3">

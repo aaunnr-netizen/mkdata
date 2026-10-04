@@ -1,632 +1,264 @@
-# MK DATA 📱 — Buy Data Instantly
+# 📱 MK DATA — Enterprise Fintech & VTU Platform
 
-Nigeria's fastest data delivery platform. Buy data for all networks at competitive prices with instant delivery.
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.3-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.4-blue?style=flat&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.19.3-2D3748?style=flat&logo=prisma)](https://www.prisma.io/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
 
----
-
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Local Development](#local-development)
-- [Environment Variables](#environment-variables)
-- [API Routes](#api-routes)
-- [Database Setup](#database-setup)
-- [Deployment](#deployment)
-- [BillStack Integration](#billstack-integration)
-- [Admin Panel](#admin-panel)
-- [Data Plan Seeding](#data-plan-seeding)
+> **MK DATA** is a high-performance, enterprise-grade Nigerian fintech and VTU (Virtual Top-Up) platform engineered with Next.js App Router, React 19, Neon Serverless PostgreSQL, Prisma ORM, and TailwindCSS. It facilitates instant mobile data bundling, airtime top-ups, electricity token vending, cable TV subscriptions, educational exam PIN purchases, and automated wallet funding via reserved virtual bank accounts.
 
 ---
 
-## Overview
+## 🏗 System Architecture & Workflow
 
-**MK DATA** is a comprehensive fintech platform for purchasing mobile data and airtime in Nigeria. It features:
+The architecture follows a resilient, API-driven design featuring atomic database transactions, anti-race wallet balance guards, multiple telecom vendor failovers, and asynchronous webhook reconciliation.
 
-- ✅ **Multi-Network Support** - MTN, Airtel, Glo, 9Mobile
-- ✅ **Real-Time Balance Management** - Instant balance updates
-- ✅ **Payment Integration** - BillStack reserved accounts + webhook funding
-- ✅ **Automatic Rewards** - Bonus credits on deposits
-- ✅ **Admin Dashboard** - Complete management panel
-- ✅ **Agent Program** - Affiliate-style earning model
-- ✅ **Guest Checkout** - One-time purchases without registration
-
----
-
-## Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| **Frontend** | Next.js 16, React 19, TypeScript |
-| **Styling** | TailwindCSS 4, Framer Motion |
-| **Database** | PostgreSQL (Neon Serverless), Prisma 7 |
-| **Authentication** | JWT (jose), next-themes |
-| **Data Fetching** | React Query, axios |
-| **Payment Gateway** | BillStack API |
-| **UI Components** | shadcn/ui, Recharts |
-| **Validation** | Zod |
-| **Hashing** | bcryptjs |
-| **State Management** | Zustand |
-| **Hosting** | Vercel |
+```mermaid
+graph TD
+    User([End User / Agent / Guest]) -->|HTTPS / REST| NextApp[Next.js App Router Web & PWA]
+    NextApp -->|JWT / Biometrics| AuthEngine[Auth & Session Engine]
+    NextApp -->|Direct / In-App Checkout| PurchaseEngine[Order & VTU Dispatcher]
+    
+    PurchaseEngine -->|Atomic Balance Deduction| NeonDB[(Neon Serverless PostgreSQL)]
+    
+    PurchaseEngine -->|Primary Vendor| Alrahuz[Alrahuz VTU API]
+    PurchaseEngine -->|Failover / Multi-Vendor| OtherVTU[AmySub / Saiful / SMEPlug]
+    
+    User -->|Bank Transfer / USSD| ReservedAcc[BillStack Reserved Virtual Accounts]
+    ReservedAcc -->|HMAC Verified Webhook| WebhookHandler[BillStack Webhook Engine]
+    WebhookHandler -->|Idempotent Credit| NeonDB
+    
+    Admin([Administrator]) -->|Role Guard / PIN Auth| AdminPortal[Admin Management Suite]
+    AdminPortal -->|Catalog & Pricing Sync| NeonDB
+    AdminPortal -->|FCM Multicast| Firebase[Firebase Admin Push Notifications]
+```
 
 ---
 
-## Local Development
+## 📁 Repository Directory Structure
 
-### Prerequisites
+```text
+mkdata/
+├── app/                              # Next.js App Router Architecture
+│   ├── (auth)/                       # Authentication views (Login, Signup)
+│   ├── admin/                        # Dedicated Admin Portal routes & submodules
+│   │   ├── agents/                   # Agent upgrade review & management
+│   │   ├── airtime-cash/             # Airtime-to-cash fee configuration
+│   │   ├── analytics/                # Real-time revenue & order analytics
+│   │   ├── broadcasts/               # Push notification broadcast manager
+│   │   ├── kyc/                      # User KYC verification & compliance
+│   │   ├── notices/                  # System-wide announcement banner editor
+│   │   ├── plans/                    # Data plan pricing & network toggles
+│   │   ├── pricing/                  # Retail vs wholesale tier pricing
+│   │   ├── push-notifications/       # Direct device push dispatcher
+│   │   ├── rewards/                  # Milestone bonus management
+│   │   ├── services/                 # Electricity, Cable TV, & Exam catalogs
+│   │   ├── transactions/             # Global financial audit log
+│   │   ├── users/                    # User account editor & balance credit/debit
+│   │   └── webhooks/                 # Payment gateway webhook monitoring
+│   ├── api/                          # REST API Endpoints
+│   │   ├── admin/                    # Admin API endpoints (guards & mutations)
+│   │   ├── agent/                    # Agent registration and status
+│   │   ├── airtime/                  # Airtime vending
+│   │   ├── auth/                     # Session, JWT, Biometrics, PIN reset
+│   │   ├── cable/                    # Cable TV lookup & subscription
+│   │   ├── data/                     # Data bundle purchase & guest checkout
+│   │   ├── electricity/              # Disco bill verification & token vending
+│   │   ├── exam/                     # WAEC/NECO/JAMB PIN purchases
+│   │   ├── notices/                  # Active service notices
+│   │   ├── payments/                 # BillStack reserved accounts & webhooks
+│   │   ├── rewards/                  # Incentive progress & claims
+│   │   ├── settings/                 # System parameters
+│   │   └── transactions/             # Order verification & status querying
+│   ├── app/                          # In-App User Dashboard & Embedded Flows
+│   ├── privacy/                      # Privacy Policy & Compliance
+│   ├── transaction-status/           # Public receipt & order verification
+│   ├── layout.tsx                    # Root layout with Theme & Query providers
+│   └── page.tsx                      # High-converting landing page
+├── components/                       # Reusable UI component library (shadcn/ui)
+├── docs/                             # Official client handover & deployment runbooks
+│   └── HANDOVER_CHECKLIST.md         # Production cutover & credential matrix
+├── hooks/                            # Custom React Hooks
+├── lib/                              # Core backend libraries & utility modules
+│   ├── adminAuth.ts                  # Admin session verification & guards
+│   ├── alrahuz.ts                    # Alrahuz VTU API driver
+│   ├── amysub.ts                     # AmySub VTU API driver
+│   ├── auth.ts                       # Jose JWT signing & cookie management
+│   ├── billstack.ts                  # BillStack Virtual Accounts & Webhooks
+│   ├── db.ts                         # Prisma Client singleton
+│   ├── firebase.ts                   # Firebase Admin SDK & FCM Multicast
+│   ├── saiful.ts                     # Saiful Legend Connect API driver
+│   ├── security.ts                   # CSRF, rate-limiting & sanitization
+│   └── smeplug.ts                    # SMEPlug API driver
+├── prisma/                           # Database Schema & Seed Data
+│   ├── schema.prisma                 # Declarative Prisma schema definition
+│   └── seed.ts                       # Base catalog & initial admin seeder
+├── public/                           # Static assets, logos, and network icons
+├── scripts/                          # Production tooling & catalog scripts
+│   ├── deploy-and-seed.sh            # One-click deployment shell script
+│   ├── generate-og-images.js         # Dynamic social share card generator
+│   └── seed-admin-services.ts        # Comprehensive utility service seeder
+├── store/                            # Client-side Zustand stores
+├── tests/                            # Automated test suite
+├── .env.example                      # Complete environment configuration template
+├── package.json                      # Dependencies and npm build scripts
+├── schema.sql                        # Consolidated PostgreSQL schema (Source of truth)
+└── tsconfig.json                     # TypeScript configuration
+```
 
-- **Node.js** ≥ 18.0.0
-- **npm** or **yarn**
-- PostgreSQL database (or Neon account)
-- BillStack account
-- API A and API B data delivery partners
+---
 
-### Installation
+## 🔐 Environment Variables Reference
 
-1. **Clone the repository**
+All runtime configuration is managed through environment variables. Copy `.env.example` to `.env.local` for local execution.
+
+| Category | Variable Name | Required | Description | Example Fallback |
+| :--- | :--- | :---: | :--- | :--- |
+| **App** | `NEXT_PUBLIC_APP_URL` | **Yes** | Public canonical domain of the web app | `https://mkdata.com.ng` |
+| **App** | `NODE_ENV` | No | Runtime environment (`development` / `production`) | `production` |
+| **App** | `PORT` | No | HTTP server port | `3000` |
+| **Database** | `DATABASE_URL` | **Yes** | Neon PostgreSQL connection string (Pooled) | `postgresql://user:pass@host/db?sslmode=require` |
+| **Database** | `DIRECT_URL` | No | Unpooled Neon PostgreSQL string (Migrations) | `postgresql://user:pass@host/db?sslmode=require` |
+| **Security** | `JWT_SECRET` | **Yes** | 256-bit entropy secret for JWT signing | `min_32_chars_random_string` |
+| **Security** | `ADMIN_PASSWORD` | **Yes** | Master fallback password for admin login | `secure_admin_password` |
+| **Admin** | `MK_ADMIN_PHONE` | **Yes** | Primary Superadmin phone number | `09066120642` |
+| **Admin** | `MK_ADMIN_NAME` | No | Display name for seed superadmin | `MK Admin` |
+| **Admin** | `MK_ADMIN_PIN` | **Yes** | 6-digit numeric PIN for seed superadmin | `000000` |
+| **Payments** | `BILLSTACK_SECRET_KEY` | **Yes** | BillStack Secret Key for API & Webhook signatures | `sk_live_...` |
+| **Payments** | `BILLSTACK_BASE_URL` | No | Base API URL for BillStack endpoints | `https://api.billstack.co/v1` |
+| **VTU Vendor** | `ALRAHUZ_API_TOKEN` | **Yes** | Alrahuz VTU partner API authorization token | `66f2e...` |
+| **VTU Vendor** | `ALRAHUZ_EPIN_API_TOKEN` | No | Dedicated Alrahuz token for exam PINs | `same as ALRAHUZ_API_TOKEN` |
+| **VTU Vendor** | `ALRAHUZ_BASE_URL` | No | Alrahuz base API URL | `https://alrahuzdata.com.ng` |
+| **VTU Vendor** | `AMYSUB_API_KEY` | No | Secondary/backup provider API key | `...` |
+| **VTU Vendor** | `SAIFUL_API_KEY` | No | Alternative telecom provider API key | `...` |
+| **VTU Vendor** | `SMEPLUG_API_KEY` | No | SMEPlug partner API key | `...` |
+| **Firebase** | `FIREBASE_SERVICE_ACCOUNT_JSON` | Optional | Stringified JSON for Vercel FCM push delivery | `{"type":"service_account",...}` |
+| **Firebase** | `FIREBASE_SERVICE_ACCOUNT_PATH` | Optional | Local filesystem path to service account JSON | `./firebase-adminsdk.json` |
+
+---
+
+## 🚀 Getting Started & Local Setup
+
+### 1. Prerequisites
+- **Node.js**: Version `20.x` or higher (LTS recommended)
+- **PostgreSQL**: Neon Serverless or standard PostgreSQL 15+
+- **Package Manager**: `npm` (included with Node.js)
+
+### 2. Installation Steps
 ```bash
-git clone <your-repo-url>
+# 1. Clone the repository
+git clone <repo-url>
 cd mkdata
-```
 
-2. **Install dependencies**
-```bash
+# 2. Install dependencies
 npm install
-```
 
-3. **Setup environment variables**
-```bash
+# 3. Configure environment variables
 cp .env.example .env.local
-# Edit .env.local with your credentials
-```
+# Open .env.local and insert your valid database URL and API keys
 
-4. **Setup database**
-```bash
-npx prisma migrate dev --name init
-npx prisma db seed
-```
+# 4. Generate Prisma Client
+npx prisma generate
 
-5. **Run development server**
-```bash
+# 5. Initialize Database & Seed Catalogs
+npx prisma db push
+npm run seed
+npm run seed:admin-services
+
+# 6. Start the Next.js development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Default Admin Credentials (After Seeding)
-
-- **Phone**: `09066120642`
-- **PIN**: `000000`
-- **URL**: `http://localhost:3000/admin`
+Navigate to `http://localhost:3000` in your web browser.
 
 ---
 
-## Environment Variables
+## 🗄 Database Architecture & Management
 
-Create a `.env.local` file with the following variables:
+The repository uses a single, consolidated `schema.sql` as the primary source of truth.
 
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| **NODE_ENV** | Environment (development/production) | `development` | ✅ |
-| **DATABASE_URL** | Neon PostgreSQL connection string | `postgresql://user:pass@...` | ✅ |
-| **JWT_SECRET** | Secret key for JWT signing (min 32 chars) | `your-very-long-secret-key-min-32-chars` | ✅ |
-| **NEXT_PUBLIC_APP_URL** | Public application URL | `http://localhost:3000` | ✅ |
-| **BILLSTACK_SECRET_KEY** | BillStack secret key | `bs_live_...` | ✅ |
-| **BILLSTACK_BASE_URL** | BillStack API base URL | `https://api.billstack.co` | ✅ |
-| **SMEPLUG_API_KEY** | API A data provider key | `sk_test_...` | ✅ |
-| **SMEPLUG_BASE_URL** | API A base URL | `https://api.smeplug.com/` | ✅ |
-| **SAIFUL_API_KEY** | API B data provider key | `sk_...` | ✅ |
-| **SAIFUL_BASE_URL** | API B base URL | `https://api.saiful.com/` | ✅ |
+### Core Relational Entities
+- **`users`**: Customer profiles, phone numbers, hashed transaction PINs, role definitions (`USER`, `AGENT`, `ADMIN`), and balances in Kobo.
+- **`user_bank_accounts`**: Dedicated BillStack Reserved Virtual Accounts allocated to each user.
+- **`plans`**: Multi-network mobile data catalog with separate `user_price` (retail) and `agent_price` (wholesale) pricing.
+- **`electricity_providers` & `cable_providers`**: Utilities catalog mapping external vendor product IDs to internal services.
+- **`transactions`**: Immutable financial ledger tracking debits, credits, reference hashes, and vendor responses.
+- **`payment_webhook_events`**: Idempotent webhook tracking preventing duplicate wallet crediting.
 
-### Getting Credentials
-
-**BillStack**:
-1. Generate your merchant secret from the BillStack dashboard
-2. Set `BILLSTACK_SECRET_KEY` in `.env.local`
-3. Set webhook callback URL to `https://your-domain.com/api/payments/webhook`
-4. Optional: set `BILLSTACK_BASE_URL` (default is `https://api.billstack.co`)
-
-**API A (SMEPlug)**:
-1. Visit [smeplug.com](https://smeplug.com)
-2. Register and get API credentials
-3. Copy to `SMEPLUG_API_KEY` and `SMEPLUG_BASE_URL`
-
-**API B (Saiful)**:
-1. Contact Saiful team for integration
-2. Get API credentials
-3. Copy to `SAIFUL_API_KEY` and `SAIFUL_BASE_URL`
-
----
-
-## API Routes
-
-### Authentication
-
-| Method | Route | Description | Protected |
-|--------|-------|-------------|-----------|
-| POST | `/api/auth/signup` | Create new user account | ❌ |
-| POST | `/api/auth/login` | Login with phone & PIN | ❌ |
-| GET | `/api/auth/me` | Get current user info | ✅ |
-
-### Data & Airtime
-
-| Method | Route | Description | Protected |
-|--------|-------|-------------|-----------|
-| GET | `/api/data/plans` | Get all data plans | ❌ |
-| POST | `/api/data/purchase` | Purchase data (auto-delivery) | ✅ |
-| POST | `/api/airtime/purchase` | Purchase airtime | ✅ |
-
-### Wallet & Transactions
-
-| Method | Route | Description | Protected |
-|--------|-------|-------------|-----------|
-| GET | `/api/transactions` | Get user's transactions | ✅ |
-| GET | `/api/transactions/status?ref=REF` | Check payment status | ❌ |
-| POST | `/api/transactions/verify-manual` | Manually verify payment | ❌ |
-
-### BillStack (Payment)
-
-| Method | Route | Description | Protected |
-|--------|-------|-------------|-----------|
-| GET | `/api/payments/reserved-account` | Fetch authenticated user's reserved account | ✅ |
-| POST | `/api/payments/reserved-account` | Create/recreate authenticated user's reserved account | ✅ |
-| POST | `/api/payments/webhook` | Webhook receiver (BillStack) | ❌ |
-
-### Rewards
-
-| Method | Route | Description | Protected |
-|--------|-------|-------------|-----------|
-| GET | `/api/rewards` | Get user's rewards | ✅ |
-| GET | `/api/rewards/history` | Get reward history | ✅ |
-
-### Admin Routes (Protected with ADMIN role)
-
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/admin/analytics` | Dashboard stats & charts |
-| GET | `/api/admin/plans` | List all plans |
-| POST | `/api/admin/plans` | Create new plan |
-| PATCH | `/api/admin/plans/[id]` | Update plan |
-| DELETE | `/api/admin/plans/[id]` | Delete plan |
-| GET | `/api/admin/users` | List all users |
-| GET | `/api/admin/users/[id]` | Get user details |
-| PATCH | `/api/admin/users/[id]` | Update user info |
-| POST | `/api/admin/users/[id]/balance` | Add/deduct balance |
-| POST | `/api/admin/users/[id]/reset-pin` | Reset user PIN |
-| GET | `/api/admin/transactions` | Get transactions (paginated, filterable) |
-
----
-
-## Database Setup
-
-### Database Schema
-
-The project uses Prisma with PostgreSQL. Key models:
-
-**User**
-- `id`: Primary key
-- `fullName`: User's name
-- `phone`: 11-digit Nigerian number (unique)
-- `email`: Email address
-- `pinHash`: Hashed 6-digit PIN (bcryptjs)
-- `balance`: Balance in kobo (₦1 = 100 kobo)
-- `role`: USER | AGENT | ADMIN
-- `isBanned`: Account ban status
-- `createdAt`, `updatedAt`: Timestamps
-
-**Plan**
-- `id`: Primary key
-- `name`: Display name (e.g., "500MB Share")
-- `network`: MTN | AIRTEL | GLO | 9MOBILE
-- `sizeLabel`: Data size (e.g., "500MB")
-- `validity`: Validity period (e.g., "Weekly")
-- `price`: Price in naira (₦)
-- `apiSource`: API_A | API_B
-- `externalPlanId`: Plan ID from data provider
-- `externalNetworkId`: Network ID from provider
-- `isActive`: Plan availability
-
-**Transaction**
-- `id`: Primary key
-- `type`: DATA_PURCHASE | AIRTIME_PURCHASE | WALLET_FUNDING | REWARD_CREDIT
-- `status`: PENDING | SUCCESS | FAILED
-- `userId`: User ID (nullable for guests)
-- `phoneNumber`: Target phone
-- `amount`: Amount in naira
-- `planId`: Related Plan ID (for data)
-- `flwRef`: Flutterwave reference
-- `description`: Transaction details
-- `createdAt`: Timestamp
-
-**VirtualAccount**
-- `id`: Primary key
-- `userId`: User ID
-- `accountNumber`: Virtual account number
-- `bankName`: Bank name
-- `orderRef`: Unique order reference
-- `accountName`: Account name
-- `createdAt`: Timestamp
-
-**Reward** & **UserReward**
-- Track signup bonuses, deposit bonuses, referral rewards
-- Automatic crediting on qualifying transactions
-
-### Seeding Plans
-
-Run once after database setup:
-
+### Manual Database Initialization
+If connecting to a fresh Neon or PostgreSQL instance:
 ```bash
-npx prisma db seed
-```
+# Apply schema directly using psql:
+psql "$DATABASE_URL" -f schema.sql
 
-This creates:
-- 30+ MTN plans (API A)
-- 5+ Airtel plans (API B)
-- 3 reward types (Signup Bonus, First Deposit, High Roller)
-- 1 admin user (phone: `09066120642`, PIN: `000000`)
-
-To reseed:
-```bash
-npx prisma db seed
+# Seed initial admin user and services catalog:
+npm run seed:admin-services
 ```
 
 ---
 
-## Deployment
+## 💳 Payment & Webhook Integration (BillStack)
 
-### Prerequisites
+### Dedicated Virtual Accounts
+Upon registration or initial wallet visit, users receive a permanent dedicated bank account (e.g., Wema Bank / Providus Bank) generated via BillStack:
+- **API**: `POST /api/payments/reserved-account`
+- **Driver**: `lib/billstack.ts`
 
-- Vercel account
-- Neon PostgreSQL account
-- All environment variables ready
-
-### Step 1: Prepare Vercel
-
-1. Push code to GitHub, GitLab, or Bitbucket
-2. Visit [vercel.com](https://vercel.com)
-3. Click "New Project" → Select your repository
-4. Vercel auto-detects Next.js → Click "Deploy"
-
-### Step 2: Add Environment Variables
-
-In Vercel dashboard:
-1. Select your project
-2. Go to **Settings** → **Environment Variables**
-3. Add all variables from [Environment Variables](#environment-variables) section:
-
-```
-DATABASE_URL=postgresql://...
-JWT_SECRET=your-secure-key-32-chars-min
-BILLSTACK_SECRET_KEY=bs_live_...
-BILLSTACK_BASE_URL=https://api.billstack.co
-SMEPLUG_API_KEY=sk_...
-SMEPLUG_BASE_URL=https://api.smeplug.com/
-SAIFUL_API_KEY=sk_...
-SAIFUL_BASE_URL=https://api.saiful.com/
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-```
-
-### Step 3: Run Migrations
-
-After environment variables are set:
-
-```bash
-# Via Vercel CLI
-vercel env pull .env.local
-
-# Run migrations on production database
-NODE_ENV=production npx prisma migrate deploy
-
-# Seed data
-NODE_ENV=production npx prisma db seed
-```
-
-### Step 4: Deploy
-
-```bash
-# Push to main branch to trigger deployment
-git push origin main
-
-# Or deploy directly via Vercel CLI
-vercel deploy --prod
-```
-
-### Vercel Configuration
-
-`vercel.json` already configured with:
-- **Webhook max duration**: 30 seconds
-- **Data purchase timeout**: 15 seconds
-- **Airtime purchase timeout**: 15 seconds
+### Webhook Processing
+- **Webhook Endpoint**: `POST /api/payments/webhook`
+- **Security**: Validates the `x-billstack-signature` against `BILLSTACK_SECRET_KEY`.
+- **Idempotency**: Every inbound transaction reference is recorded in `payment_webhook_events`. Repeated webhook payloads are safely acknowledged with HTTP 200 without double-crediting balances.
 
 ---
 
-## BillStack Integration
+## 🛡 Admin Portal Operations
 
-BillStack reserved account integration now uses:
-- `POST /api/payments/reserved-account` to create/recreate a user's reserved account
-- `GET /api/payments/reserved-account` to fetch the authenticated user's reserved account
-- `POST /api/payments/webhook` for payment notifications
+The Admin Portal is accessed at `/admin` or `/app` (in Admin mode).
 
-Required env vars:
-- `BILLSTACK_SECRET_KEY`
-- `BILLSTACK_BASE_URL` (defaults to `https://api.billstack.co`)
+- **Default Administrator Phone**: `09066120642`
+- **Default PIN**: `000000` (Can be updated via Admin Settings)
 
-Run validation locally:
+### Administrative Features:
+1. **Catalog & Pricing Engine (`/admin/plans`, `/admin/services`)**: Modify retail prices, agent discounts, and enable/disable individual data bundles or utility billers.
+2. **User & Balance Management (`/admin/users`)**: Search any user by phone number, adjust wallet balances (with mandatory audit logs), and reset forgotten PINs.
+3. **Agent Approval Queue (`/admin/agents`)**: Review pending agent applications and toggle user tiers.
+4. **Broadcast & Push Notifications (`/admin/broadcasts`, `/admin/notices`)**: Publish system notices and send instant push notifications to all registered mobile devices.
+5. **Webhook & Audit Logs (`/admin/webhooks`, `/admin/transactions`)**: Live inspection of incoming payment webhooks and vendor API response logs.
+
+---
+
+## 🚢 Deployment Runbook (Vercel)
+
+### Production Deployment to Vercel
+1. Push your repository to GitHub / GitLab.
+2. Import the project in the [Vercel Dashboard](https://vercel.com).
+3. Set the **Framework Preset** to **Next.js**.
+4. Configure all required Environment Variables listed in `.env.example`.
+5. Set the **Build Command** to:
+   ```bash
+   prisma generate && next build
+   ```
+6. Deploy.
+
+---
+
+## 🧪 Automated Testing & Quality Verification
+
+Run the comprehensive test suite locally:
 ```bash
-npm run test
-npm run lint
-```
+# Execute unit and integration tests
+npm test
 
-### Webhook Setup
-
-1. **In your Flutterwave Dashboard**:
-   - Settings → Webhooks
-  - Add webhook endpoint: `https://your-domain.com/api/payments/webhook`
-   - Enable these events:
-     - `charge.completed`
-     - `charge.updated`
-
-2. **Get Webhook Secret**:
-   - Dashboard → Settings → API
-   - Copy your BillStack API secret value → `BILLSTACK_SECRET_KEY`
-
-### Payment Flow
-
-**Guest User (Temp Virtual Account)**:
-```
-1. Guest fills phone & selects plan
-2. Endpoint: POST /api/payments/reserved-account
-   - Parameters: phone, planId, amount
-   - Returns: Virtual account details
-3. Guest transfers money to account
-4. BillStack webhook processes payment
-5. Data automatically delivered to phone
-```
-
-**Registered User (Permanent Virtual Account)**:
-```
-1. User funds wallet via virtual account
-2. Endpoint: POST /api/payments/reserved-account
-   - Creates permanent VA tied to user
-   - Returns: Account details
-3. User transfers money
-4. Webhook credits wallet + evaluates rewards
-5. User can now purchase data instantly
-```
-
-### Webhook Signature Verification
-
-Webhook requests include `x-wiaxy-signature` header. Verification:
-```ts
-import { createHash } from "crypto";
-
-const secretKey = process.env.BILLSTACK_SECRET_KEY;
-const expectedHash = createHash("md5").update(secretKey).digest("hex");
-
-const isValid = expectedHash === req.headers["x-wiaxy-signature"];
-```
-
----
-
-## Admin Panel
-
-### Access
-
-- **URL**: `https://your-domain.com/admin`
-- **Auth**: Login with admin credentials:
-  - Phone: `09066120642`
-  - PIN: `000000` (default)
-
-**⚠️ Change the default PIN immediately in production!**
-
-### Features
-
-#### 📊 **Analytics Dashboard** (`/admin/analytics`)
-- **Stats Cards**: Total users, transactions, revenue, today's revenue
-- **Charts**:
-  - Line: 7-day transaction trend
-  - Pie: Revenue by network
-  - Bar: Top 5 plans
-- **Recent Transactions**: Last 20 transactions table
-
-#### 📱 **Plans Management** (`/admin/plans`)
-- View all plans (sortable table)
-- **Create Plan** - Dialog form with all fields
-- **Edit Plan** - Pre-filled form
-- **Delete Plan** - Hard delete with confirmation
-- **Toggle Active** - Inline toggle for availability
-
-#### 👥 **Users Management** (`/admin/users`)
-- View all users with search & role filter
-- **User Detail Modal**:
-  - Profile info (avatar, name, phone, role)
-  - Balance management (add/deduct)
-  - Change role (USER/AGENT/ADMIN)
-  - Ban/Unban user
-  - Reset PIN to 000000
-  - View recent 10 transactions
-
-#### 💵 **Transactions Viewer** (`/admin/transactions`)
-- View all transactions (paginated)
-- **Filters**:
-  - By Status (ALL, PENDING, SUCCESS, FAILED)
-  - By Type (ALL, DATA_PURCHASE, AIRTIME_PURCHASE, WALLET_FUNDING, REWARD_CREDIT)
-  - By Date Range (start & end date)
-- **Pagination**: 20 per page with prev/next
-- **Color-Coded Status**: Green (success), Red (failed), Yellow (pending)
-
----
-
-## Data Plan Seeding
-
-### Manual Plan Creation (Admin Panel)
-
-1. Login to `/admin`
-2. Navigate to **Plans**
-3. Click **Add Plan** button
-4. Fill form:
-   - Name: `500MB Share`
-   - Network: `MTN`
-   - Size Label: `500MB`
-   - Validity: `Weekly`
-   - Price: `300` (in naira)
-   - API Source: `API_A` or `API_B`
-   - External Plan ID: Get from provider
-   - External Network ID: Get from provider
-5. Click **Create**
-
-### API A (SMEPlug) Plan IDs
-
-| Plan | Size | Price | Validity | ID |
-|------|------|-------|----------|-----|
-| MTN 500MB | 500MB | ₦300 | Weekly | 423 |
-| MTN 1GB | 1GB | ₦450 | Weekly | 424 |
-| MTN 2GB | 2GB | ₦900 | Weekly | 425 |
-| MTN 5GB | 5GB | ₦1,500 | Monthly | 176 |
-
-*See `prisma/seed.ts` for complete list*
-
-### API B (Saiful) Plan IDs
-
-| Plan | Size | Price | Validity | ID |
-|------|------|-------|----------|-----|
-| MTN 5GB | 5GB | ₦1,500 | 14-30 Days | 85 |
-| Airtel 5GB | 5GB | ₦1,500 | Monthly | 92 |
-
-*Contact Saiful support for complete list*
-
----
-
-## Building & Testing
-
-### Local Build
-
-```bash
+# Verify production build compilation
 npm run build
 ```
 
-Must complete with 0 errors. Output: `.next/` directory
-
-### Type Checking
-
-```bash
-npx tsc --noEmit
-```
-
-Must pass with 0 TypeScript errors
-
-### Schema Validation
-
-```bash
-npx prisma validate
-```
-
-Must pass validation
-
-### Lint Check
-
-```bash
-npm run lint
-```
-
-Must pass ESLint rules
-
-### Complete Pre-Deployment Checklist
-
-```bash
-# 1. Build
-npm run build
-
-# 2. Type check
-npx tsc --noEmit
-
-# 3. Schema validate
-npx prisma validate
-
-# 4. Lint
-npm run lint
-
-# All should complete with 0 errors before deploying
-```
-
 ---
 
-## Rate Limiting
+## 📞 Developer Contact & Technical Support
 
-Implemented in-memory rate limiting for sensitive routes:
-
-| Route | Limit |
-|-------|-------|
-| `POST /api/auth/login` | 5 attempts per 5 minutes per IP |
-| `POST /api/data/purchase` | 10 attempts per minute per IP |
-| `POST /api/airtime/purchase` | 10 attempts per minute per IP |
-
-Limits are tracked by IP address and reset after the window expires. For large-scale deployments, upgrade to Redis-based rate limiting.
-
----
-
-## Error Handling
-
-All API routes return standardized JSON responses:
-
-**Success (200-201)**:
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-**Error (400-500)**:
-```json
-{
-  "success": false,
-  "error": "Error message describing what went wrong"
-}
-```
-
----
-
-## Troubleshooting
-
-### Database Connection Issues
-```
-Error: connect ENOTFOUND neon.tech
-```
-- Verify `DATABASE_URL` is correct
-- Check Neon dashboard for IP whitelisting
-- Ensure `.env.local` file exists with valid URL
-
-### BillStack Webhook Not Firing
-- Verify webhook URL in BillStack dashboard
-- Check webhook secret is correctly set in `.env`
-- Test webhook from BillStack dashboard first
-
-### Rate Limit Exceeded
-- Wait for the window to reset (5 mins for login, 1 min for purchases)
-- Try from different IP if using VPN
-- Contact support for IP whitelisting
-
-### Admin Login Fails
-- Default PIN is `000000`
-- If changed, check database for admin user PIN hash
-- Reset PIN via admin panel if locked
-
----
-
-## Support & Contribution
-
-For issues, feature requests, or contributions:
-- Email: support@mkdata.com
-- GitHub Issues: [your-repo-issues](about:blank)
-- Slack: [mkdata channel](about:blank)
-
----
-
-## License
-
-© 2026 MK DATA. All rights reserved.
-
----
-
-**Last Updated**: April 9, 2026
+For technical inquiries, source code walkthroughs, server migrations, or handover assistance:
+- **Lead Developer Phone / WhatsApp**: `08034910470`
+- **Handover Support**: Direct Architecture & Environment Inquiries
