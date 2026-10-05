@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { PlansSection } from "@/components/landing/PlansSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { DeveloperCTA } from "@/components/landing/DeveloperCTA";
 import { PremiumValueSection } from "@/components/landing/PremiumValueSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { CTABanner } from "@/components/landing/CTABanner";
@@ -48,6 +49,7 @@ export default function LandingPage() {
       <FeaturesSection />
       <PlansSection />
       <HowItWorksSection />
+      <DeveloperCTA />
       <PremiumValueSection />
       <FAQSection />
       <CTABanner />

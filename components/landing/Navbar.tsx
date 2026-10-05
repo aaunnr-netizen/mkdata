@@ -29,6 +29,7 @@ export function Navbar() {
               { label: "Features", href: "#features" },
               { label: "Pricing", href: "#pricing" },
               { label: "How it works", href: "#howitworks" },
+              { label: "Developers", href: "/docs" },
               { label: "FAQ", href: "#faq" }
             ].map((link) => (
               <a

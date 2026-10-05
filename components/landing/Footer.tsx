@@ -26,6 +26,7 @@ export function Footer() {
               <li><a href="#pricing" className="text-sm text-white/58 transition-colors hover:text-white">Pricing</a></li>
               <li><a href="#howitworks" className="text-sm text-white/58 transition-colors hover:text-white">How it Works</a></li>
               <li><a href="#faq" className="text-sm text-white/58 transition-colors hover:text-white">FAQ</a></li>
+              <li><Link href="/docs" className="text-sm font-semibold text-[#008fef] transition-colors hover:text-white">Developer API</Link></li>
             </ul>
           </div>
 

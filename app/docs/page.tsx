@@ -424,7 +424,7 @@ export default function DocumentationPage() {
                 {copiedIndex === "balance-code" ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            <pre className="p-4 text-sky-200 font-mono text-xs overflow-x-auto">
+            <pre className="p-4 bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border-t border-slate-800">
               {activeLang === "curl" &&
                 `curl -X GET "https://mkdatasub.com/api/v1/balance" \\\n  -H "Authorization: Bearer YOUR_API_KEY"`}
               {activeLang === "node" &&
@@ -436,7 +436,7 @@ export default function DocumentationPage() {
 
           <div className="space-y-1.5">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Response (200 OK)</span>
-            <pre className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 overflow-x-auto">
+            <pre className="p-4 rounded-xl bg-[#0b1329] border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed">
 {`{
   "success": true,
   "balance": 24500.00,
@@ -491,7 +491,7 @@ export default function DocumentationPage() {
                 {copiedIndex === "catalog-code" ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            <pre className="p-4 text-sky-200 font-mono text-xs overflow-x-auto">
+            <pre className="p-4 bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border-t border-slate-800">
               {activeLang === "curl" &&
                 `curl -X GET "https://mkdatasub.com/api/v1/data/plans?network=1" \\\n  -H "Authorization: Bearer YOUR_API_KEY"`}
               {activeLang === "node" &&
@@ -503,7 +503,7 @@ export default function DocumentationPage() {
 
           <div className="space-y-1.5">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Response (200 OK)</span>
-            <pre className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 overflow-x-auto">
+            <pre className="p-4 rounded-xl bg-[#0b1329] border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed">
 {`{
   "success": true,
   "count": 48,
@@ -672,7 +672,7 @@ export default function DocumentationPage() {
                 {copiedIndex === "data-code" ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            <pre className="p-4 text-sky-200 font-mono text-xs overflow-x-auto">
+            <pre className="p-4 bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border-t border-slate-800">
               {activeLang === "curl" &&
 `curl -X POST "https://mkdatasub.com/api/v1/data/purchase" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -720,7 +720,7 @@ print(res.json())`}
 
           <div className="space-y-1.5">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Response (200 OK)</span>
-            <pre className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 overflow-x-auto">
+            <pre className="p-4 rounded-xl bg-[#0b1329] border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed">
 {`{
   "success": true,
   "status": "SUCCESS",
@@ -781,7 +781,7 @@ print(res.json())`}
                 {copiedIndex === "airtime-code" ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
-            <pre className="p-4 text-sky-200 font-mono text-xs overflow-x-auto">
+            <pre className="p-4 bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border-t border-slate-800">
               {activeLang === "curl" &&
 `curl -X POST "https://mkdatasub.com/api/v1/airtime/purchase" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -829,7 +829,7 @@ print(res.json())`}
 
           <div className="space-y-1.5">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Response (200 OK)</span>
-            <pre className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 overflow-x-auto">
+            <pre className="p-4 rounded-xl bg-[#0b1329] border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto leading-relaxed">
 {`{
   "success": true,
   "status": "SUCCESS",
@@ -869,7 +869,7 @@ print(res.json())`}
             Query the final state of any transaction by passing your MK DATA reference or client-side <code className="font-mono text-slate-900 font-bold">request_id</code>.
           </p>
 
-          <pre className="p-4 rounded-xl bg-[#090d16] text-sky-200 font-mono text-xs overflow-x-auto border border-slate-800">
+          <pre className="p-4 rounded-xl bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800">
 {`curl -X GET "https://mkdatasub.com/api/v1/transactions/MKD-DATA-171800123456" \\
   -H "Authorization: Bearer YOUR_API_KEY"`}
           </pre>
@@ -892,7 +892,7 @@ print(res.json())`}
             Every webhook notification sent to your configured endpoint includes a signature header: <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-xs text-slate-900">X-MK-Signature: t=1718000000,v1=abc123...</code>. Verify this signature to ensure payloads are authentic and unhampered:
           </p>
 
-          <pre className="p-4 rounded-xl bg-[#090d16] text-sky-200 font-mono text-xs overflow-x-auto border border-slate-800">
+          <pre className="p-4 rounded-xl bg-[#090d16] text-[#f8fafc] font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800">
 {`import crypto from "crypto";
 
 export function verifyWebhook(secret: string, signatureHeader: string, rawBody: string): boolean {

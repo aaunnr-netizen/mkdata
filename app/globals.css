@@ -235,15 +235,16 @@
   }
 
   /* CODE */
-  code, pre {
+  code {
     font-family: var(--font-mono);
     font-size: 0.875rem;
-    background-color: var(--input-bg);
     border-radius: var(--radius-sm);
     padding: 0.25rem 0.5rem;
   }
 
   pre {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
     padding: var(--spacing-lg);
     overflow-x: auto;
   }
