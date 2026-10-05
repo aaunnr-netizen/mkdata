@@ -25,6 +25,7 @@ export interface DataPurchaseParams {
   developer: AuthenticatedDeveloper;
   planId: string;
   recipientPhone: string;
+  network?: string;
   requestId?: string;
 }
 
@@ -62,10 +63,24 @@ export async function executeDataPurchaseForDeveloper(
 ): Promise<VtuExecutionResult> {
   const { developer, planId, recipientPhone, requestId } = params;
 
-  // 1. Fetch Plan details
-  const plan = await prisma.plan.findUnique({
-    where: { id: planId },
-  });
+  // 1. Fetch Plan details - supports numeric externalPlanId (e.g. 5, 82, 174) or cuid string id
+  let plan = null;
+  const numericId = parseInt(planId, 10);
+  if (!isNaN(numericId) && String(numericId) === String(planId).trim()) {
+    const whereClause: any = { externalPlanId: numericId, isActive: true };
+    if (params.network) {
+      whereClause.network = params.network.toUpperCase();
+    }
+    plan = await prisma.plan.findFirst({
+      where: whereClause,
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+  if (!plan) {
+    plan = await prisma.plan.findUnique({
+      where: { id: planId },
+    });
+  }
 
   if (!plan || !plan.isActive) {
     return {

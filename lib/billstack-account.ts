@@ -5,6 +5,16 @@ export type BillstackBank = "9PSB" | "SAFEHAVEN" | "PROVIDUS" | "BANKLY" | "PALM
 
 const SIGNUP_BANK_FALLBACK: BillstackBank[] = ["PALMPAY", "9PSB", "SAFEHAVEN", "PROVIDUS"];
 
+function normalizePhoneForBillstack(phone: string): string {
+  let cleaned = (phone || "").replace(/\D/g, "");
+  if (cleaned.startsWith("234") && cleaned.length === 13) {
+    cleaned = "0" + cleaned.slice(3);
+  } else if (cleaned.length === 10) {
+    cleaned = "0" + cleaned;
+  }
+  return cleaned;
+}
+
 function splitName(fullName: string) {
   const normalized = (fullName || "").trim().replace(/\s+/g, " ");
   if (!normalized) return { firstName: "Customer", lastName: "User" };
@@ -54,13 +64,14 @@ export async function createBillstackBankAccount(params: CreateAccountParams) {
     };
   }
 
+  const cleanedPhone = normalizePhoneForBillstack(params.phone);
   const names = splitName(params.fullName);
   const merchantReference = `BS-VA-${params.userId}-${params.bank}`;
 
   const result = await createReservedVirtualAccount({
     reference: merchantReference,
-    email: emailForProvision(params.phone, params.email),
-    phone: params.phone,
+    email: emailForProvision(cleanedPhone, params.email),
+    phone: cleanedPhone,
     firstName: "MK DATA",
     lastName: names.firstName,
     bank: params.bank,

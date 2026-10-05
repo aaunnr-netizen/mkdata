@@ -18,6 +18,8 @@ const ROUTE_NAMES: Record<string, string> = {
   "/dashboard/exams": "Exam Pins",
   "/dashboard/history": "Transaction History",
   "/dashboard/developer/keys": "API Keys",
+  "/dashboard/developer/plans": "Plan IDs",
+  "/dashboard/plans": "Plan IDs",
   "/dashboard/developer/webhooks": "Developer Webhooks",
   "/dashboard/docs": "Developer Documentation",
 };

@@ -31,6 +31,8 @@ interface DashboardContextType {
   closeFunding: () => void;
   reservedAccount: ReservedAccount | null;
   loadingAccount: boolean;
+  fetchReservedAccount: () => Promise<void>;
+  generateAccount: (bank?: string) => Promise<boolean>;
   handleLogout: () => Promise<void>;
 }
 
@@ -50,7 +52,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok || !data.success || !data.data) {
         setUser(null);
-        router.replace("/dashboard/login");
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") && window.location.pathname !== "/dashboard/login") {
+          router.replace("/dashboard/login");
+        }
         return;
       }
 
@@ -61,7 +65,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       setUser({
         id: userData.id,
-        fullName: userData.fullName || "Valued User",
+        fullName: userData.fullName || "",
         phone: userData.phone,
         email: userData.email,
         role: userData.role || "USER",
@@ -71,7 +75,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       });
     } catch {
       setUser(null);
-      router.replace("/dashboard/login");
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") && window.location.pathname !== "/dashboard/login") {
+        router.replace("/dashboard/login");
+      }
     } finally {
       setLoading(false);
     }
@@ -111,6 +117,35 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.fullName]);
 
+  const generateAccount = useCallback(async (bank: string = "PALMPAY"): Promise<boolean> => {
+    setLoadingAccount(true);
+    try {
+      const res = await fetch("/api/payments/reserved-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bank }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.data?.accountNumber) {
+        setReservedAccount({
+          accountNumber: data.data.accountNumber,
+          bankName: data.data.bankName,
+          bankCode: data.data.bankCode,
+          accountName: data.data.accountName || user?.fullName || "MK DATA Customer",
+        });
+        toast.success("Dedicated funding account ready!");
+        return true;
+      }
+      toast.error(data.error || "Failed to generate account. Please try another bank.");
+      return false;
+    } catch {
+      toast.error("Network error while generating account.");
+      return false;
+    } finally {
+      setLoadingAccount(false);
+    }
+  }, [user?.fullName]);
+
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -123,10 +158,21 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch {}
-    toast.success("Logged out successfully.");
-    router.replace("/dashboard/login");
+      setUser(null);
+      setReservedAccount(null);
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout request error:", err);
+    } finally {
+      toast.success("Logged out successfully.");
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard/login";
+      }
+    }
   };
 
   const openFunding = () => setIsFundingOpen(true);
@@ -143,6 +189,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         closeFunding,
         reservedAccount,
         loadingAccount,
+        fetchReservedAccount,
+        generateAccount,
         handleLogout,
       }}
     >

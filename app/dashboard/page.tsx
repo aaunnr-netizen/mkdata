@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  PlusCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,7 +36,7 @@ interface TransactionItem {
 }
 
 export default function DashboardHomePage() {
-  const { user, openFunding, reservedAccount, loadingAccount } = useDashboard();
+  const { user, openFunding, reservedAccount, loadingAccount, generateAccount } = useDashboard();
   const [copied, setCopied] = useState(false);
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [loadingTx, setLoadingTx] = useState(true);
@@ -92,7 +93,7 @@ export default function DashboardHomePage() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-[#06133a] tracking-tight">
-              Welcome back, {user?.fullName || "Partner"}
+              Welcome back{user?.fullName ? `, ${user.fullName}` : ""}
             </h2>
             <span
               className={`px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full tracking-wider ${
@@ -130,66 +131,120 @@ export default function DashboardHomePage() {
       {/* Top Cards: Reserved Bank Account & Balance Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* Dedicated Bank Account Funding Card */}
-        <div className="lg:col-span-2 rounded-2xl bg-[linear-gradient(135deg,#008fef_0%,#005bb5_100%)] p-6 text-white shadow-md relative overflow-hidden">
+        <div className="lg:col-span-2 rounded-2xl bg-[linear-gradient(135deg,#008fef_0%,#005bb5_100%)] p-6 text-white shadow-md relative overflow-hidden flex flex-col justify-between">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-white/20 backdrop-blur-md">
-                <Building2 className="h-5 w-5 text-white" />
+          {loadingAccount ? (
+            <div className="flex flex-col items-center justify-center py-10 gap-3 text-white">
+              <Loader2 className="h-7 w-7 animate-spin text-white" />
+              <p className="text-xs font-bold tracking-wide text-white/90">
+                Fetching dedicated funding account...
+              </p>
+            </div>
+          ) : reservedAccount?.accountNumber ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-white/20 backdrop-blur-md">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Dedicated Funding Account
+                    </p>
+                    <h3 className="text-base font-bold text-white">
+                      {reservedAccount.bankName}
+                    </h3>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                  Instant 24/7 Credit
+                </span>
               </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">
-                  Dedicated Funding Account
-                </p>
-                <h3 className="text-base font-bold text-white">
-                  {reservedAccount?.bankName || "Commercial Bank (PalmPay / 9PSB)"}
-                </h3>
+
+              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-white/70 tracking-wider">
+                    Account Number
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black tracking-wider text-white font-mono">
+                    {reservedAccount.accountNumber}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleCopyAccount(reservedAccount.accountNumber)}
+                  className="px-4 py-2 rounded-xl bg-white text-[#0060d0] text-xs font-bold shadow-md hover:bg-white/95 active:scale-95 transition-all flex items-center gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-[#00a040]" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      Copy Account
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-white/85 pt-3 border-t border-white/15">
+                <span>
+                  Beneficiary: <strong className="text-white">{reservedAccount.accountName || user?.fullName || "MK DATA"}</strong>
+                </span>
+                <span className="text-[11px] text-white/70">
+                  Transfer funds from any Nigerian banking app to credit your wallet instantly.
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="py-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-white/20 backdrop-blur-md">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">
+                      Dedicated Virtual Account
+                    </p>
+                    <h3 className="text-base font-bold text-white">
+                      Instant Automated Funding
+                    </h3>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                  Automated Credit
+                </span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-white">
+                    You don&apos;t have a dedicated bank account yet.
+                  </p>
+                  <p className="text-xs text-white/80 mt-1 max-w-md">
+                    Generate your unique virtual account number to fund your wallet instantly at any time via simple bank transfer.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => generateAccount("PALMPAY")}
+                  disabled={loadingAccount}
+                  className="px-5 py-2.5 rounded-xl bg-white text-[#0060d0] text-xs font-black shadow-md hover:bg-white/95 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Generate Account
+                </button>
+              </div>
+
+              <div className="mt-4 text-[11px] text-white/70 pt-3 border-t border-white/15">
+                Instant wallet top-up 24/7 supported across all Nigerian commercial banks.
               </div>
             </div>
-            <span className="text-[10px] bg-white/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
-              Instant 24/7 Credit
-            </span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-[10px] uppercase font-bold text-white/70 tracking-wider">
-                Account Number
-              </span>
-              <div className="text-2xl sm:text-3xl font-black tracking-wider text-white">
-                {reservedAccount?.accountNumber || "Generating account..."}
-              </div>
-            </div>
-
-            {reservedAccount?.accountNumber && (
-              <button
-                onClick={() => handleCopyAccount(reservedAccount.accountNumber)}
-                className="px-4 py-2 rounded-xl bg-white text-[#0060d0] text-xs font-bold shadow-md hover:bg-white/95 active:scale-95 transition-all flex items-center gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 text-[#00a040]" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy Account
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-white/85 pt-3 border-t border-white/15">
-            <span>
-              Beneficiary: <strong className="text-white">{user?.fullName || "MK DATA"}</strong>
-            </span>
-            <span className="text-[11px] text-white/70">
-              Transfer funds from any Nigerian banking app to credit your wallet instantly.
-            </span>
-          </div>
+          )}
         </div>
 
         {/* Wallet Balance & Key Overview */}

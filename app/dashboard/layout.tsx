@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { DashboardProvider, useDashboard } from "@/components/dashboard/DashboardContext";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
@@ -8,8 +9,20 @@ import { FundingModal } from "@/components/dashboard/FundingModal";
 import { Loader2 } from "lucide-react";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
-  const { loading } = useDashboard();
+  const pathname = usePathname();
+  const { user, loading } = useDashboard();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isAuthPage = pathname === "/dashboard/login" || pathname?.startsWith("/dashboard/login/");
+
+  // On auth pages (e.g. /dashboard/login), render strictly standalone without sidebar, header, or funding modal
+  if (isAuthPage) {
+    return (
+      <div className="min-h-screen bg-[#f5faff] text-[#06133a]">
+        {children}
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -17,6 +30,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-[#008fef]" />
           <p className="text-xs font-semibold text-[#526079]">Loading your portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated and not on login page, render clean redirecting guard to prevent layout/balance flash
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5faff]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-[#008fef]" />
+          <p className="text-xs font-semibold text-[#526079]">Redirecting to sign in...</p>
         </div>
       </div>
     );

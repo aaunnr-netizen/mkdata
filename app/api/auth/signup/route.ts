@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     });
 
     let fundingAccountProvisioned = false;
+    let provisionedAccount: { accountNumber: string; bankName: string; bankCode: string; accountName: string | null } | null = null;
     try {
       const provisioned = await provisionSignupBillstackAccount({
         userId: user.id,
@@ -67,6 +68,14 @@ export async function POST(req: NextRequest) {
         email,
       });
       fundingAccountProvisioned = provisioned.success;
+      if (provisioned.success && provisioned.account) {
+        provisionedAccount = {
+          accountNumber: provisioned.account.accountNumber,
+          bankName: provisioned.account.bankName,
+          bankCode: provisioned.account.bankCode,
+          accountName: provisioned.account.accountName,
+        };
+      }
     } catch (error) {
       console.error("[SIGNUP VIRTUAL VA PROVISION ERROR]", error);
     }
@@ -113,6 +122,7 @@ export async function POST(req: NextRequest) {
           rewardBalance: "rewardBalance" in updatedUser ? updatedUser.rewardBalance ?? 0 : 0,
         },
         fundingAccountProvisioned,
+        account: provisionedAccount,
       },
       { status: 201 }
     );

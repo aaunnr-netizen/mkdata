@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useDashboard } from "./DashboardContext";
-import { X, Copy, Check, Building2, ShieldCheck, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
+import { X, Copy, Check, Building2, ShieldCheck, RefreshCw, AlertCircle, Loader2, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export function FundingModal() {
-  const { isFundingOpen, closeFunding, reservedAccount, loadingAccount, user } = useDashboard();
+  const { isFundingOpen, closeFunding, reservedAccount, loadingAccount, user, generateAccount } = useDashboard();
   const [copied, setCopied] = useState(false);
 
   if (!isFundingOpen) return null;
@@ -115,14 +115,22 @@ export function FundingModal() {
               </div>
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-[#fff5f5] border border-[#fed7d7] text-xs text-[#c53030] flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <div className="p-6 rounded-2xl bg-[#f5faff] border border-[#d7e8ff] text-center space-y-3">
+              <Building2 className="h-8 w-8 text-[#008fef] mx-auto" />
               <div>
-                <p className="font-bold">Reserved account not yet generated.</p>
-                <p className="mt-1">
-                  Complete your profile or initiate an automatic reserved account generation from your settings.
+                <h3 className="text-sm font-bold text-[#06133a]">Dedicated Bank Account</h3>
+                <p className="text-xs text-[#526079] mt-1 max-w-xs mx-auto">
+                  Generate your dedicated virtual account number to fund your wallet automatically 24/7 via bank transfer.
                 </p>
               </div>
+              <button
+                onClick={() => generateAccount("PALMPAY")}
+                disabled={loadingAccount}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#008fef] text-white text-xs font-bold hover:bg-[#0060d0] active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Generate Account Now
+              </button>
             </div>
           )}
         </div>

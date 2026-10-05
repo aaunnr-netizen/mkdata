@@ -13,6 +13,7 @@ import {
   Tv,
   GraduationCap,
   KeyRound,
+  Layers,
   Webhook,
   BookOpen,
   LogOut,
@@ -56,6 +57,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
       group: "Developer Hub",
       items: [
         { label: "API Keys", href: "/dashboard/developer/keys", icon: KeyRound },
+        { label: "Plan IDs", href: "/dashboard/developer/plans", icon: Layers },
         { label: "Webhooks", href: "/dashboard/developer/webhooks", icon: Webhook },
         { label: "API Documentation", href: "/docs", icon: BookOpen },
       ],
