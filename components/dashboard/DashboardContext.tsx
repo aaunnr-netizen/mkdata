@@ -55,9 +55,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       }
 
       const userData = data.data;
-      // In DB, balance is often stored in Kobo or Naira. Normalize to Naira for UI display.
+      // In DB, user balance is strictly stored in KOBO (1 NGN = 100 KOBO). Normalize to Naira for UI display.
       const rawBalance = typeof userData.balance === "number" ? userData.balance : 0;
-      const normalizedBalance = rawBalance > 10000000 ? rawBalance / 100 : rawBalance;
+      const normalizedBalance = rawBalance / 100;
 
       setUser({
         id: userData.id,
@@ -87,7 +87,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           accountNumber: data.data.accountNumber,
           bankName: data.data.bankName,
           bankCode: data.data.bankCode,
-          accountName: user?.fullName || "MK DATA Customer",
+          accountName: data.data.accountName || user?.fullName || "MK DATA Customer",
         });
         return;
       }
@@ -101,7 +101,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           accountNumber: primary.accountNumber,
           bankName: primary.bankName,
           bankCode: primary.bankCode,
-          accountName: user?.fullName || "MK DATA Customer",
+          accountName: primary.accountName || user?.fullName || "MK DATA Customer",
         });
       }
     } catch {
