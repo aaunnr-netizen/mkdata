@@ -423,10 +423,10 @@ export default function AuthPage() {
           <div className="p-5 sm:p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <img src="/logo.jpeg" alt="MK DATA" className="h-12 w-12 rounded-lg bg-white object-cover p-0.5 shadow-sm" />
+                <img src="/logo-sub.png" alt="MK DATA SUB" className="h-12 w-12 rounded-lg bg-white object-contain p-0.5 shadow-sm" />
                 <div>
                   <p className="text-xs font-black uppercase text-[#008fef]">Welcome to</p>
-                  <h1 className="text-2xl font-black text-[#06133a]">MK DATA</h1>
+                  <h1 className="text-2xl font-black text-[#06133a]">MK DATA SUB</h1>
                 </div>
               </div>
               <a href="/" className="text-sm font-black text-[#008fef] hover:text-[#0060d0]">
@@ -461,7 +461,7 @@ export default function AuthPage() {
               <p className="text-sm leading-6 text-[#526079]">
                 {mode === "login"
                   ? "Continue with your phone number and secure 6-digit PIN."
-                  : "Create your MK DATA profile with the same secure PIN flow."}
+                  : "Create your MK DATA SUB profile with the same secure PIN flow."}
               </p>
               {mode === "login" && savedPhone ? (
                 <p className="mt-3 inline-flex rounded-full bg-[#eafaf2] px-3 py-1 text-xs font-bold text-[#00a040]">

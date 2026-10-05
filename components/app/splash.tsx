@@ -64,8 +64,8 @@ function SplashScreen() {
         }}
       >
         <img
-          src="/logo.jpeg"
-          alt="MK Data Logo"
+          src="/logo-sub.png"
+          alt="MK Data Sub Logo"
           style={{
             width: 80,
             height: 80,
@@ -93,7 +93,7 @@ function SplashScreen() {
             letterSpacing: '-0.02em'
           }}
         >
-          MK Data
+          MK Data Sub
         </h1>
         <p
           style={{

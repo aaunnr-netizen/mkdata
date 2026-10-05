@@ -1609,7 +1609,7 @@ export function InAppAdminShell({
       <div style={{ position: "sticky", top: 0, zIndex: 40, background: T.headerBg, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-            <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
+            <img src="/logo-sub.png" alt="MK Data Sub" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "contain", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
               <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue, margin: "0 0 4px", textTransform: "uppercase" }}>MK Data Admin</p>
               <p style={{ fontFamily: T.font, fontSize: 15, fontWeight: 900, color: T.text, margin: 0, maxWidth: 185, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.fullName}</p>

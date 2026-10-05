@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
 import { InAppAdminShell } from "./admin-in-app";
 import { safeLocalStorage, safeSessionStorage } from "@/lib/safe-storage";
+import { detectNigerianNetwork } from "@/lib/nigerian-networks";
 
 const fontStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
@@ -2798,8 +2799,40 @@ function PurchaseScreen({
   const selectedAirtimeNetwork = NETWORKS.find((network) => network.id === airtimeNetwork) || NETWORKS[0];
   const purchaseTitle = mode === "data" ? "Buy Data" : "Buy Airtime";
 
-  const [activeTypeTab, setActiveTypeTab] = useState<string>("SME");
-  const dataTypes = ["SME", "SME2", "GIFTING", "MTN CG"];
+  const [activeTypeTab, setActiveTypeTab] = useState<string>("ALL");
+
+  const planMatchesType = (plan: DataPlan, type: string) => {
+    if (type.toUpperCase() === "ALL") return true;
+    const pType = (plan.dataType || "SME").toUpperCase();
+    const target = type.toUpperCase();
+    if (target === "CG") {
+      return pType === "CG" || pType === "MTN CG" || pType === "CORPORATE GIFTING";
+    }
+    return pType === target;
+  };
+
+  const categoryTabs = useMemo(() => {
+    const dynamicTypes = new Set<string>();
+    dataPlans.forEach((plan) => {
+      const raw = (plan.dataType || "SME").toUpperCase();
+      if (raw === "MTN CG" || raw === "CORPORATE GIFTING" || raw === "CG") {
+        dynamicTypes.add("CG");
+      } else {
+        dynamicTypes.add(raw);
+      }
+    });
+
+    const tabs = ["ALL"];
+    const orderedKeys = ["SME", "CG", "SME2", "GIFTING"];
+    for (const key of orderedKeys) {
+      if (dynamicTypes.has(key)) {
+        tabs.push(key);
+        dynamicTypes.delete(key);
+      }
+    }
+    dynamicTypes.forEach((key) => tabs.push(key));
+    return tabs;
+  }, [dataPlans]);
 
   const [showPinPopup, setShowPinPopup] = useState(false);
   const [showAirtimePinPopup, setShowAirtimePinPopup] = useState(false);
@@ -2821,17 +2854,14 @@ function PurchaseScreen({
   }, [airtimePhone, airtimeNetwork, airtimeAmount]);
 
   useEffect(() => {
-    if (dataPlans.length > 0) {
-      const availableTypes = Array.from(new Set(dataPlans.map(p => (p.dataType || "SME").toUpperCase())));
-      if (availableTypes.length > 0 && !availableTypes.includes(activeTypeTab.toUpperCase())) {
-        setActiveTypeTab(availableTypes[0]);
-      }
+    if (activeTypeTab !== "ALL" && !categoryTabs.includes(activeTypeTab)) {
+      setActiveTypeTab("ALL");
     }
-  }, [dataPlans]);
+  }, [categoryTabs, activeTypeTab]);
 
-  const filteredPlans = dataPlans.filter(
-    (plan) => (plan.dataType || "SME").toUpperCase() === activeTypeTab.toUpperCase()
-  );
+  const filteredPlans = activeTypeTab.toUpperCase() === "ALL"
+    ? dataPlans
+    : dataPlans.filter((plan) => planMatchesType(plan, activeTypeTab));
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -2864,9 +2894,16 @@ function PurchaseScreen({
             </div>
 
             <div>
-              <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase" }}>
-                Network
-              </p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 6px" }}>
+                <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: 0, textTransform: "uppercase" }}>
+                  Network
+                </p>
+                {detectNigerianNetwork(phoneNumber) && detectNigerianNetwork(phoneNumber) === selectedNetwork && (
+                  <span style={{ fontFamily: T.font, fontSize: 10, fontWeight: 800, color: T.green }}>
+                    Auto-selected
+                  </span>
+                )}
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 6 }}>
                 {NETWORKS.map((network) => (
                   <NetworkLogoChip
@@ -2897,10 +2934,8 @@ function PurchaseScreen({
             ) : dataPlans.length ? (
               <>
                 <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 8, scrollbarWidth: "none" }}>
-                  {dataTypes.map((type) => {
+                  {categoryTabs.map((type) => {
                     const active = activeTypeTab.toUpperCase() === type.toUpperCase();
-                    const hasPlans = dataPlans.some(p => (p.dataType || "SME").toUpperCase() === type.toUpperCase());
-                    if (!hasPlans) return null;
                     return (
                       <button
                         key={type}
@@ -2909,7 +2944,7 @@ function PurchaseScreen({
                           flexShrink: 0,
                           border: `1px solid ${active ? T.blue : T.borderStrong}`,
                           borderRadius: 10,
-                          padding: "5px 10px",
+                          padding: "5px 12px",
                           background: active ? T.blue : T.surface,
                           color: active ? "#fff" : T.textDim,
                           fontFamily: T.font,
@@ -2943,9 +2978,16 @@ function PurchaseScreen({
                             minHeight: 72,
                           }}
                         >
-                          <p style={{ fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, margin: "0 0 2px" }}>
-                            {plan.sizeLabel}
-                          </p>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, margin: "0 0 2px" }}>
+                            <p style={{ fontFamily: T.font, fontSize: 13, fontWeight: 900, color: T.text, margin: 0 }}>
+                              {plan.sizeLabel}
+                            </p>
+                            {activeTypeTab === "ALL" && plan.dataType && (
+                              <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 5px", borderRadius: 4, background: T.surface, color: T.textDim }}>
+                                {plan.dataType === "MTN CG" ? "CG" : plan.dataType}
+                              </span>
+                            )}
+                          </div>
                           <p style={{ fontFamily: T.font, fontSize: 10, color: T.textDim, margin: "0 0 6px" }}>{plan.validity}</p>
                           <p style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 900, color: T.blue, margin: 0 }}>
                             {formatNaira(getPriceForTier(plan, user?.tier || "user"))}
@@ -4326,7 +4368,7 @@ function AdminAppShell({
       <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(3,11,31,0.88)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
         <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-            <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
+            <img src="/logo-sub.png" alt="MK Data Sub" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "contain", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
               <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.blue, margin: "0 0 4px", textTransform: "uppercase" }}>
                 MK Data Admin
@@ -4689,6 +4731,38 @@ export default function DashboardPage() {
       toast.error("Ahh, sorry, plans could not load right now. Please try again shortly.");
     } finally {
       setPlansLoading(false);
+    }
+  };
+
+  const handleDataPhoneChange = (value: string) => {
+    let clean = value.replace(/\D/g, "");
+    if (clean.startsWith("234") && clean.length > 10) {
+      clean = "0" + clean.slice(3);
+    }
+    clean = clean.slice(0, 11);
+    setPhoneNumber(clean);
+
+    if (clean.length >= 4) {
+      const detected = detectNigerianNetwork(clean);
+      if (detected && detected !== selectedNetwork) {
+        void handleNetworkSelect(detected);
+      }
+    }
+  };
+
+  const handleAirtimePhoneChange = (value: string) => {
+    let clean = value.replace(/\D/g, "");
+    if (clean.startsWith("234") && clean.length > 10) {
+      clean = "0" + clean.slice(3);
+    }
+    clean = clean.slice(0, 11);
+    setAirtimePhone(clean);
+
+    if (clean.length >= 4) {
+      const detected = detectNigerianNetwork(clean);
+      if (detected && detected !== airtimeNetwork) {
+        setAirtimeNetwork(detected);
+      }
     }
   };
 
@@ -5172,7 +5246,7 @@ export default function DashboardPage() {
     purchasingData,
     onDataNetworkSelect: handleNetworkSelect,
     onPlanSelect: setSelectedPlan,
-    onPhoneChange: setPhoneNumber,
+    onPhoneChange: handleDataPhoneChange,
     onPinChange: setPin,
     onDataPurchase: handleDataPurchase,
     airtimeNetwork: airtimeNetwork || "mtn",
@@ -5182,7 +5256,7 @@ export default function DashboardPage() {
     purchasingAirtime,
     onAirtimeNetworkSelect: setAirtimeNetwork,
     onAirtimeAmountSelect: setAirtimeAmount,
-    onAirtimePhoneChange: setAirtimePhone,
+    onAirtimePhoneChange: handleAirtimePhoneChange,
     onAirtimePinChange: setAirtimePin,
     onAirtimePurchase: handleAirtimePurchase,
     onBack: () => setActiveTab("home"),
@@ -5455,7 +5529,7 @@ export default function DashboardPage() {
               purchasingData={purchasingData}
               onDataNetworkSelect={handleNetworkSelect}
               onPlanSelect={setSelectedPlan}
-              onPhoneChange={setPhoneNumber}
+              onPhoneChange={handleDataPhoneChange}
               onPinChange={setPin}
               onDataPurchase={handleDataPurchase}
               airtimeNetwork={airtimeNetwork || "mtn"}
@@ -5465,7 +5539,7 @@ export default function DashboardPage() {
               purchasingAirtime={purchasingAirtime}
               onAirtimeNetworkSelect={setAirtimeNetwork}
               onAirtimeAmountSelect={setAirtimeAmount}
-              onAirtimePhoneChange={setAirtimePhone}
+              onAirtimePhoneChange={handleAirtimePhoneChange}
               onAirtimePinChange={setAirtimePin}
               onAirtimePurchase={handleAirtimePurchase}
               onBack={() => setActiveTab("home")}
