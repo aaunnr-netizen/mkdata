@@ -289,28 +289,64 @@ export default function DocumentationPage() {
               </div>
 
               <p className="text-xs text-[#526079]">
-                Query parameter <code className="font-mono text-[#008fef]">?network=mtn|airtel|glo|9mobile</code> is optional. Returns all active data plans with wholesale agent pricing.
+                Returns all active data plans with numeric <code className="font-mono text-[#008fef]">plan_id</code>, numeric network code, and wholesale developer pricing. Optional query parameter <code className="font-mono text-[#008fef]">?network=1|2|3|4</code> filters by network.
               </p>
 
-              <pre className="p-4 rounded-xl bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
-{`curl -X GET "https://mkdatasub.com/api/v1/data/plans?network=mtn" \\
-  -H "Authorization: Bearer YOUR_API_KEY"`}
-              </pre>
+              <div className="rounded-xl overflow-hidden border border-[#1e293b]">
+                <div className="px-4 py-2 bg-[#06133a] flex items-center justify-between text-xs text-[#9db7dc] border-b border-[#1e293b]">
+                  <span className="font-mono">{activeLang === "curl" ? "cURL" : activeLang === "node" ? "Node.js (Fetch)" : "Python (Requests)"}</span>
+                  <button
+                    onClick={() =>
+                      copyCode(
+                        activeLang === "curl"
+                          ? `curl -X GET "https://mkdatasub.com/api/v1/data/plans?network=1" \\\n  -H "Authorization: Bearer YOUR_API_KEY"`
+                          : activeLang === "node"
+                          ? `const res = await fetch("https://mkdatasub.com/api/v1/data/plans?network=1", {\n  headers: { "Authorization": "Bearer YOUR_API_KEY" }\n});\nconst data = await res.json();\nconsole.log(data);`
+                          : `import requests\n\nres = requests.get("https://mkdatasub.com/api/v1/data/plans?network=1", headers={\n    "Authorization": "Bearer YOUR_API_KEY"\n})\nprint(res.json())`,
+                        "catalog-code"
+                      )
+                    }
+                    className="hover:text-white"
+                  >
+                    {copiedIndex === "catalog-code" ? <Check className="h-4 w-4 text-[#00a040]" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+                <pre className="p-4 bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
+                  {activeLang === "curl" &&
+                    `curl -X GET "https://mkdatasub.com/api/v1/data/plans?network=1" \\\n  -H "Authorization: Bearer YOUR_API_KEY"`}
+                  {activeLang === "node" &&
+                    `const res = await fetch("https://mkdatasub.com/api/v1/data/plans?network=1", {\n  headers: { "Authorization": "Bearer YOUR_API_KEY" }\n});\nconst data = await res.json();\nconsole.log(data);`}
+                  {activeLang === "python" &&
+                    `import requests\n\nres = requests.get("https://mkdatasub.com/api/v1/data/plans?network=1", headers={\n    "Authorization": "Bearer YOUR_API_KEY"\n})\nprint(res.json())`}
+                </pre>
+              </div>
 
               <div className="space-y-1.5">
                 <span className="text-[11px] font-bold text-[#526079] uppercase">Response (200 OK)</span>
                 <pre className="p-4 rounded-xl bg-[#f8fbff] border border-[#d7e8ff] font-mono text-xs text-[#06133a] overflow-x-auto">
 {`{
   "success": true,
-  "plans": [
+  "count": 48,
+  "data": [
     {
-      "id": "cm7...",
-      "network": "MTN",
+      "plan_id": 82,
+      "network": 1,
+      "network_name": "MTN",
       "name": "MTN SME 1GB",
       "type": "SME",
       "size": "1GB",
       "validity": "30 Days",
       "price": 285.00
+    },
+    {
+      "plan_id": 83,
+      "network": 1,
+      "network_name": "MTN",
+      "name": "MTN SME 2GB",
+      "type": "SME",
+      "size": "2GB",
+      "validity": "30 Days",
+      "price": 570.00
     }
   ]
 }`}
@@ -336,9 +372,38 @@ export default function DocumentationPage() {
                 </span>
               </div>
 
+              {/* Mandatory Numeric Network Mapping Card */}
+              <div className="p-4 rounded-xl bg-[#edf5ff] border border-[#b9d9ff] text-xs space-y-2">
+                <div className="flex items-center gap-2 text-[#0060d0] font-black uppercase text-[11px] tracking-wider">
+                  <Zap className="h-4 w-4" />
+                  <span>Numeric Network Codes (Required)</span>
+                </div>
+                <p className="text-[#324563]">
+                  The <code className="font-mono font-bold text-[#0060d0]">network</code> parameter must always be supplied as a number (not text):
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-xs">
+                  <div className="bg-white p-2.5 rounded-lg border border-[#cbe1ff] flex items-center justify-between">
+                    <span className="font-bold text-[#06133a]">MTN</span>
+                    <span className="font-black text-[#008fef] bg-[#eef6ff] px-2 py-0.5 rounded">1</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-[#cbe1ff] flex items-center justify-between">
+                    <span className="font-bold text-[#06133a]">GLO</span>
+                    <span className="font-black text-[#008fef] bg-[#eef6ff] px-2 py-0.5 rounded">2</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-[#cbe1ff] flex items-center justify-between">
+                    <span className="font-bold text-[#06133a]">AIRTEL</span>
+                    <span className="font-black text-[#008fef] bg-[#eef6ff] px-2 py-0.5 rounded">3</span>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-[#cbe1ff] flex items-center justify-between">
+                    <span className="font-bold text-[#06133a]">9MOBILE</span>
+                    <span className="font-black text-[#008fef] bg-[#eef6ff] px-2 py-0.5 rounded">4</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Request Schema Table */}
               <div className="border border-[#eaf2ff] rounded-xl overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs min-w-[400px]">
+                <table className="w-full text-left border-collapse text-xs min-w-[450px]">
                   <thead>
                     <tr className="bg-[#f8fbff] text-[10px] font-bold text-[#526079] uppercase border-b border-[#eaf2ff]">
                       <th className="py-2.5 px-4">Field</th>
@@ -349,39 +414,98 @@ export default function DocumentationPage() {
                   </thead>
                   <tbody className="divide-y divide-[#eaf2ff]">
                     <tr>
+                      <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">network</td>
+                      <td className="py-2.5 px-4 text-[#526079]">number</td>
+                      <td className="py-2.5 px-4 text-[#059669] font-bold">Yes</td>
+                      <td className="py-2.5 px-4 text-[#526079]">Numeric network ID: <strong>1</strong> (MTN), <strong>2</strong> (GLO), <strong>3</strong> (AIRTEL), <strong>4</strong> (9MOBILE)</td>
+                    </tr>
+                    <tr>
                       <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">plan_id</td>
-                      <td className="py-2.5 px-4 text-[#526079]">string</td>
+                      <td className="py-2.5 px-4 text-[#526079]">number</td>
                       <td className="py-2.5 px-4 text-[#059669] font-bold">Yes</td>
-                      <td className="py-2.5 px-4 text-[#526079]">The plan ID from catalog</td>
+                      <td className="py-2.5 px-4 text-[#526079]">Numeric plan ID from the catalog or Plan IDs tab (e.g. <strong>82</strong>, <strong>5</strong>, <strong>174</strong>)</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">phone</td>
+                      <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">number</td>
                       <td className="py-2.5 px-4 text-[#526079]">string</td>
                       <td className="py-2.5 px-4 text-[#059669] font-bold">Yes</td>
-                      <td className="py-2.5 px-4 text-[#526079]">11-digit recipient phone (080...)</td>
+                      <td className="py-2.5 px-4 text-[#526079]">11-digit recipient phone number (e.g. <code>"08012345678"</code>)</td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">request_id</td>
+                      <td className="py-2.5 px-4 font-mono font-bold text-[#06133a]">tx_id</td>
                       <td className="py-2.5 px-4 text-[#526079]">string</td>
-                      <td className="py-2.5 px-4 text-[#526079]">Optional</td>
-                      <td className="py-2.5 px-4 text-[#526079]">Your client-side unique reference</td>
+                      <td className="py-2.5 px-4 text-[#008fef] font-bold">Recommended</td>
+                      <td className="py-2.5 px-4 text-[#526079]">Your client-side unique transaction reference for idempotency and status query</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* Code */}
-              <pre className="p-4 rounded-xl bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
-{`curl -X POST "https://mkdatasub.com/api/v1/data/purchase" \\
+              {/* Code Snippets */}
+              <div className="rounded-xl overflow-hidden border border-[#1e293b]">
+                <div className="px-4 py-2 bg-[#06133a] flex items-center justify-between text-xs text-[#9db7dc] border-b border-[#1e293b]">
+                  <span className="font-mono">{activeLang === "curl" ? "cURL" : activeLang === "node" ? "Node.js (Fetch)" : "Python (Requests)"}</span>
+                  <button
+                    onClick={() =>
+                      copyCode(
+                        activeLang === "curl"
+                          ? `curl -X POST "https://mkdatasub.com/api/v1/data/purchase" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "network": 1,\n    "plan_id": 82,\n    "number": "08012345678",\n    "tx_id": "MKD-TX-171800123456"\n  }'`
+                          : activeLang === "node"
+                          ? `const res = await fetch("https://mkdatasub.com/api/v1/data/purchase", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer YOUR_API_KEY",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({\n    network: 1, // 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE\n    plan_id: 82,\n    number: "08012345678",\n    tx_id: "MKD-TX-171800123456"\n  })\n});\nconst data = await res.json();\nconsole.log(data);`
+                          : `import requests\n\npayload = {\n    "network": 1,  # 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE\n    "plan_id": 82,\n    "number": "08012345678",\n    "tx_id": "MKD-TX-171800123456"\n}\n\nres = requests.post(\n    "https://mkdatasub.com/api/v1/data/purchase",\n    headers={"Authorization": "Bearer YOUR_API_KEY"},\n    json=payload\n)\nprint(res.json())`,
+                        "data-code"
+                      )
+                    }
+                    className="hover:text-white"
+                  >
+                    {copiedIndex === "data-code" ? <Check className="h-4 w-4 text-[#00a040]" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+                <pre className="p-4 bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
+                  {activeLang === "curl" &&
+`curl -X POST "https://mkdatasub.com/api/v1/data/purchase" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Idempotency-Key: uuid-1234-5678" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "plan_id": "cm7...",
-    "phone": "08012345678",
-    "request_id": "INV-99214"
+    "network": 1,
+    "plan_id": 82,
+    "number": "08012345678",
+    "tx_id": "MKD-TX-171800123456"
   }'`}
-              </pre>
+                  {activeLang === "node" &&
+`const res = await fetch("https://mkdatasub.com/api/v1/data/purchase", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    network: 1, // 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE
+    plan_id: 82,
+    number: "08012345678",
+    tx_id: "MKD-TX-171800123456"
+  })
+});
+const data = await res.json();
+console.log(data);`}
+                  {activeLang === "python" &&
+`import requests
+
+payload = {
+    "network": 1,  # 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE
+    "plan_id": 82,
+    "number": "08012345678",
+    "tx_id": "MKD-TX-171800123456"
+}
+
+res = requests.post(
+    "https://mkdatasub.com/api/v1/data/purchase",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json=payload
+)
+print(res.json())`}
+                </pre>
+              </div>
 
               <div className="space-y-1.5">
                 <span className="text-[11px] font-bold text-[#526079] uppercase">Response (200 OK)</span>
@@ -390,13 +514,14 @@ export default function DocumentationPage() {
   "success": true,
   "status": "SUCCESS",
   "reference": "MKD-DATA-171800123456",
-  "request_id": "INV-99214",
-  "amount_charged": 285.00,
-  "previous_balance": 10500.00,
-  "new_balance": 10215.00,
+  "requestId": "MKD-TX-171800123456",
+  "amount": 285.00,
+  "balance": 10215.00,
   "phone": "08012345678",
+  "network": 1,
+  "network_name": "MTN",
   "plan": "MTN SME 1GB",
-  "created_at": "2026-10-04T22:30:00.000Z"
+  "message": "Data vending successful."
 }`}
                 </pre>
               </div>
@@ -420,17 +545,74 @@ export default function DocumentationPage() {
                 </span>
               </div>
 
-              <pre className="p-4 rounded-xl bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
-{`curl -X POST "https://mkdatasub.com/api/v1/airtime/purchase" \\
+              <p className="text-xs text-[#526079]">
+                Top up any Nigerian mobile number. Accepts numeric network: <code className="font-mono text-[#008fef]">1</code> (MTN), <code className="font-mono text-[#008fef]">2</code> (GLO), <code className="font-mono text-[#008fef]">3</code> (AIRTEL), or <code className="font-mono text-[#008fef]">4</code> (9MOBILE).
+              </p>
+
+              <div className="rounded-xl overflow-hidden border border-[#1e293b]">
+                <div className="px-4 py-2 bg-[#06133a] flex items-center justify-between text-xs text-[#9db7dc] border-b border-[#1e293b]">
+                  <span className="font-mono">{activeLang === "curl" ? "cURL" : activeLang === "node" ? "Node.js (Fetch)" : "Python (Requests)"}</span>
+                  <button
+                    onClick={() =>
+                      copyCode(
+                        activeLang === "curl"
+                          ? `curl -X POST "https://mkdatasub.com/api/v1/airtime/purchase" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "network": 1,\n    "amount": 1000,\n    "number": "08012345678",\n    "tx_id": "MKD-AIR-171800998877"\n  }'`
+                          : activeLang === "node"
+                          ? `const res = await fetch("https://mkdatasub.com/api/v1/airtime/purchase", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer YOUR_API_KEY",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({\n    network: 1, // 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE\n    amount: 1000,\n    number: "08012345678",\n    tx_id: "MKD-AIR-171800998877"\n  })\n});\nconst data = await res.json();\nconsole.log(data);`
+                          : `import requests\n\npayload = {\n    "network": 1,  # 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE\n    "amount": 1000,\n    "number": "08012345678",\n    "tx_id": "MKD-AIR-171800998877"\n}\n\nres = requests.post(\n    "https://mkdatasub.com/api/v1/airtime/purchase",\n    headers={"Authorization": "Bearer YOUR_API_KEY"},\n    json=payload\n)\nprint(res.json())`,
+                        "airtime-code"
+                      )
+                    }
+                    className="hover:text-white"
+                  >
+                    {copiedIndex === "airtime-code" ? <Check className="h-4 w-4 text-[#00a040]" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                </div>
+                <pre className="p-4 bg-[#0a1845] text-[#86e1fc] font-mono text-xs overflow-x-auto">
+                  {activeLang === "curl" &&
+`curl -X POST "https://mkdatasub.com/api/v1/airtime/purchase" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Idempotency-Key: uuid-9988-7766" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "network": "mtn",
+    "network": 1,
     "amount": 1000,
-    "phone": "08012345678"
+    "number": "08012345678",
+    "tx_id": "MKD-AIR-171800998877"
   }'`}
-              </pre>
+                  {activeLang === "node" &&
+`const res = await fetch("https://mkdatasub.com/api/v1/airtime/purchase", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    network: 1, // 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE
+    amount: 1000,
+    number: "08012345678",
+    tx_id: "MKD-AIR-171800998877"
+  })
+});
+const data = await res.json();
+console.log(data);`}
+                  {activeLang === "python" &&
+`import requests
+
+payload = {
+    "network": 1,  # 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE
+    "amount": 1000,
+    "number": "08012345678",
+    "tx_id": "MKD-AIR-171800998877"
+}
+
+res = requests.post(
+    "https://mkdatasub.com/api/v1/airtime/purchase",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json=payload
+)
+print(res.json())`}
+                </pre>
+              </div>
 
               <div className="space-y-1.5">
                 <span className="text-[11px] font-bold text-[#526079] uppercase">Response (200 OK)</span>
@@ -443,7 +625,8 @@ export default function DocumentationPage() {
   "discount_applied": 30.00,
   "new_balance": 9245.00,
   "phone": "08012345678",
-  "network": "MTN"
+  "network": 1,
+  "network_name": "MTN"
 }`}
                 </pre>
               </div>

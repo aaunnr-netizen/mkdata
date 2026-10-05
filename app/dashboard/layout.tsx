@@ -35,6 +35,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  React.useEffect(() => {
+    if (!loading && !user && !isAuthPage) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard/login";
+      }
+    }
+  }, [loading, user, isAuthPage]);
+
   // If not authenticated and not on login page, render clean redirecting guard to prevent layout/balance flash
   if (!user) {
     return (

@@ -23,8 +23,11 @@ export async function GET(req: NextRequest) {
     isActive: true,
   };
 
-  if (networkParam && Object.values(NetworkType).includes(networkParam as NetworkType)) {
-    where.network = networkParam as NetworkType;
+  if (networkParam) {
+    if (networkParam === "1" || networkParam === "MTN") where.network = "MTN";
+    else if (networkParam === "2" || networkParam === "GLO") where.network = "GLO";
+    else if (networkParam === "3" || networkParam === "AIRTEL") where.network = "AIRTEL";
+    else if (networkParam === "4" || networkParam === "9MOBILE" || networkParam === "NINEMOBILE") where.network = "NINEMOBILE";
   }
 
   if (typeParam) {
@@ -33,11 +36,12 @@ export async function GET(req: NextRequest) {
 
   const plans = await prisma.plan.findMany({
     where,
-    orderBy: [{ network: "asc" }, { agent_price: "asc" }],
+    orderBy: [{ network: "asc" }, { externalPlanId: "asc" }],
     select: {
       id: true,
       name: true,
       network: true,
+      externalPlanId: true,
       sizeLabel: true,
       validity: true,
       dataType: true,
@@ -46,15 +50,19 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const formattedPlans = plans.map((p) => ({
-    plan_id: p.id,
-    name: p.name,
-    network: p.network,
-    size: p.sizeLabel,
-    validity: p.validity,
-    type: p.dataType,
-    price: p.agent_price > 0 ? p.agent_price : p.price, // Wholesale agent pricing
-  }));
+  const formattedPlans = plans.map((p) => {
+    const networkId = p.network === "MTN" ? 1 : p.network === "GLO" ? 2 : p.network === "AIRTEL" ? 3 : 4;
+    return {
+      plan_id: p.externalPlanId,
+      network: networkId,
+      network_name: p.network === "NINEMOBILE" ? "9MOBILE" : p.network,
+      name: p.name,
+      size: p.sizeLabel,
+      validity: p.validity,
+      type: p.dataType,
+      price: p.agent_price > 0 ? p.agent_price : p.price, // Wholesale agent pricing
+    };
+  });
 
   return NextResponse.json(
     {

@@ -83,6 +83,14 @@ export default function DeveloperPlansPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+const NETWORK_ID_MAP: Record<string, number> = {
+  MTN: 1,
+  GLO: 2,
+  AIRTEL: 3,
+  "9MOBILE": 4,
+  NINEMOBILE: 4,
+};
+
   const currentSamplePlan = activeSamplePlan || plans[0] || {
     network: "MTN",
     plan_id: 82,
@@ -91,7 +99,7 @@ export default function DeveloperPlansPage() {
 
   const sampleJson = JSON.stringify(
     {
-      network: currentSamplePlan.network,
+      network: NETWORK_ID_MAP[currentSamplePlan.network] || 1,
       plan_id: currentSamplePlan.plan_id,
       number: "08012345678",
       tx_id: `MKD-TX-${Date.now()}`,
@@ -196,8 +204,8 @@ export default function DeveloperPlansPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <span className="text-[#9db7dc] block text-[10px] font-bold">network</span>
-                <span className="font-semibold text-white">MTN, AIRTEL, GLO, 9MOBILE</span>
+                <span className="text-[#9db7dc] block text-[10px] font-bold">network (numeric)</span>
+                <span className="font-semibold text-white">1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE</span>
               </div>
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
                 <span className="text-[#9db7dc] block text-[10px] font-bold">plan_id</span>
@@ -247,7 +255,7 @@ export default function DeveloperPlansPage() {
                   : "bg-white text-[#526079] border border-[#d7e8ff] hover:bg-[#f5faff]"
               }`}
             >
-              <span>{net === "ALL" ? "All Networks" : net}</span>
+              <span>{net === "ALL" ? "All Networks" : `${net} (ID: ${NETWORK_ID_MAP[net]})`}</span>
               <span
                 className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                   isActive ? "bg-white/20 text-white" : "bg-[#f0f5ff] text-[#0060d0]"
@@ -361,11 +369,16 @@ export default function DeveloperPlansPage() {
 
                       {/* Network */}
                       <td className="py-3 px-4">
-                        <span
-                          className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${netStyle.bg} ${netStyle.text} ${netStyle.border}`}
-                        >
-                          {plan.network}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${netStyle.bg} ${netStyle.text} ${netStyle.border}`}
+                          >
+                            {plan.network}
+                          </span>
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#f0f4f9] text-[#526079] border border-[#d7e8ff]">
+                            ID: {NETWORK_ID_MAP[plan.network] || 1}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Plan Name */}

@@ -70,7 +70,7 @@ export default function DashboardLoginPage() {
       }
 
       toast.success(`Welcome back, ${data.user?.fullName || "Partner"}!`);
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err: any) {
       toast.error(getFriendlyMessage(err.message));
     } finally {
@@ -121,7 +121,7 @@ export default function DashboardLoginPage() {
       }
 
       toast.success("Account created successfully! Welcome to MK DATA.");
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err: any) {
       toast.error(getFriendlyMessage(err.message));
     } finally {

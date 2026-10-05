@@ -35,11 +35,13 @@ export async function GET(req: NextRequest) {
     const formatted = plans.map((p) => {
       const wholesalePrice = p.agent_price > 0 ? p.agent_price : p.price;
       const retailPrice = p.user_price > 0 ? p.user_price : p.price;
+      const networkId = p.network === "MTN" ? 1 : p.network === "GLO" ? 2 : p.network === "AIRTEL" ? 3 : 4;
       return {
         id: p.id,
         plan_id: p.externalPlanId, // Numeric ID for developer integrations (e.g. 5, 82, 174)
-        name: p.name,
         network: p.network,
+        network_id: networkId, // Numeric network ID: 1=MTN, 2=GLO, 3=AIRTEL, 4=9MOBILE
+        name: p.name,
         size: p.sizeLabel,
         validity: p.validity,
         type: p.dataType || "SME",

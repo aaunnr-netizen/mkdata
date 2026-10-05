@@ -7,9 +7,19 @@ import { enforceRateLimit } from "@/lib/security";
 
 export const maxDuration = 60;
 
+function normalizeNetwork(network?: string | number): "MTN" | "GLO" | "AIRTEL" | "NINEMOBILE" | undefined {
+  if (network === undefined || network === null || network === "") return undefined;
+  const val = String(network).trim().toUpperCase();
+  if (val === "1" || val === "MTN") return "MTN";
+  if (val === "2" || val === "GLO") return "GLO";
+  if (val === "3" || val === "AIRTEL") return "AIRTEL";
+  if (val === "4" || val === "9MOBILE" || val === "NINEMOBILE") return "NINEMOBILE";
+  return undefined;
+}
+
 const requestSchema = z.object({
   plan_id: z.union([z.string(), z.number()]).transform((val) => String(val).trim()),
-  network: z.string().optional(),
+  network: z.union([z.string(), z.number()]).optional(),
   number: z.string().optional(),
   phone: z.string().optional(),
   tx_id: z.string().min(1).max(100).optional(),
@@ -90,7 +100,7 @@ export async function POST(req: NextRequest) {
     developer,
     planId: plan_id,
     recipientPhone,
-    network,
+    network: normalizeNetwork(network),
     requestId: tx_id,
   });
 

@@ -69,7 +69,12 @@ export async function executeDataPurchaseForDeveloper(
   if (!isNaN(numericId) && String(numericId) === String(planId).trim()) {
     const whereClause: any = { externalPlanId: numericId, isActive: true };
     if (params.network) {
-      whereClause.network = params.network.toUpperCase();
+      const netStr = String(params.network).trim().toUpperCase();
+      if (netStr === "1" || netStr === "MTN") whereClause.network = "MTN";
+      else if (netStr === "2" || netStr === "GLO") whereClause.network = "GLO";
+      else if (netStr === "3" || netStr === "AIRTEL") whereClause.network = "AIRTEL";
+      else if (netStr === "4" || netStr === "9MOBILE" || netStr === "NINEMOBILE") whereClause.network = "NINEMOBILE";
+      else whereClause.network = netStr;
     }
     plan = await prisma.plan.findFirst({
       where: whereClause,

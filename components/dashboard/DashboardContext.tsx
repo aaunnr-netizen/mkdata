@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 export interface DashboardUser {
@@ -40,6 +40,7 @@ const DashboardContext = createContext<DashboardContextType | null>(null);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<DashboardUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFundingOpen, setIsFundingOpen] = useState(false);
@@ -48,7 +49,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const res = await fetch("/api/auth/me", { cache: "no-store", credentials: "include" });
       const data = await res.json();
       if (!res.ok || !data.success || !data.data) {
         setUser(null);
@@ -149,6 +150,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  useEffect(() => {
+    if (pathname && pathname.startsWith("/dashboard") && pathname !== "/dashboard/login" && !user) {
+      fetchUser();
+    }
+  }, [pathname, user, fetchUser]);
 
   useEffect(() => {
     if (user && !reservedAccount) {
