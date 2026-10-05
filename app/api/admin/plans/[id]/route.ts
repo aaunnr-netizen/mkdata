@@ -9,8 +9,9 @@ const updatePlanSchema = z.object({
   network: z.enum(["MTN", "GLO", "AIRTEL", "NINEMOBILE"]).optional(),
   sizeLabel: z.string().min(1).optional(),
   validity: z.string().min(1).optional(),
-  user_price: z.number().min(50).optional(),
-  agent_price: z.number().min(50).optional(),
+  user_price: z.number().min(1).optional(),
+  agent_price: z.number().min(1).optional(),
+  admin_price: z.number().min(0).optional(),
   apiSource: z.enum(["API_A", "API_B", "API_C", "API_D"]).optional(),
   apiAPlanId: z.number().int().nonnegative().nullable().optional(),
   apiANetworkId: z.number().int().nonnegative().nullable().optional(),
@@ -48,12 +49,20 @@ export async function PATCH(
 
     const nextUserPrice = data.user_price ?? plan.user_price;
     const nextAgentPrice = data.agent_price ?? plan.agent_price;
+    const nextAdminPrice = data.admin_price ?? plan.admin_price ?? 0;
     const merged = { ...plan, ...data };
     const activeIds = getExternalIdsForSource(merged);
 
     if (nextAgentPrice > nextUserPrice) {
       return NextResponse.json(
         { error: "Agent price cannot exceed user price" },
+        { status: 400 }
+      );
+    }
+
+    if (nextAdminPrice > nextAgentPrice) {
+      return NextResponse.json(
+        { error: "Admin cost price cannot exceed agent price" },
         { status: 400 }
       );
     }
@@ -77,6 +86,7 @@ export async function PATCH(
         externalPlanId: activeIds.externalPlanId,
         externalNetworkId: activeIds.externalNetworkId,
         price: nextUserPrice,
+        admin_price: nextAdminPrice,
       },
     });
 

@@ -26,7 +26,10 @@ export async function GET(req: NextRequest) {
           network: plan.network,
           user_price: plan.user_price,
           agent_price: plan.agent_price,
+          admin_price: plan.admin_price,
           margin: plan.agent_price > 0 ? plan.user_price - plan.agent_price : 0,
+          customerMargin: plan.user_price - plan.admin_price,
+          agentMargin: plan.agent_price - plan.admin_price,
           externalPlanId: plan.externalPlanId,
         });
         return acc;

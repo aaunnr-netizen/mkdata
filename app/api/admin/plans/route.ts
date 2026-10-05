@@ -10,8 +10,9 @@ const planSchema = z
     network: z.enum(["MTN", "GLO", "AIRTEL", "NINEMOBILE"]),
     sizeLabel: z.string().min(1, "Size label is required"),
     validity: z.string().min(1, "Validity is required"),
-    user_price: z.number().min(50, "Minimum user price is N50"),
-    agent_price: z.number().min(50, "Minimum agent price is N50"),
+    user_price: z.number().min(1, "Minimum user price is N1"),
+    agent_price: z.number().min(1, "Minimum agent price is N1"),
+    admin_price: z.number().min(0, "Admin price must be non-negative").default(0),
     apiSource: z.enum(["API_A", "API_B", "API_C", "API_D"]),
     apiAPlanId: z.number().int().nonnegative().nullable().optional(),
     apiANetworkId: z.number().int().nonnegative().nullable().optional(),
@@ -26,6 +27,10 @@ const planSchema = z
   .refine((data) => data.agent_price <= data.user_price, {
     message: "Agent price cannot exceed user price",
     path: ["agent_price"],
+  })
+  .refine((data) => (data.admin_price ?? 0) <= data.agent_price, {
+    message: "Admin cost price cannot exceed agent price",
+    path: ["admin_price"],
   });
 
 export async function GET(req: NextRequest) {
@@ -95,6 +100,7 @@ export async function POST(req: NextRequest) {
         externalPlanId: activeIds.externalPlanId,
         externalNetworkId: activeIds.externalNetworkId,
         price: data.user_price,
+        admin_price: data.admin_price ?? 0,
         isActive: true,
       },
     });

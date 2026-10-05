@@ -202,6 +202,7 @@ model Plan {
   price               Int        // in NAIRA (deprecated - use user_price)
   user_price          Int        @default(0) // Standard customer price in NAIRA
   agent_price         Int        @default(0) // Reseller/bulk price in NAIRA
+  admin_price         Int        @default(0) // Admin/API gateway cost price in NAIRA
   apiSource           ApiSource
   externalPlanId      Int
   externalNetworkId   Int

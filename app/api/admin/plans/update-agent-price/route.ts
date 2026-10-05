@@ -8,10 +8,15 @@ const updatePricesSchema = z
     planId: z.string(),
     user_price: z.number().positive("User price must be positive"),
     agent_price: z.number().positive("Agent price must be positive"),
+    admin_price: z.number().min(0).optional(),
   })
   .refine((data) => data.agent_price <= data.user_price, {
     message: "Agent price cannot exceed user price",
     path: ["agent_price"],
+  })
+  .refine((data) => data.admin_price === undefined || data.admin_price <= data.agent_price, {
+    message: "Admin cost price cannot exceed agent price",
+    path: ["admin_price"],
   });
 
 const bulkUpdateSchema = z.object({
@@ -36,6 +41,7 @@ export async function POST(req: NextRequest) {
           user_price: update.user_price,
           agent_price: update.agent_price,
           price: update.user_price,
+          ...(update.admin_price !== undefined ? { admin_price: update.admin_price } : {}),
         },
       });
 
@@ -45,7 +51,10 @@ export async function POST(req: NextRequest) {
         sizeLabel: plan.sizeLabel,
         user_price: plan.user_price,
         agent_price: plan.agent_price,
+        admin_price: plan.admin_price,
         margin: plan.user_price - plan.agent_price,
+        customerMargin: plan.user_price - plan.admin_price,
+        agentMargin: plan.agent_price - plan.admin_price,
       });
     }
 
