@@ -20,6 +20,7 @@ import {
   Loader2,
   LogOut,
   Moon,
+  Sun,
   MessageCircle,
   Phone,
   Receipt,
@@ -38,29 +39,90 @@ import { safeLocalStorage, safeSessionStorage } from "@/lib/safe-storage";
 
 const fontStyle = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
-  body { background: #030b1f; }
-  input, select, textarea { color: #f8fbff; caret-color: #25b8ff; }
-  option { background: #0a1734; color: #f8fbff; }
-  input::placeholder, textarea::placeholder { color: #7fa5d8; }
+
+  :root, [data-theme="light"] {
+    --mk-bg: #f5faff;
+    --mk-surface: #ffffff;
+    --mk-card: #ffffff;
+    --mk-border: #d7e8ff;
+    --mk-border-strong: #cfe2fb;
+    --mk-blue: #008fef;
+    --mk-blue-light: rgba(0, 143, 239, 0.08);
+    --mk-blue-dark: #0060d0;
+    --mk-shadow: 0 10px 30px rgba(0, 143, 239, 0.08);
+    --mk-green: #059669;
+    --mk-amber: #d97706;
+    --mk-rose: #dc2626;
+    --mk-text: #06133a;
+    --mk-text-mid: #526079;
+    --mk-text-dim: #8aa0be;
+    --mk-header-bg: rgba(245, 250, 255, 0.88);
+    --mk-nav-bg: rgba(255, 255, 255, 0.90);
+    --mk-card-elevated: #ffffff;
+    --mk-input-bg: #ffffff;
+  }
+
+  [data-theme="dark"] {
+    --mk-bg: #060d1f;
+    --mk-surface: #0a162e;
+    --mk-card: #0e1d3c;
+    --mk-border: #1a3058;
+    --mk-border-strong: #27457a;
+    --mk-blue: #008fef;
+    --mk-blue-light: rgba(0, 143, 239, 0.16);
+    --mk-blue-dark: #0060d0;
+    --mk-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    --mk-green: #10b981;
+    --mk-amber: #f59e0b;
+    --mk-rose: #f43f5e;
+    --mk-text: #f8fbff;
+    --mk-text-mid: #9db2cf;
+    --mk-text-dim: #5b7294;
+    --mk-header-bg: rgba(6, 13, 31, 0.88);
+    --mk-nav-bg: rgba(10, 22, 46, 0.90);
+    --mk-card-elevated: #112347;
+    --mk-input-bg: #0e1d3c;
+  }
+
+  body {
+    background: var(--mk-bg);
+    color: var(--mk-text);
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  input, select, textarea {
+    color: var(--mk-text);
+    background: var(--mk-input-bg);
+    caret-color: var(--mk-blue);
+    border-color: var(--mk-border);
+  }
+  option {
+    background: var(--mk-surface);
+    color: var(--mk-text);
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--mk-text-dim);
+  }
 `;
 
 const T = {
-  bg: "#030b1f",
-  surface: "#0a1734",
-  card: "#0f2146",
-  border: "#1d3f73",
-  borderStrong: "#2d63a8",
-  blueLight: "rgba(0, 143, 239, 0.16)",
-  blue: "#25b8ff",
-  blueDark: "#06133a",
-  blueShadow: "0 20px 54px rgba(0, 143, 239, 0.28)",
-  green: "#17d96f",
-  amber: "#facc15",
-  rose: "#fb7185",
-  text: "#f8fbff",
-  textMid: "#bed4f7",
-  textDim: "#7fa5d8",
-  font: "'DM Sans', sans-serif",
+  bg: "var(--mk-bg, #f5faff)",
+  surface: "var(--mk-surface, #ffffff)",
+  card: "var(--mk-card, #ffffff)",
+  border: "var(--mk-border, #d7e8ff)",
+  borderStrong: "var(--mk-border-strong, #cfe2fb)",
+  blueLight: "var(--mk-blue-light, rgba(0, 143, 239, 0.08))",
+  blue: "var(--mk-blue, #008fef)",
+  blueDark: "var(--mk-blue-dark, #0060d0)",
+  blueShadow: "var(--mk-shadow, 0 10px 30px rgba(0, 143, 239, 0.08))",
+  green: "var(--mk-green, #059669)",
+  amber: "var(--mk-amber, #d97706)",
+  rose: "var(--mk-rose, #dc2626)",
+  text: "var(--mk-text, #06133a)",
+  textMid: "var(--mk-text-mid, #526079)",
+  textDim: "var(--mk-text-dim, #8aa0be)",
+  headerBg: "var(--mk-header-bg, rgba(245, 250, 255, 0.88))",
+  navBg: "var(--mk-nav-bg, rgba(255, 255, 255, 0.90))",
+  font: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   mono: "'DM Mono', monospace",
 };
 
@@ -440,37 +502,39 @@ function HomeActionCard({
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
       style={{
-        border: "none",
+        border: `1px solid ${T.border}`,
         background: T.card,
-        borderRadius: 16,
-        padding: "12px 10px",
-        minHeight: 84,
+        borderRadius: 18,
+        padding: "14px 10px",
+        minHeight: 88,
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-start",
         justifyContent: "space-between",
         cursor: "pointer",
-        boxShadow: "0 8px 18px rgba(15,23,42,0.06)",
+        boxShadow: T.blueShadow,
+        transition: "all 0.15s ease",
       }}
     >
       <div
         style={{
-          width: 34,
-          height: 34,
+          width: 36,
+          height: 36,
           borderRadius: 12,
           background,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
         {icon}
       </div>
-      <div style={{ textAlign: "left" }}>
-        <p style={{ fontFamily: T.font, fontWeight: 800, fontSize: 12, color: T.text, margin: "0 0 2px" }}>
+      <div style={{ textAlign: "left", width: "100%" }}>
+        <p style={{ fontFamily: T.font, fontWeight: 900, fontSize: 13, color: T.text, margin: "0 0 2px" }}>
           {title}
         </p>
-        <p style={{ fontFamily: T.font, fontSize: 10, color: color, margin: 0 }}>{subtitle}</p>
+        <p style={{ fontFamily: T.font, fontSize: 10, fontWeight: 700, color: color, margin: 0 }}>{subtitle}</p>
       </div>
     </motion.button>
   );
@@ -1360,101 +1424,168 @@ function HomeTab({
 }) {
   return (
     <>
+      {/* 1. WALLET BALANCE CARD */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: "radial-gradient(circle at 12% 0%, rgba(37,184,255,0.36) 0%, rgba(6,19,58,0.96) 38%, rgba(3,11,31,1) 100%)",
+          background: T.card,
           borderRadius: 22,
           padding: 16,
-          border: `1px solid ${T.borderStrong}`,
+          border: `1px solid ${T.border}`,
           boxShadow: T.blueShadow,
-          marginBottom: 18,
+          marginBottom: 14,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-          <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-            <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: 0 }}>
-              Wallet Balance
-            </p>
-            <p style={{ display: "none", fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.blueDark, margin: "0 0 8px" }}>
-              {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(user.balance / 100) : "••••••"}
-            </p>
-            <p style={{ display: "none", fontFamily: T.font, fontSize: 12, fontWeight: 700, color: T.textMid, margin: 0 }}>
-              Payment channel update in progress
-            </p>
-            <p
-              style={{
-                fontFamily: T.mono,
-                fontSize: "clamp(20px, 6vw, 30px)",
-                lineHeight: 1,
-                fontWeight: 900,
-                color: T.text,
-                margin: 0,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(user.balance / 100) : "******"}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: T.green }} />
+            <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: T.textDim, margin: 0, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Available Wallet Balance
             </p>
           </div>
-          <div style={{ display: "flex", flex: "0 0 auto", gap: 8 }}>
+          <div style={{ display: "flex", flex: "0 0 auto", gap: 6 }}>
             <button
               onClick={onToggleBalance}
+              title={showBalance ? "Hide balance" : "Show balance"}
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 14,
-                border: `1px solid ${T.borderStrong}`,
-                background: T.card,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                border: `1px solid ${T.border}`,
+                background: T.blueLight,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
+                transition: "all 0.15s",
               }}
             >
-              {showBalance ? <Eye size={17} color={T.blue} /> : <EyeOff size={17} color={T.blue} />}
+              {showBalance ? <Eye size={16} color={T.blue} /> : <EyeOff size={16} color={T.blue} />}
             </button>
             <button
               onClick={onSyncBalance}
+              title="Refresh balance"
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 14,
-                border: `1px solid ${T.borderStrong}`,
-                background: T.card,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                border: `1px solid ${T.border}`,
+                background: T.blueLight,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
+                transition: "all 0.15s",
               }}
             >
-              {syncingBalance ? <Loader2 size={17} className="animate-spin" color={T.blue} /> : <RefreshCw size={16} color={T.blue} />}
+              {syncingBalance ? <Loader2 size={16} className="animate-spin" color={T.blue} /> : <RefreshCw size={15} color={T.blue} />}
             </button>
           </div>
         </div>
 
-        <p style={{ display: "none", fontFamily: T.mono, fontSize: 28, fontWeight: 800, color: T.blueDark, margin: "0 0 10px" }}>
-          {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(user.balance / 100) : "••••••"}
-        </p>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+          <p
+            style={{
+              fontFamily: T.mono,
+              fontSize: "clamp(24px, 7vw, 32px)",
+              lineHeight: 1.1,
+              fontWeight: 900,
+              color: T.text,
+              margin: 0,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              letterSpacing: "-0.03em",
+            }}
+          >
+            {showBalance ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(user.balance / 100) : "••••••••"}
+          </p>
+          <button
+            onClick={onOpenAccounts}
+            style={{
+              border: "none",
+              borderRadius: 12,
+              padding: "7px 12px",
+              background: T.blueLight,
+              color: T.blue,
+              fontFamily: T.font,
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              whiteSpace: "nowrap",
+            }}
+          >
+            + Fund
+          </button>
+        </div>
+      </motion.div>
 
+      {/* 2. DEDICATED FUNDING ACCOUNT CARD (Signature /dashboard Electric Sky Blue) */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        style={{
+          background: "linear-gradient(135deg, #008fef 0%, #0060d0 100%)",
+          borderRadius: 22,
+          padding: 16,
+          boxShadow: "0 10px 28px rgba(0, 143, 239, 0.24)",
+          color: "#ffffff",
+          marginBottom: 18,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
         <div
           style={{
-            border: `1px solid ${T.border}`,
-            borderRadius: 16,
-            padding: "9px 11px",
-            background: "rgba(3,11,31,0.58)",
+            position: "absolute",
+            top: -24,
+            right: -24,
+            width: 100,
+            height: 100,
+            borderRadius: "50%",
+            background: "rgba(255, 255, 255, 0.08)",
+            pointerEvents: "none",
           }}
-        >
-          {primaryAccount ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        />
+
+        {primaryAccount ? (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255, 255, 255, 0.20)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                }}
+              >
+                <CreditCard size={12} color="#fff" />
+                <span style={{ fontFamily: T.font, fontSize: 11, fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {primaryAccount.bankName || "9PSB Bank"}
+                </span>
+              </div>
+              <span style={{ fontFamily: T.font, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Auto-Fund • 1% Fee
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
               <div>
-                <p style={{ margin: "0 0 5px", fontFamily: T.font, fontSize: 11, fontWeight: 800, color: T.textDim, textTransform: "uppercase" }}>
-                  Funding Account ({primaryAccount.bankCode})
+                <p style={{ margin: "0 0 4px", fontFamily: T.font, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Dedicated Account No.
                 </p>
-                <p style={{ margin: 0, fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: T.text }}>
-                  {primaryAccount.accountNumber} • {primaryAccount.bankName}
+                <p style={{ margin: 0, fontFamily: T.mono, fontSize: "clamp(20px, 6vw, 26px)", fontWeight: 900, color: "#ffffff", letterSpacing: "0.06em", lineHeight: 1 }}>
+                  {primaryAccount.accountNumber}
                 </p>
               </div>
               <button
@@ -1462,45 +1593,65 @@ function HomeTab({
                 style={{
                   border: "none",
                   borderRadius: 12,
-                  padding: "8px 10px",
-                  background: T.blueLight,
-                  color: T.blue,
+                  padding: "8px 12px",
+                  background: "#ffffff",
+                  color: "#0060d0",
                   fontFamily: T.font,
-                  fontWeight: 800,
+                  fontSize: 12,
+                  fontWeight: 900,
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
                   cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.14)",
+                  transition: "transform 0.15s ease",
+                  flexShrink: 0,
                 }}
               >
-                <Copy size={14} />
+                <Copy size={13} />
                 Copy
               </button>
             </div>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <p style={{ fontFamily: T.font, fontSize: 13, fontWeight: 700, color: T.textMid, margin: 0 }}>
-                No reserved account yet. Create one to fund your wallet.
+
+            <div style={{ paddingTop: 8, borderTop: "1px solid rgba(255, 255, 255, 0.18)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {primaryAccount.accountName || (user.fullName ? `MK DATA SUB - ${user.fullName}` : "MK DATA SUB")}
               </p>
-              <button
-                onClick={onOpenAccounts}
-                style={{
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "8px 10px",
-                  background: T.blue,
-                  color: "#fff",
-                  fontFamily: T.font,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Create Account
-              </button>
+              <p style={{ margin: 0, fontFamily: T.font, fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.75)", whiteSpace: "nowrap" }}>
+                Instant Credit
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <p style={{ fontFamily: T.font, fontSize: 13, fontWeight: 800, color: "#ffffff", margin: "0 0 3px" }}>
+                Dedicated Virtual Account
+              </p>
+              <p style={{ fontFamily: T.font, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)", margin: 0 }}>
+                Instant 24/7 wallet funding via transfer
+              </p>
+            </div>
+            <button
+              onClick={onOpenAccounts}
+              style={{
+                border: "none",
+                borderRadius: 12,
+                padding: "9px 13px",
+                background: "#ffffff",
+                color: "#0060d0",
+                fontFamily: T.font,
+                fontSize: 12,
+                fontWeight: 900,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              }}
+            >
+              Get Account
+            </button>
+          </div>
+        )}
       </motion.div>
 
       <motion.div
@@ -1920,14 +2071,17 @@ function AccountsTab({
 
 function ProfileTab({
   user,
+  theme,
+  onToggleTheme,
   onLogout,
 }: {
   user: UserData;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
   onLogout: () => void;
 }) {
   const [securityOpen, setSecurityOpen] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [darkThemeEnabled, setDarkThemeEnabled] = useState(false);
   const [metrics, setMetrics] = useState({ volume: 0, count: 0 });
 
   useEffect(() => {
@@ -1946,11 +2100,6 @@ function ProfileTab({
   const toggleHaptics = () => {
     setHapticsEnabled((value) => !value);
     toast.success(`Haptics ${hapticsEnabled ? "disabled" : "enabled"}.`);
-  };
-
-  const toggleTheme = () => {
-    setDarkThemeEnabled((value) => !value);
-    toast.info("Theme preference saved on this device.");
   };
 
   return (
@@ -2013,10 +2162,10 @@ function ProfileTab({
               icon: <Sparkles size={16} color={T.blue} />,
             },
             {
-              label: "Theme",
-              sub: darkThemeEnabled ? "Dark preference saved" : "Light preference saved",
-              action: toggleTheme,
-              icon: <Moon size={16} color={T.blue} />,
+              label: "Appearance",
+              sub: theme === "light" ? "Light theme (Click for Dark)" : "Dark theme (Click for Light)",
+              action: onToggleTheme,
+              icon: theme === "light" ? <Sun size={16} color="#f59e0b" /> : <Moon size={16} color={T.blue} />,
             },
             {
               label: "Change PIN",
@@ -2146,15 +2295,18 @@ function ProfileTab({
 function ModernProfileTab({
   user,
   accounts,
+  theme,
+  onToggleTheme,
   onLogout,
 }: {
   user: UserData;
   accounts: BankAccountItem[];
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
   onLogout: () => void;
 }) {
   const [securityOpen, setSecurityOpen] = useState(false);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
-  const [darkThemeEnabled, setDarkThemeEnabled] = useState(false);
   const [enrollingBiometric, setEnrollingBiometric] = useState(false);
   const [metrics, setMetrics] = useState({ volume: 0, count: 0 });
 
@@ -2240,13 +2392,10 @@ function ModernProfileTab({
       icon: <Sparkles size={17} color={T.blue} />,
     },
     {
-      label: "Theme",
-      sub: darkThemeEnabled ? "Dark preference saved" : "Light preference saved",
-      action: () => {
-        setDarkThemeEnabled((value) => !value);
-        toast.info("Theme preference saved on this device.");
-      },
-      icon: <Moon size={17} color={T.blue} />,
+      label: "Appearance",
+      sub: theme === "light" ? "Light theme (Click for Dark)" : "Dark theme (Click for Light)",
+      action: onToggleTheme,
+      icon: theme === "light" ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color={T.blue} />,
     },
     {
       label: "Enroll fingerprint",
@@ -3518,9 +3667,10 @@ function TabBar({
           width: "100%",
           maxWidth: 390,
           borderRadius: 26,
-          background: "rgba(6,19,58,0.92)",
-          backdropFilter: "blur(18px)",
-          border: `1px solid ${T.borderStrong}`,
+          background: T.navBg,
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: `1px solid ${T.border}`,
           boxShadow: T.blueShadow,
           padding: 10,
           display: "grid",
@@ -4091,7 +4241,7 @@ function AdminBottomNav({
 
   return (
     <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 10px 12px" }}>
-      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(6,19,58,0.92)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
+      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: T.navBg, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: `1px solid ${T.border}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -4211,6 +4361,36 @@ export default function DashboardPage() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AppTab>("home");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = safeLocalStorage.getItem("mk_theme") as "light" | "dark" | null;
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    } else if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme);
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "light" ? "dark" : "light";
+      safeLocalStorage.setItem("mk_theme", next);
+      toast.info(`Switched to ${next === "light" ? "Light" : "Dark"} mode`);
+      return next;
+    });
+  };
   const [showBalance, setShowBalance] = useState(true);
   const [syncingBalance, setSyncingBalance] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<BankAccountItem[]>([]);
@@ -5045,9 +5225,10 @@ export default function DashboardPage() {
               position: "sticky",
               top: 0,
               zIndex: 40,
-              background: "rgba(3,11,31,0.88)",
-              backdropFilter: "blur(18px)",
-              borderBottom: `1px solid ${T.borderStrong}`,
+              background: T.headerBg,
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              borderBottom: `1px solid ${T.border}`,
             }}
           >
             <div
@@ -5093,28 +5274,50 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                style={{
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "8px 12px",
-                  background: "rgba(225,29,72,0.1)",
-                  color: T.rose,
-                  fontFamily: T.font,
-                  fontSize: 11,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  transition: "background 0.2s",
-                }}
-              >
-                <LogOut size={13} />
-                Logout
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  onClick={handleToggleTheme}
+                  title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
+                  style={{
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 12,
+                    width: 36,
+                    height: 36,
+                    background: T.card,
+                    color: theme === "light" ? "#d97706" : "#38bdf8",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {theme === "light" ? <Sun size={17} /> : <Moon size={17} />}
+                </button>
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    border: "none",
+                    borderRadius: 12,
+                    padding: "8px 12px",
+                    background: "rgba(225,29,72,0.1)",
+                    color: T.rose,
+                    fontFamily: T.font,
+                    fontSize: 11,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    transition: "background 0.2s",
+                  }}
+                >
+                  <LogOut size={13} />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -5125,9 +5328,10 @@ export default function DashboardPage() {
               position: "sticky",
               top: 0,
               zIndex: 40,
-              background: "rgba(3,11,31,0.88)",
-              backdropFilter: "blur(18px)",
-              borderBottom: `1px solid ${T.borderStrong}`,
+              background: T.headerBg,
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              borderBottom: `1px solid ${T.border}`,
             }}
           >
             <div
@@ -5137,58 +5341,82 @@ export default function DashboardPage() {
                 padding: "12px 16px",
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 gap: 12,
                 minHeight: 38,
                 boxSizing: "border-box",
               }}
             >
-              {(["buy", "electricity", "cable", "exam", "accounts", "agent"] as AppTab[]).includes(activeTab) ? (
-                <button
-                  onClick={() => setActiveTab("home")}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {(["buy", "electricity", "cable", "exam", "accounts", "agent"] as AppTab[]).includes(activeTab) ? (
+                  <button
+                    onClick={() => setActiveTab("home")}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: T.blue,
+                      padding: 0,
+                      margin: 0,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                ) : null}
+                <h1
                   style={{
-                    border: "none",
-                    background: "transparent",
-                    color: T.blue,
-                    padding: 0,
+                    fontFamily: T.font,
+                    fontSize: 16,
+                    fontWeight: 900,
+                    color: T.text,
                     margin: 0,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
                   }}
                 >
-                  <ChevronLeft size={24} />
-                </button>
-              ) : null}
-              <h1
+                  {activeTab === "buy"
+                    ? (purchaseMode === "data" ? "Buy Data" : "Buy Airtime")
+                    : activeTab === "electricity"
+                    ? "Buy Electricity"
+                    : activeTab === "cable"
+                    ? "Cable TV"
+                    : activeTab === "exam"
+                    ? "Exam PINs"
+                    : activeTab === "transactions"
+                    ? "Transactions"
+                    : activeTab === "support"
+                    ? "Support"
+                    : activeTab === "profile"
+                    ? "Profile"
+                    : activeTab === "accounts"
+                    ? "Reserved Accounts"
+                    : activeTab === "agent"
+                    ? "Agent Application"
+                    : "MK Data"}
+                </h1>
+              </div>
+
+              <button
+                onClick={handleToggleTheme}
+                title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
                 style={{
-                  fontFamily: T.font,
-                  fontSize: 16,
-                  fontWeight: 900,
-                  color: T.text,
-                  margin: 0,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 12,
+                  width: 34,
+                  height: 34,
+                  background: T.card,
+                  color: theme === "light" ? "#d97706" : "#38bdf8",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                  flexShrink: 0,
                 }}
               >
-                {activeTab === "buy"
-                  ? (purchaseMode === "data" ? "Buy Data" : "Buy Airtime")
-                  : activeTab === "electricity"
-                  ? "Buy Electricity"
-                  : activeTab === "cable"
-                  ? "Cable TV"
-                  : activeTab === "exam"
-                  ? "Exam PINs"
-                  : activeTab === "transactions"
-                  ? "Transactions"
-                  : activeTab === "support"
-                  ? "Support"
-                  : activeTab === "profile"
-                  ? "Profile"
-                  : activeTab === "accounts"
-                  ? "Reserved Accounts"
-                  : activeTab === "agent"
-                  ? "Agent Application"
-                  : "MK Data"}
-              </h1>
+                {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
             </div>
           </div>
         )}
@@ -5324,7 +5552,7 @@ export default function DashboardPage() {
           ) : activeTab === "agent" ? (
             <AgentTab />
           ) : (
-            <ModernProfileTab user={user} accounts={bankAccounts} onLogout={handleLogout} />
+            <ModernProfileTab user={user} accounts={bankAccounts} theme={theme} onToggleTheme={handleToggleTheme} onLogout={handleLogout} />
           )}
         </main>
 

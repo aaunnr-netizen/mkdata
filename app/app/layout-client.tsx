@@ -62,10 +62,11 @@ export default function AppLayoutClient({
   }, []);
 
   return (
-    <div className="flex min-h-[100dvh] w-full justify-center bg-[#eef7ff] p-0">
+    <div className="flex min-h-[100dvh] w-full justify-center p-0 transition-colors" style={{ backgroundColor: "var(--mk-bg, #f5faff)" }}>
       <div
-        className="relative z-10 min-h-[100dvh] w-full max-w-[390px] overflow-x-hidden bg-[#f5faff] md:shadow-[0_0_0_1px_rgba(0,143,239,0.08),0_18px_60px_rgba(0,16,64,0.10)]"
+        className="relative z-10 min-h-[100dvh] w-full max-w-[390px] overflow-x-hidden md:shadow-[0_0_0_1px_rgba(0,143,239,0.08),0_18px_60px_rgba(0,16,64,0.10)] transition-colors"
         style={{
+          backgroundColor: "var(--mk-bg, #f5faff)",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
         }}

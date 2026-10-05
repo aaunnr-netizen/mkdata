@@ -26,22 +26,24 @@ import {
 import { toast } from "sonner";
 
 const T = {
-  bg: "#030b1f",
-  surface: "#0a1734",
-  card: "#0f2146",
-  border: "#1d3f73",
-  borderStrong: "#2d63a8",
-  blueLight: "rgba(0, 143, 239, 0.16)",
-  blue: "#25b8ff",
-  blueDark: "#06133a",
-  blueShadow: "0 20px 54px rgba(0, 143, 239, 0.28)",
-  green: "#17d96f",
-  amber: "#facc15",
-  rose: "#fb7185",
-  text: "#f8fbff",
-  textMid: "#bed4f7",
-  textDim: "#7fa5d8",
-  font: "'DM Sans', sans-serif",
+  bg: "var(--mk-bg, #f5faff)",
+  surface: "var(--mk-surface, #ffffff)",
+  card: "var(--mk-card, #ffffff)",
+  border: "var(--mk-border, #d7e8ff)",
+  borderStrong: "var(--mk-border-strong, #cfe2fb)",
+  blueLight: "var(--mk-blue-light, rgba(0, 143, 239, 0.08))",
+  blue: "var(--mk-blue, #008fef)",
+  blueDark: "var(--mk-blue-dark, #0060d0)",
+  blueShadow: "var(--mk-shadow, 0 10px 30px rgba(0, 143, 239, 0.08))",
+  green: "var(--mk-green, #059669)",
+  amber: "var(--mk-amber, #d97706)",
+  rose: "var(--mk-rose, #dc2626)",
+  text: "var(--mk-text, #06133a)",
+  textMid: "var(--mk-text-mid, #526079)",
+  textDim: "var(--mk-text-dim, #8aa0be)",
+  headerBg: "var(--mk-header-bg, rgba(245, 250, 255, 0.88))",
+  navBg: "var(--mk-nav-bg, rgba(255, 255, 255, 0.90))",
+  font: "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   mono: "'DM Mono', monospace",
 };
 
@@ -1519,7 +1521,7 @@ function AdminBottomNav({ activeTab, onChange }: { activeTab: AdminTab; onChange
 
   return (
     <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", justifyContent: "center", padding: "0 10px 12px" }}>
-      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: "rgba(6,19,58,0.92)", backdropFilter: "blur(18px)", border: `1px solid ${T.borderStrong}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
+      <div style={{ width: "100%", maxWidth: 390, borderRadius: 24, background: T.navBg, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: `1px solid ${T.border}`, boxShadow: T.blueShadow, padding: 8, display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 6 }}>
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -1604,7 +1606,7 @@ export function InAppAdminShell({
 
   return (
     <div style={{ minHeight: "100dvh", background: T.bg, paddingBottom: 104 }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(3,11,31,0.88)", backdropFilter: "blur(18px)", borderBottom: `1px solid ${T.borderStrong}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 40, background: T.headerBg, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 390, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
             <img src="/logo.jpeg" alt="MK Data" style={{ width: 42, height: 42, borderRadius: 15, objectFit: "cover", boxShadow: "0 8px 18px rgba(0,143,239,0.16)", flexShrink: 0 }} />
