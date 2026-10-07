@@ -113,7 +113,9 @@ export default function DeveloperWebhooksPage() {
   }, []);
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     toast.success("Webhook signing secret copied to clipboard!");
   };
 

@@ -12,7 +12,9 @@ export function FundingModal() {
   if (!isFundingOpen) return null;
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     setCopied(true);
     toast.success("Account number copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);

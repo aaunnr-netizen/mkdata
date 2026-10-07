@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Lock, Phone, User, Mail, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Phone, User, Mail, ShieldCheck, ArrowRight, Loader2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { getFriendlyMessage } from "@/lib/user-feedback";
 
@@ -416,8 +416,19 @@ export default function DashboardLoginPage() {
             </form>
           )}
 
+          {/* Mobile App Switch Link */}
+          <div className="mt-4 pt-3 border-t border-[#eaf2ff] text-center">
+            <Link
+              href="/app"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#008fef] hover:underline"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              Buying personal airtime or data? Open Mobile App
+            </Link>
+          </div>
+
           {/* Security Assurance */}
-          <div className="mt-6 pt-5 border-t border-[#eaf2ff] flex items-center justify-center gap-2 text-xs text-[#526079]">
+          <div className="mt-3 pt-3 border-t border-[#eaf2ff] flex items-center justify-center gap-2 text-xs text-[#526079]">
             <ShieldCheck className="h-4 w-4 text-[#00a040]" />
             <span>Bank-grade 256-bit SSL encryption</span>
           </div>

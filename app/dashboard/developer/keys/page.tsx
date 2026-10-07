@@ -72,7 +72,9 @@ export default function DeveloperKeysPage() {
   }, []);
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     toast.success("API Key copied to clipboard!");
   };
 

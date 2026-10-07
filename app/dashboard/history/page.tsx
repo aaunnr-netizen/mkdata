@@ -44,6 +44,22 @@ export default function DashboardHistoryPage() {
     fetchTransactions();
   }, []);
 
+  const formatSafeDate = (dateVal: any) => {
+    if (!dateVal) return "—";
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "—";
+    }
+  };
+
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
       // Type filter
@@ -254,12 +270,7 @@ export default function DashboardHistoryPage() {
                     </td>
                     <td className="py-3.5 px-5">{getStatusBadge(tx.status)}</td>
                     <td className="py-3.5 px-5 text-[#8aa0be]">
-                      {new Date(tx.createdAt).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatSafeDate(tx.createdAt)}
                     </td>
                     <td className="py-3.5 px-5 text-right">
                       <button

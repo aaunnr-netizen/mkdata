@@ -77,7 +77,9 @@ export default function DeveloperPlansPage() {
   }, []);
 
   const handleCopyId = (id: number) => {
-    navigator.clipboard.writeText(String(id));
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(String(id)).catch(() => {});
+    }
     setCopiedId(id);
     toast.success(`Copied Plan ID: ${id}`);
     setTimeout(() => setCopiedId(null), 2000);
@@ -109,7 +111,9 @@ const NETWORK_ID_MAP: Record<string, number> = {
   );
 
   const handleCopyPayload = () => {
-    navigator.clipboard.writeText(sampleJson);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(sampleJson).catch(() => {});
+    }
     setCopiedPayload(true);
     toast.success("Sample JSON payload copied.");
     setTimeout(() => setCopiedPayload(false), 2000);

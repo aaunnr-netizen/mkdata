@@ -53,9 +53,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (!res.ok || !data.success || !data.data) {
         setUser(null);
-        if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") && window.location.pathname !== "/dashboard/login") {
-          router.replace("/dashboard/login");
-        }
         return;
       }
 
@@ -76,13 +73,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       });
     } catch {
       setUser(null);
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") && window.location.pathname !== "/dashboard/login") {
-        router.replace("/dashboard/login");
-      }
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   const fetchReservedAccount = useCallback(async () => {
     setLoadingAccount(true);
@@ -150,12 +144,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
-
-  useEffect(() => {
-    if (pathname && pathname.startsWith("/dashboard") && pathname !== "/dashboard/login" && !user) {
-      fetchUser();
-    }
-  }, [pathname, user, fetchUser]);
 
   useEffect(() => {
     if (user && !reservedAccount) {

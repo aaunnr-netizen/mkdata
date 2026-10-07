@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { DashboardProvider, useDashboard } from "@/components/dashboard/DashboardContext";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
@@ -9,6 +9,7 @@ import { FundingModal } from "@/components/dashboard/FundingModal";
 import { Loader2 } from "lucide-react";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
   const { user, loading } = useDashboard();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -24,6 +25,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  React.useEffect(() => {
+    if (!loading && !user && !isAuthPage) {
+      router.replace("/dashboard/login");
+    }
+  }, [loading, user, isAuthPage, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5faff]">
@@ -34,14 +41,6 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  React.useEffect(() => {
-    if (!loading && !user && !isAuthPage) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard/login";
-      }
-    }
-  }, [loading, user, isAuthPage]);
 
   // If not authenticated and not on login page, render clean redirecting guard to prevent layout/balance flash
   if (!user) {

@@ -53,8 +53,26 @@ export default function DashboardHomePage() {
       .finally(() => setLoadingTx(false));
   }, []);
 
+  const formatSafeDate = (dateVal: any) => {
+    if (!dateVal) return "—";
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "—";
+    }
+  };
+
   const handleCopyAccount = (acc: string) => {
-    navigator.clipboard.writeText(acc);
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(acc).catch(() => {});
+    }
     setCopied(true);
     toast.success("Account number copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
@@ -423,12 +441,7 @@ export default function DashboardHomePage() {
                     </td>
                     <td className="py-3.5 px-5">{getStatusBadge(tx.status)}</td>
                     <td className="py-3.5 px-5 text-right text-[#8aa0be]">
-                      {new Date(tx.createdAt).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatSafeDate(tx.createdAt)}
                     </td>
                   </tr>
                 ))}
