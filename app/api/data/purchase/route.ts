@@ -318,7 +318,7 @@ export async function POST(req: NextRequest) {
             where: { reference },
             data: {
               status: "FAILED",
-              description: errorMessage,
+              description: `${plan.name} (${plan.sizeLabel}) -> ${recipientPhone} (${errorMessage})`,
               externalReference: apiResult.externalReference || undefined,
             },
           });
@@ -332,7 +332,7 @@ export async function POST(req: NextRequest) {
         data: {
           status: "SUCCESS",
           externalReference: apiResult.externalReference || undefined,
-          description: apiResult.message,
+          description: `${plan.name} (${plan.sizeLabel}) -> ${recipientPhone}`,
         },
       });
 

@@ -13,6 +13,12 @@ export interface TransactionDetail {
   phone?: string;
   description?: string;
   createdAt: string;
+  plan?: {
+    name: string;
+    sizeLabel: string;
+    network: string;
+    dataType: string;
+  } | null;
 }
 
 interface TransactionReceiptModalProps {
@@ -107,7 +113,9 @@ export function TransactionReceiptModal({
             <div className="flex justify-between py-1 border-b border-[#f0f7ff]">
               <span className="text-[#526079]">Description:</span>
               <span className="font-semibold text-[#06133a] text-right max-w-[200px]">
-                {transaction.description || transaction.phone || "Vending order"}
+                {transaction.plan
+                  ? `${transaction.plan.network} ${transaction.plan.sizeLabel} (${transaction.plan.dataType || transaction.plan.name})`
+                  : transaction.description || transaction.phone || "Vending order"}
               </span>
             </div>
             {transaction.phone && (

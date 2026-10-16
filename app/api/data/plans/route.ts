@@ -24,10 +24,25 @@ export async function GET(req: NextRequest) {
       orderBy: [{ user_price: "asc" }, { price: "asc" }],
     });
 
-    const serializedPlans = plans.map((plan) => ({
-      ...plan,
-      price: plan.user_price > 0 ? plan.user_price : plan.price,
-    }));
+    const serializedPlans = plans.map((plan) => {
+      const size = (plan.sizeLabel || "").trim();
+      const rawName = (plan.name || "").trim();
+      const type = (plan.dataType || "SME").trim();
+      const displayName =
+        size && !rawName.toUpperCase().includes(size.toUpperCase())
+          ? `${size} ${rawName}`
+          : rawName || size;
+
+      return {
+        ...plan,
+        name: rawName,
+        sizeLabel: size,
+        price: plan.user_price > 0 ? plan.user_price : plan.price,
+        size,
+        type,
+        displayName,
+      };
+    });
 
     return NextResponse.json(
       { success: true, data: serializedPlans, plans: serializedPlans },

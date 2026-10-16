@@ -13,11 +13,25 @@ interface PlanItem {
   id: string;
   name: string;
   network: string;
-  type: string;
-  size: string;
+  type?: string;
+  dataType?: string;
+  size?: string;
+  sizeLabel?: string;
+  displayName?: string;
   validity: string;
   price: number;
   agent_price?: number;
+}
+
+function formatPlanTitle(plan?: PlanItem | null) {
+  if (!plan) return "";
+  if (plan.displayName) return plan.displayName.trim();
+  const size = (plan.sizeLabel || plan.size || "").trim();
+  const name = (plan.name || "").trim();
+  if (size && !name.toUpperCase().includes(size.toUpperCase())) {
+    return `${size} ${name}`.trim();
+  }
+  return name || size;
 }
 
 const NETWORKS = [
@@ -62,7 +76,8 @@ export default function DashboardDataPage() {
   const categories = useMemo(() => {
     const set = new Set<string>(["ALL"]);
     plans.forEach((p) => {
-      if (p.type) set.add(p.type.toUpperCase());
+      const type = p.dataType || p.type;
+      if (type) set.add(type.toUpperCase());
     });
     return Array.from(set);
   }, [plans]);
@@ -70,7 +85,10 @@ export default function DashboardDataPage() {
   // Filtered plans
   const filteredPlans = useMemo(() => {
     if (selectedCategory === "ALL") return plans;
-    return plans.filter((p) => (p.type || "").toUpperCase() === selectedCategory);
+    return plans.filter((p) => {
+      const type = p.dataType || p.type || "";
+      return type.toUpperCase() === selectedCategory;
+    });
   }, [plans, selectedCategory]);
 
   const selectedPlan = plans.find((p) => p.id === selectedPlanId);
@@ -147,7 +165,7 @@ export default function DashboardDataPage() {
         amount: activePrice,
         status: data.transaction?.status || "SUCCESS",
         phone: recipientPhone.trim(),
-        description: `${selectedNetwork.toUpperCase()} ${selectedPlan.name} (${selectedPlan.size || ""})`,
+        description: `${selectedNetwork.toUpperCase()} ${formatPlanTitle(selectedPlan)}`,
         createdAt: new Date().toISOString(),
       });
     } catch (err: any) {
@@ -320,10 +338,10 @@ export default function DashboardDataPage() {
                         </div>
                         <div>
                           <p className="text-xs font-bold text-[#06133a]">
-                            {plan.name} {plan.size && `(${plan.size})`}
+                            {formatPlanTitle(plan)}
                           </p>
                           <p className="text-[10px] text-[#526079]">
-                            {plan.type?.toUpperCase()} • {plan.validity || "30 Days"}
+                            {(plan.dataType || plan.type || "DATA")?.toUpperCase()} • {plan.validity || "30 Days"}
                           </p>
                         </div>
                       </div>
@@ -361,7 +379,7 @@ export default function DashboardDataPage() {
               <div className="flex justify-between">
                 <span className="text-[#526079]">Bundle:</span>
                 <span className="font-bold text-[#06133a] truncate max-w-[150px]">
-                  {selectedPlan?.name || "Not selected"}
+                  {selectedPlan ? formatPlanTitle(selectedPlan) : "Not selected"}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -410,7 +428,7 @@ export default function DashboardDataPage() {
         title="Authorize Data Purchase"
         amount={activePrice}
         recipient={recipientPhone}
-        itemDescription={`${selectedNetwork.toUpperCase()} ${selectedPlan?.name || ""} (${selectedPlan?.size || ""})`}
+        itemDescription={`${selectedNetwork.toUpperCase()} ${formatPlanTitle(selectedPlan)}`}
         loading={submitting}
       />
 

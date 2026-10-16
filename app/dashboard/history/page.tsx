@@ -82,7 +82,12 @@ export default function DashboardHistoryPage() {
         const matchesRef = (tx.reference || "").toLowerCase().includes(q);
         const matchesPhone = (tx.phone || "").toLowerCase().includes(q);
         const matchesDesc = (tx.description || "").toLowerCase().includes(q);
-        if (!matchesRef && !matchesPhone && !matchesDesc) return false;
+        const matchesPlan = tx.plan
+          ? `${tx.plan.network} ${tx.plan.sizeLabel} ${tx.plan.name} ${tx.plan.dataType}`
+              .toLowerCase()
+              .includes(q)
+          : false;
+        if (!matchesRef && !matchesPhone && !matchesDesc && !matchesPlan) return false;
       }
 
       return true;
@@ -96,15 +101,21 @@ export default function DashboardHistoryPage() {
     }
 
     const headers = ["Reference", "Type", "Recipient/Phone", "Description", "Amount (NGN)", "Status", "Date"];
-    const rows = filtered.map((tx) => [
-      `"${tx.reference}"`,
-      `"${tx.type}"`,
-      `"${tx.phone || ""}"`,
-      `"${(tx.description || "").replace(/"/g, '""')}"`,
-      tx.amount,
-      `"${tx.status}"`,
-      `"${new Date(tx.createdAt).toISOString()}"`,
-    ]);
+    const rows = filtered.map((tx) => {
+      const desc = tx.plan
+        ? `${tx.plan.network} ${tx.plan.sizeLabel} (${tx.plan.dataType || tx.plan.name})`
+        : tx.description || "";
+
+      return [
+        `"${tx.reference}"`,
+        `"${tx.type}"`,
+        `"${tx.phone || ""}"`,
+        `"${desc.replace(/"/g, '""')}"`,
+        tx.amount,
+        `"${tx.status}"`,
+        `"${new Date(tx.createdAt).toISOString()}"`,
+      ];
+    });
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -262,8 +273,25 @@ export default function DashboardHistoryPage() {
                     <td className="py-3.5 px-5 font-semibold text-[#06133a] uppercase">
                       {tx.type}
                     </td>
-                    <td className="py-3.5 px-5 text-[#526079] max-w-[220px] truncate">
-                      {tx.description || tx.phone || "—"}
+                    <td
+                      className="py-3.5 px-5 text-[#526079] max-w-[240px] truncate"
+                      title={
+                        tx.plan
+                          ? `${tx.plan.network} ${tx.plan.sizeLabel} (${tx.plan.dataType || tx.plan.name})`
+                          : tx.description || tx.phone || "—"
+                      }
+                    >
+                      {tx.plan ? (
+                        <span>
+                          <strong className="text-[#06133a] font-semibold">
+                            {tx.plan.network} {tx.plan.sizeLabel}
+                          </strong>{" "}
+                          ({tx.plan.dataType || tx.plan.name})
+                          {tx.phone && <span className="text-[#8aa0be]"> • {tx.phone}</span>}
+                        </span>
+                      ) : (
+                        tx.description || tx.phone || "—"
+                      )}
                     </td>
                     <td className="py-3.5 px-5 font-bold text-[#06133a]">
                       ₦{Number(tx.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

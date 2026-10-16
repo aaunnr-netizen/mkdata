@@ -33,6 +33,12 @@ interface TransactionItem {
   phone?: string;
   description?: string;
   createdAt: string;
+  plan?: {
+    name: string;
+    sizeLabel: string;
+    network: string;
+    dataType: string;
+  } | null;
 }
 
 export default function DashboardHomePage() {
@@ -433,8 +439,25 @@ export default function DashboardHomePage() {
                     <td className="py-3.5 px-5 font-semibold text-[#06133a] uppercase">
                       {tx.type}
                     </td>
-                    <td className="py-3.5 px-5 text-[#526079] max-w-[240px] truncate">
-                      {tx.description || tx.phone || "Vending order"}
+                    <td
+                      className="py-3.5 px-5 text-[#526079] max-w-[260px] truncate"
+                      title={
+                        tx.plan
+                          ? `${tx.plan.network} ${tx.plan.sizeLabel} (${tx.plan.dataType || tx.plan.name})`
+                          : tx.description || tx.phone || "Vending order"
+                      }
+                    >
+                      {tx.plan ? (
+                        <span>
+                          <strong className="text-[#06133a] font-semibold">
+                            {tx.plan.network} {tx.plan.sizeLabel}
+                          </strong>{" "}
+                          ({tx.plan.dataType || tx.plan.name})
+                          {tx.phone && <span className="text-[#8aa0be]"> • {tx.phone}</span>}
+                        </span>
+                      ) : (
+                        tx.description || tx.phone || "Vending order"
+                      )}
                     </td>
                     <td className="py-3.5 px-5 font-bold text-[#06133a]">
                       ₦{Number(tx.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

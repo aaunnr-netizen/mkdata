@@ -27,6 +27,14 @@ export async function GET(req: NextRequest) {
         phone: true,
         createdAt: true,
         reference: true,
+        plan: {
+          select: {
+            name: true,
+            sizeLabel: true,
+            network: true,
+            dataType: true,
+          },
+        },
       },
     })
 
