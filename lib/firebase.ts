@@ -27,7 +27,7 @@ function initFirebase() {
     } else if (serviceAccountPath) {
       const resolvedPath = path.isAbsolute(serviceAccountPath)
         ? serviceAccountPath
-        : path.resolve(process.cwd(), serviceAccountPath);
+        : path.join(/*turbopackIgnore: true*/ process.cwd(), serviceAccountPath);
 
       if (fs.existsSync(resolvedPath)) {
         const fileContent = fs.readFileSync(resolvedPath, "utf-8");
