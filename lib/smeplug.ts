@@ -1,4 +1,5 @@
 import axios from "axios";
+import { extractMessageString } from "./purchase-utils";
 
 interface SmeplugPurchaseParams {
   externalNetworkId: number;
@@ -98,9 +99,10 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
       return returnData;
     } else {
       const errorMsg =
-        response.data?.data?.msg ||
-        response.data?.msg ||
-        response.data?.message ||
+        extractMessageString(response.data?.data?.msg) ||
+        extractMessageString(response.data?.msg) ||
+        extractMessageString(response.data?.message) ||
+        extractMessageString(response.data?.error) ||
         "Data purchase failed";
       console.log("[SMEPLUG REJECTED]", { message: errorMsg, response: response.data });
       return {
@@ -121,8 +123,11 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
     if (error.response) {
       const is504 = error.response.status === 504 || error.response.status === 502;
       const errorMessage =
-        error.response.data?.msg ||
-        error.response.data?.message ||
+        extractMessageString(error.response.data?.data?.msg) ||
+        extractMessageString(error.response.data?.msg) ||
+        extractMessageString(error.response.data?.message) ||
+        extractMessageString(error.response.data?.error) ||
+        extractMessageString(error.response.data) ||
         `API Error: ${error.response.status}`;
 
       return {
@@ -140,7 +145,7 @@ export async function purchaseData(params: SmeplugPurchaseParams): Promise<Smepl
       // Network disconnect / connection reset
       return {
         success: false,
-        message: "Network connection issue - order status is pending verification",
+        message: extractMessageString(error.message) || "Network connection issue - order status is pending verification",
         isTimeout: true,
       };
     }
@@ -196,9 +201,10 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
     return {
       success: false,
       message:
-        response.data?.data?.msg ||
-        response.data?.msg ||
-        response.data?.message ||
+        extractMessageString(response.data?.data?.msg) ||
+        extractMessageString(response.data?.msg) ||
+        extractMessageString(response.data?.message) ||
+        extractMessageString(response.data?.error) ||
         "Airtime purchase failed",
       isTimeout: false,
     };
@@ -212,13 +218,17 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
 
     if (error.response) {
       const is504 = error.response.status === 504 || error.response.status === 502;
+      const errorMessage =
+        extractMessageString(error.response.data?.data?.msg) ||
+        extractMessageString(error.response.data?.msg) ||
+        extractMessageString(error.response.data?.message) ||
+        extractMessageString(error.response.data?.error) ||
+        extractMessageString(error.response.data) ||
+        `API Error: ${error.response.status}`;
+
       return {
         success: false,
-        message:
-          error.response.data?.data?.msg ||
-          error.response.data?.msg ||
-          error.response.data?.message ||
-          `API Error: ${error.response.status}`,
+        message: errorMessage,
         isTimeout: is504,
       };
     }
@@ -233,7 +243,7 @@ export async function purchaseAirtime(params: SmeplugAirtimeParams): Promise<Sme
 
     return {
       success: false,
-      message: "Network error - order status is pending verification",
+      message: extractMessageString(error.message) || "Network error - order status is pending verification",
       isTimeout: true,
     };
   }

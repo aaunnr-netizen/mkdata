@@ -175,7 +175,7 @@ export default function UsersPage() {
       const matchesSearch =
         user.fullName.toLowerCase().includes(q) ||
         user.phone.includes(q) ||
-        (user.email || "").toLowerCase().includes(q);
+        String(user.email || "").toLowerCase().includes(q);
       const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });

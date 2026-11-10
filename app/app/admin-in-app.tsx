@@ -654,7 +654,7 @@ function UsersAdminScreen({ onBack }: { onBack: () => void }) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((user) => {
-      const matchesSearch = !q || user.fullName.toLowerCase().includes(q) || user.phone.includes(q) || (user.email || "").toLowerCase().includes(q);
+      const matchesSearch = !q || user.fullName.toLowerCase().includes(q) || user.phone.includes(q) || String(user.email || "").toLowerCase().includes(q);
       const matchesRole = role === "ALL" || user.role === role;
       return matchesSearch && matchesRole;
     });

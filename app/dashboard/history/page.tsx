@@ -79,9 +79,9 @@ export default function DashboardHistoryPage() {
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchesRef = (tx.reference || "").toLowerCase().includes(q);
-        const matchesPhone = (tx.phone || "").toLowerCase().includes(q);
-        const matchesDesc = (tx.description || "").toLowerCase().includes(q);
+        const matchesRef = String(tx.reference || "").toLowerCase().includes(q);
+        const matchesPhone = String(tx.phone || "").toLowerCase().includes(q);
+        const matchesDesc = String(tx.description || "").toLowerCase().includes(q);
         const matchesPlan = tx.plan
           ? `${tx.plan.network} ${tx.plan.sizeLabel} ${tx.plan.name} ${tx.plan.dataType}`
               .toLowerCase()

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { extractMessageString } from "./purchase-utils";
 
 interface SaifulPurchaseParams {
   plan: number;  // Plan ID as integer
@@ -88,7 +89,11 @@ export async function purchaseData(params: SaifulPurchaseParams): Promise<Saiful
       console.log("[SAIFUL PENDING]", returnData);
       return returnData;
     } else {
-      const errorMsg = responseData?.description || responseData?.message || "Data purchase failed";
+      const errorMsg =
+        extractMessageString(responseData?.description) ||
+        extractMessageString(responseData?.message) ||
+        extractMessageString(responseData?.error) ||
+        "Data purchase failed";
       console.log("[SAIFUL FAILED]", { message: errorMsg, response: responseData });
       return {
         success: false,
@@ -105,14 +110,19 @@ export async function purchaseData(params: SaifulPurchaseParams): Promise<Saiful
 
     if (error.response) {
       // API returned an error response
-      const errorMessage = error.response.data?.description || error.response.data?.message || `API Error: ${error.response.status}`;
+      const errorMessage =
+        extractMessageString(error.response.data?.description) ||
+        extractMessageString(error.response.data?.message) ||
+        extractMessageString(error.response.data?.error) ||
+        extractMessageString(error.response.data) ||
+        `API Error: ${error.response.status}`;
       console.error("[SAIFUL API DETAILS]", {
         errorMessage,
         apiResponse: error.response.data,
       });
       return {
         success: false,
-        message: error.response.data?.message || `API Error: ${error.response.status}`,
+        message: errorMessage,
       };
     } else if (error.code === "ECONNABORTED") {
       // Timeout
@@ -124,7 +134,7 @@ export async function purchaseData(params: SaifulPurchaseParams): Promise<Saiful
       // Network or other error
       return {
         success: false,
-        message: "Network error - please try again",
+        message: extractMessageString(error.message) || "Network error - please try again",
       };
     }
   }
@@ -200,7 +210,11 @@ export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<Sa
     } else {
       return {
         success: false,
-        message: responseData?.description || responseData?.message || "Airtime purchase failed",
+        message:
+          extractMessageString(responseData?.description) ||
+          extractMessageString(responseData?.message) ||
+          extractMessageString(responseData?.error) ||
+          "Airtime purchase failed",
       };
     }
   } catch (error: any) {
@@ -208,9 +222,15 @@ export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<Sa
 
     if (error.response) {
       // API returned an error response
+      const errorMessage =
+        extractMessageString(error.response.data?.message) ||
+        extractMessageString(error.response.data?.description) ||
+        extractMessageString(error.response.data?.error) ||
+        extractMessageString(error.response.data) ||
+        `API Error: ${error.response.status}`;
       return {
         success: false,
-        message: error.response.data?.message || `API Error: ${error.response.status}`,
+        message: errorMessage,
       };
     } else if (error.code === "ECONNABORTED") {
       // Timeout
@@ -222,7 +242,7 @@ export async function purchaseAirtime(params: AirtimePurchaseParams): Promise<Sa
       // Network or other error
       return {
         success: false,
-        message: "Network error - please try again",
+        message: extractMessageString(error.message) || "Network error - please try again",
       };
     }
   }

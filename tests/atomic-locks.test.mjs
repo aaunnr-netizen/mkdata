@@ -56,15 +56,53 @@ const PROVIDER_TECHNICAL_FAILURE_PATTERNS = [
   "unexpected token",
 ];
 
+function extractMessageString(input) {
+  if (typeof input === "string") return input.trim();
+  if (input instanceof Error) return input.message.trim();
+  if (Array.isArray(input)) {
+    return input
+      .map(extractMessageString)
+      .filter((part) => part.length > 0)
+      .join(", ");
+  }
+  if (input && typeof input === "object") {
+    const candidate =
+      input.message ||
+      input.Message ||
+      input.detail ||
+      input.error ||
+      input.msg ||
+      input.description ||
+      input.api_response ||
+      input.status;
+    if (candidate && candidate !== input) {
+      const extracted = extractMessageString(candidate);
+      if (extracted) return extracted;
+    }
+    try {
+      const json = JSON.stringify(input);
+      if (json && json !== "{}") return json;
+    } catch {
+      return "";
+    }
+  }
+  if (input !== null && input !== undefined && typeof input !== "symbol") {
+    const str = String(input).trim();
+    if (str && str !== "[object Object]") return str;
+  }
+  return "";
+}
+
 function normalizeProviderFailureMessage(message) {
-  const normalizedMessage = (message || "").toLowerCase();
+  const rawMessage = extractMessageString(message);
+  const normalizedMessage = rawMessage.toLowerCase();
   if (PLAN_UNAVAILABLE_PATTERNS.some((pattern) => normalizedMessage.includes(pattern))) {
     return "plan not available now, choose other plans!";
   }
   if (PROVIDER_TECHNICAL_FAILURE_PATTERNS.some((pattern) => normalizedMessage.includes(pattern))) {
     return "unable to send data, try again later";
   }
-  return message || "Purchase failed";
+  return rawMessage || "Purchase failed";
 }
 
 function buildPurchaseLockKey(service, userId, targetIdentifier, amount) {
@@ -133,6 +171,25 @@ export async function testAtomicLocksAndGuards() {
 
   const friendlyPlan = normalizeProviderFailureMessage("Product unavailable or disabled");
   assert.equal(friendlyPlan, "plan not available now, choose other plans!");
+
+  // 5. Non-string object / array / error tolerance (prevents "(e || '').toLowerCase is not a function")
+  const objError = normalizeProviderFailureMessage({ error: ["Product unavailable or disabled"] });
+  assert.equal(objError, "plan not available now, choose other plans!");
+
+  const detailError = normalizeProviderFailureMessage({ detail: "Gateway timeout from upstream" });
+  assert.equal(detailError, "unable to send data, try again later");
+
+  const arrayError = normalizeProviderFailureMessage(["route failed"]);
+  assert.equal(arrayError, "unable to send data, try again later");
+
+  const instanceError = normalizeProviderFailureMessage(new Error("bad gateway from server"));
+  assert.equal(instanceError, "unable to send data, try again later");
+
+  const nullError = normalizeProviderFailureMessage(null);
+  assert.equal(nullError, "Purchase failed");
+
+  const numError = normalizeProviderFailureMessage(500);
+  assert.equal(numError, "500");
 
   console.log("PASS: Atomic locks, anti-race guards, and KYC bypass verified successfully.\n");
 }

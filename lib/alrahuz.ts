@@ -1,4 +1,5 @@
 import axios from "axios";
+import { extractMessageString } from "./purchase-utils";
 
 export type AlrahuzResult = {
   success: boolean;
@@ -98,8 +99,8 @@ function formatLocalPhone(phone: string) {
   return phone;
 }
 
-function getMessage(data: any, fallback: string) {
-  return (
+function getMessage(data: any, fallback: string): string {
+  const candidate =
     data?.message ||
     data?.Message ||
     data?.detail ||
@@ -107,9 +108,9 @@ function getMessage(data: any, fallback: string) {
     data?.error ||
     data?.data?.message ||
     data?.data?.detail ||
-    data?.data?.description ||
-    fallback
-  );
+    data?.data?.description;
+
+  return extractMessageString(candidate) || fallback;
 }
 
 function getExternalReference(data: any, reference: string) {
@@ -302,9 +303,17 @@ async function postToAlrahuz(
       return { success: false, message: "Request timeout - please try again" };
     }
 
+    const caught =
+      extractMessageString(error.response?.data?.message) ||
+      extractMessageString(error.response?.data?.detail) ||
+      extractMessageString(error.response?.data?.error) ||
+      extractMessageString(error.response?.data) ||
+      extractMessageString(error.message) ||
+      "Network error - please try again";
+
     return {
       success: false,
-      message: error.response?.data?.message || error.response?.data?.detail || "Network error - please try again",
+      message: caught,
     };
   }
 }
@@ -426,7 +435,11 @@ export async function validateIUC(params: AlrahuzValidateIucParams): Promise<Alr
     return {
       success: false,
       valid: false,
-      message: error.response?.data?.message || error.message || "Smart card validation failed",
+      message:
+        extractMessageString(error.response?.data?.message) ||
+        extractMessageString(error.response?.data?.detail) ||
+        extractMessageString(error.message) ||
+        "Smart card validation failed",
     };
   }
 }
@@ -472,7 +485,11 @@ export async function validateMeter(params: AlrahuzValidateMeterParams): Promise
     return {
       success: false,
       valid: false,
-      message: error.response?.data?.message || error.message || "Meter validation failed",
+      message:
+        extractMessageString(error.response?.data?.message) ||
+        extractMessageString(error.response?.data?.detail) ||
+        extractMessageString(error.message) ||
+        "Meter validation failed",
     };
   }
 }
@@ -499,7 +516,11 @@ export async function queryCableSub(id: string | number): Promise<AlrahuzResult>
     console.error("[ALRAHUZ QUERY CABLE ERROR]", error);
     return {
       success: false,
-      message: error.response?.data?.message || error.message || "Could not query cable subscription",
+      message:
+        extractMessageString(error.response?.data?.message) ||
+        extractMessageString(error.response?.data?.detail) ||
+        extractMessageString(error.message) ||
+        "Could not query cable subscription",
     };
   }
 }
@@ -528,7 +549,11 @@ export async function queryElectricityBill(id: string | number): Promise<Alrahuz
     console.error("[ALRAHUZ QUERY ELECTRICITY ERROR]", error);
     return {
       success: false,
-      message: error.response?.data?.message || error.message || "Could not query electricity bill",
+      message:
+        extractMessageString(error.response?.data?.message) ||
+        extractMessageString(error.response?.data?.detail) ||
+        extractMessageString(error.message) ||
+        "Could not query electricity bill",
     };
   }
 }
@@ -557,7 +582,11 @@ export async function queryExamPin(id: string | number): Promise<AlrahuzResult> 
     console.error("[ALRAHUZ QUERY EXAM PIN ERROR]", error);
     return {
       success: false,
-      message: error.response?.data?.message || error.message || "Could not query exam pin",
+      message:
+        extractMessageString(error.response?.data?.message) ||
+        extractMessageString(error.response?.data?.detail) ||
+        extractMessageString(error.message) ||
+        "Could not query exam pin",
     };
   }
 }

@@ -1,3 +1,5 @@
+import { extractMessageString } from "./purchase-utils";
+
 const TECHNICAL_PATTERNS = [
   "api response",
   "api error",
@@ -38,8 +40,8 @@ const TECHNICAL_PATTERNS = [
   "undefined",
 ];
 
-export function getFriendlyMessage(input?: string | null, fallback = "Something went wrong. Please try again in a moment.") {
-  const message = String(input || "").trim();
+export function getFriendlyMessage(input?: unknown, fallback = "Something went wrong. Please try again in a moment.") {
+  const message = extractMessageString(input);
   const normalized = message.toLowerCase();
 
   const cleanFallback = fallback.startsWith("Ahh, sorry")

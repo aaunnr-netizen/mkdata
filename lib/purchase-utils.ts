@@ -62,8 +62,47 @@ export const DATA_INSUFFICIENT_FUNDS_MESSAGE = "Aahh! insufficient fund";
 export const PROVIDER_TECHNICAL_FAILURE_MESSAGE = "unable to send data, try again later";
 export const IDEMPOTENCY_WINDOW_MINUTES = 5;
 
-export function normalizeProviderFailureMessage(message?: string | null) {
-  const normalizedMessage = (message || "").toLowerCase();
+export function extractMessageString(input: unknown): string {
+  if (typeof input === "string") return input.trim();
+  if (input instanceof Error) return input.message.trim();
+  if (Array.isArray(input)) {
+    return input
+      .map(extractMessageString)
+      .filter((part) => part.length > 0)
+      .join(", ");
+  }
+  if (input && typeof input === "object") {
+    const obj = input as Record<string, any>;
+    const candidate =
+      obj.message ||
+      obj.Message ||
+      obj.detail ||
+      obj.error ||
+      obj.msg ||
+      obj.description ||
+      obj.api_response ||
+      obj.status;
+    if (candidate && candidate !== input) {
+      const extracted = extractMessageString(candidate);
+      if (extracted) return extracted;
+    }
+    try {
+      const json = JSON.stringify(input);
+      if (json && json !== "{}") return json;
+    } catch {
+      return "";
+    }
+  }
+  if (input !== null && input !== undefined && typeof input !== "symbol") {
+    const str = String(input).trim();
+    if (str && str !== "[object Object]") return str;
+  }
+  return "";
+}
+
+export function normalizeProviderFailureMessage(message?: unknown): string {
+  const rawMessage = extractMessageString(message);
+  const normalizedMessage = rawMessage.toLowerCase();
 
   if (PLAN_UNAVAILABLE_PATTERNS.some((pattern) => normalizedMessage.includes(pattern))) {
     return PLAN_UNAVAILABLE_MESSAGE;
@@ -73,7 +112,7 @@ export function normalizeProviderFailureMessage(message?: string | null) {
     return PROVIDER_TECHNICAL_FAILURE_MESSAGE;
   }
 
-  return message || "Purchase failed";
+  return rawMessage || "Purchase failed";
 }
 
 export function buildPurchaseLockKey(

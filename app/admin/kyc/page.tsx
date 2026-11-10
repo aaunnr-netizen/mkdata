@@ -80,7 +80,7 @@ export default function AdminKycPage() {
     const matchesSearch =
       u.fullName.toLowerCase().includes(searchLower) ||
       u.phone.includes(searchLower) ||
-      (u.kycDetailsParsed?.ninOrId || "").toLowerCase().includes(searchLower);
+      String(u.kycDetailsParsed?.ninOrId || "").toLowerCase().includes(searchLower);
     return matchesFilter && matchesSearch;
   });
 

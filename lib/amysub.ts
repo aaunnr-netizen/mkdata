@@ -1,4 +1,5 @@
 import axios from "axios";
+import { extractMessageString } from "./purchase-utils";
 
 interface AmysubPurchaseParams {
   plan: number;  // Plan ID as integer
@@ -73,7 +74,12 @@ export async function purchaseData(params: AmysubPurchaseParams): Promise<Amysub
         externalReference: String(responseData.reference || responseData.ident || responseData.id || ""),
       };
     } else {
-      const errorMsg = responseData?.api_response || responseData?.description || "Data purchase failed";
+      const errorMsg =
+        extractMessageString(responseData?.api_response) ||
+        extractMessageString(responseData?.description) ||
+        extractMessageString(responseData?.message) ||
+        extractMessageString(responseData?.error) ||
+        "Data purchase failed";
       console.log("[AMYSUB FAILED]", { message: errorMsg, response: responseData });
       return {
         success: false,
@@ -89,7 +95,13 @@ export async function purchaseData(params: AmysubPurchaseParams): Promise<Amysub
     });
 
     if (error.response) {
-      const errorMessage = error.response.data?.api_response || error.response.data?.description || `API Error: ${error.response.status}`;
+      const errorMessage =
+        extractMessageString(error.response.data?.api_response) ||
+        extractMessageString(error.response.data?.description) ||
+        extractMessageString(error.response.data?.message) ||
+        extractMessageString(error.response.data?.error) ||
+        extractMessageString(error.response.data) ||
+        `API Error: ${error.response.status}`;
       return {
         success: false,
         message: errorMessage,
@@ -102,7 +114,7 @@ export async function purchaseData(params: AmysubPurchaseParams): Promise<Amysub
     } else {
       return {
         success: false,
-        message: "Network error - please try again",
+        message: extractMessageString(error.message) || "Network error - please try again",
       };
     }
   }
